@@ -19,7 +19,10 @@ ln -s ../../aws-deepracer-workshops/log-analysis  ./docker/volumes/log-analysis
 
 # setup symlink to rl-coach config file
 ln -s deepracer/rl_coach/rl_deepracer_coach_robomaker.py rl_deepracer_coach_robomaker.py
-#TODO edit rl-coach file with additional hyperparameters using sed or something comparable
+
+# replace the contents of the rl_deepracer_coach_robomaker.py file with the gpu specific version (this is also where you can edit the hyperparameters)
+# TODO this file should be genrated from a gui before running training
+cat overrides/rl_deepracer_coach_robomaker.py > rl_deepracer_coach_robomaker.py 
 
 # build rl-coach image with latest code from crr0004's repo
 docker build -f ./docker/dockerfiles/rl_coach/Dockerfile -t aschu/rl_coach deepracer/
