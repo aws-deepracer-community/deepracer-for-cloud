@@ -1,0 +1,41 @@
+version: '3.7'
+
+networks:
+  default:
+    external:
+      name: sagemaker-local
+
+services:
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+    container_name: minio
+    command: server /data
+    volumes:
+      - ./volumes/minio:/data
+    restart: unless-stopped
+    env_file: .env
+  rl_coach:
+    image: aschu/rl_coach
+    env_file: .env
+    container_name: rl_coach
+    volumes:
+    - '//var/run/docker.sock:/var/run/docker.sock'
+    - '../deepracer/sagemaker-python-sdk:/deepracer/sagemaker-python-sdk'
+    - '../deepracer/rl_coach:/deepracer/rl_coach'
+    - '/robo/container:/robo/container'
+    depends_on:
+    - minio
+  robomaker:
+    image: crr0004/deepracer_robomaker:console
+    volumes:
+      - ../deepracer/simulation/aws-robomaker-sample-application-deepracer/simulation_ws/src:/app/robomaker-deepracer/simulation_ws/src 
+      - ./volumes/robo/checkpoint:/root/.ros/
+    ports:
+      - "8080:5900"
+    container_name: robomaker
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+    - rl_coach
