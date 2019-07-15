@@ -23,6 +23,18 @@ To start or stop the local deepracer training, use the scripts found in the scri
 
 Here is a brief overview of the available scripts
 
+#### Hyperparameters
+
+You can modify training hyperparameters from the file **rl_deepracer_coach_robomaker.py**.
+
+#### Action Space & Reward Function
+
+The action-space and reward function files are located in the **deepracer-for-dummies/docker/volumes/minio/bucket/custom_files** directory
+
+#### Track Selection
+
+The track selection is controled via an environment variable in the **.env** file located in the **deepracer-for-dummies/docker** directory
+
 #### Scripts
 
 * training
