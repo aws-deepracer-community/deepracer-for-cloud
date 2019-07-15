@@ -1,4 +1,4 @@
-# Deepracer-For-Dummies
+# DeepRacer-For-Dummies
 a quick way to get up and running with local deepracer training environment
 
 
@@ -40,5 +40,9 @@ Here is a brief overview of the available scripts
 	* work in progress
 
 * log-analysis
-	* startes a container running jupyter labs with the log analysis notebooks which were originally provided by AWS and then extended by  Tomasz Ptak
-	* the logs from robomaker are automatically mounted in the container so you don't have to move any files around
+	* start.sh
+		* starts a container with Nvidia-Docker running jupyter labs with the log analysis notebooks which were originally provided by AWS and then extended by  Tomasz Ptak
+		* the logs from robomaker are automatically mounted in the container so you don't have to move any files around
+		* in order to get to the container, look at the log output from when it starts. You need to grab the URL including the token query parameter and then paste it into the brower at **localhost:8888**.
+	* stop.sh
+		* stops the log-analysis container
