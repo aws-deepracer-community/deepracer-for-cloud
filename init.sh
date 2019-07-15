@@ -2,7 +2,6 @@
 
 # create directory structure for docker volumes
 mkdir -p docker/volumes/minio/bucket/custom_files \
-		 docker/volumes/robo/container \
 		 docker/volumes/robo/checkpoint
 
 # create symlink to current user's home .aws directory 
