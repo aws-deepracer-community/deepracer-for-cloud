@@ -30,7 +30,7 @@ services:
   robomaker:
     image: crr0004/deepracer_robomaker:console
     # entrypoint: ["/bin/bash", "-c"]
-    command: run.sh build ${ROBOMAKER_RUN_TYPE}.launch
+    # command: run.sh build ${ROBOMAKER_RUN_TYPE}.launch
     volumes:
       - ../deepracer/simulation/aws-robomaker-sample-application-deepracer/simulation_ws/src:/app/robomaker-deepracer/simulation_ws/src 
       - ./volumes/robo/checkpoint:/root/.ros/
