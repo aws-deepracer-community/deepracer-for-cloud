@@ -47,7 +47,7 @@ The track selection is controled via an environment variable in the **.env** fil
 		* stops the whole environment
 		* automatically finds and stops the training container which was started from the sagemaker container
 	* upload-snapshot.sh
-		* uploades a specific snapshot to S3 in AWS. If no checkpoint is provided, it attempts to retrieve the latest snapshot
+		* uploads a specific snapshot to S3 in AWS. If no checkpoint is provided, it attempts to retrieve the latest snapshot
 
 
 * evaluation
