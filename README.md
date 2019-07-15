@@ -2,9 +2,9 @@
 a quick way to get up and running with local deepracer training environment
 
 
-#Getting Started
+# Getting Started
 
-####Prerequisites
+#### Prerequisites
 
 * This project is specifically built to run on Ubuntu 18.04 with an **Nvidia GPU**. It is assumed you already have **CUDA/CUDNN** installed and configured.
 
@@ -14,7 +14,7 @@ a quick way to get up and running with local deepracer training environment
 
 * ensure you have **vncviewer** installed
 
-####Initialization
+#### Initialization
 
 In a command prompt, simply run "./init.sh".
 This will set everything up so you can run the deepracer local training environment.
@@ -23,7 +23,7 @@ To start or stop the local deepracer training, use the scripts found in the scri
 
 Here is a brief overview of the available scripts
 
-####Scripts
+#### Scripts
 
 * training
 
