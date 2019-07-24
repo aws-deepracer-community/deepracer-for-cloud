@@ -88,9 +88,11 @@ metric_definitions = [
 
 RLCOACH_PRESET = "deepracer"
 
+gpu_available = os.environ.get("GPU_AVAILABLE", False)
 # 'local' for cpu, 'local_gpu' for nvidia gpu (and then you don't have to set default runtime to nvidia)
-instance_type = "local_gpu"
-
+instance_type = "local_gpu" if gpu_available else "local"
+image_name = "crr0004/sagemaker-rl-tensorflow:{}".format(
+    "nvidia" if gpu_available else "console")
 
 estimator = RLEstimator(entry_point="training_worker.py",
                         source_dir='src',
@@ -105,7 +107,7 @@ estimator = RLEstimator(entry_point="training_worker.py",
                         train_instance_count=1,
                         output_path=s3_output_path,
                         base_job_name=job_name_prefix,
-                        image_name="crr0004/sagemaker-rl-tensorflow:nvidia",
+                        image_name=image_name,
                         train_max_run=job_duration_in_seconds, # Maximum runtime in seconds
                         hyperparameters={"s3_bucket": s3_bucket,
                                          "s3_prefix": s3_prefix,
@@ -130,7 +132,7 @@ estimator = RLEstimator(entry_point="training_worker.py",
                                          # "loss_type": "mean squared error",
                                       },
                         metric_definitions = metric_definitions,
-						s3_client=s3Client
+                        s3_client=s3Client
                         #subnets=default_subnets, # Required for VPC mode
                         #security_group_ids=default_security_groups, # Required for VPC mode
                     )
