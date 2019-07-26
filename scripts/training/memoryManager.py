@@ -35,7 +35,7 @@ def handle_folder_files(path, name, max_size):
 
 def manage_memory(args):
     model_path = os.path.join(os.path.abspath(""), "../../docker/volumes/minio/bucket/rl-deepracer-sagemaker/model/")
-    checkpoint_path = os.path.join(os.path.abspath(""), "../../docker/volumes/robo/checkpoint")
+    checkpoint_path = os.path.join(os.path.abspath(""), "../../docker/volumes/robo/checkpoint/checkpoint/")
     while True:
         handle_folder_files(model_path, "model", args.sagemaker_model_cap)
         handle_folder_files(checkpoint_path, "checkpoint", args.checkpoint_cap)

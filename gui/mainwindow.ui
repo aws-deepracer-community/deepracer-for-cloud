@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>643</width>
+    <height>518</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="1" column="2">
+     <widget class="QPushButton" name="start_button">
+      <property name="text">
+       <string>Start </string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0" rowspan="4">
+     <widget class="QTextEdit" name="action_space"/>
+    </item>
+    <item row="2" column="1" rowspan="3">
+     <widget class="QTextEdit" name="hyper_parameters"/>
+    </item>
+    <item row="0" column="0">
+     <widget class="QTextEdit" name="reward_function"/>
+    </item>
+    <item row="3" column="2">
+     <widget class="QPushButton" name="restart_button">
+      <property name="text">
+       <string>Restart</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="2">
+     <widget class="QPushButton" name="save_button">
+      <property name="text">
+       <string>Save Changes</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QLineEdit" name="world_name"/>
+    </item>
+    <item row="0" column="1" colspan="2">
+     <widget class="QwtPlot" name="reward_plot"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QToolBar" name="mainToolBar">
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>QwtPlot</class>
+   <extends>QFrame</extends>
+   <header>qwt_plot.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
