@@ -32,6 +32,8 @@ private slots:
 
     void on_init_button_clicked();
 
+    void on_uploadbutton_clicked();
+    
 private:
     Ui::MainWindow *ui;
 

@@ -72,12 +72,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_start_button_clicked()
-{
-    //Start the simulation and training instance
-
-}
-
 void MainWindow::on_save_button_clicked()
 {
     //Save updates writen to the QText editor to the minio bucket and coach_rl python file
@@ -171,16 +165,51 @@ void MainWindow::on_save_button_clicked()
 
 }
 
+void MainWindow::on_start_button_clicked()
+{
+    //Start the simulation and training instance
+    if (!QProcess::startDetached("/bin/sh", QStringList{start_script})){
+        QMessageBox::warning(this, "Warning", "Failed to run script start.sh");
+    }
+}
+
 void MainWindow::on_restart_button_clicked()
 {
     //Restart the simulation and training instance using model that has been training (ie using pretrained model)
     //This allows you to tweak the parameters incrementally
-    current_action_space.clear();
-    current_action_space.clear();
+    if (!QProcess::startDetached("/bin/sh", QStringList{stop_script})){
+        QMessageBox::warning(this, "Warning", "Failed to run script start.sh");
+    }
+    if (!QProcess::startDetached("/bin/sh", QStringList{use_pretrained_script})){
+        QMessageBox::warning(this, "Warning", "Failed to run script set-last-run-to-pretrained.sh");
+    }
+    if (!QProcess::startDetached("/bin/sh", QStringList{start_script})){
+        QMessageBox::warning(this, "Warning", "Failed to run script start.sh");
+    }
 }
 
 void MainWindow::on_stop_button_clicked()
 {
     //Stop the training instance
+    //Stop the simulation and training instance
+    if (!QProcess::startDetached("/bin/sh", QStringList{stop_script})){
+        QMessageBox::warning(this, "Warning", "Failed to run script stop.sh");
+    }
 
+}
+
+void MainWindow::on_init_button_clicked()
+{
+    //Init the Repository, this also can perform recovery if something brakes
+    if (!QProcess::startDetached("/bin/sh", QStringList{init_script})){
+        QMessageBox::warning(this, "Warning", "Failed to run script init.sh");
+    }
+}
+
+void MainWindow::on_uploadbutton_clicked()
+{
+    //Upload snapshot to S3, make sure envs are set
+    if (!QProcess::startDetached("/bin/sh", QStringList{upload_script})){
+        QMessageBox::warning(this, "Warning", "Failed to run script upload-snapshot.sh");
+    }
 }

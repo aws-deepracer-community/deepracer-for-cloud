@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 
+SCRIPT=`realpath $0`
+SCRIPTPATH=`dirname $SCRIPT`
+
 export ROBOMAKER_RUN_TYPE=distributed_training
 
-docker-compose -f ../../docker/docker-compose.yml up -d
+docker-compose -f "$SCRIPTPATH/../../docker/docker-compose.yml" up -d
 echo 'waiting for containers to start up...'
 
 #sleep for 20 seconds to allow the containers to start
