@@ -48,9 +48,9 @@ if __name__ == "__main__":
         description="Manage memory usage of local DeepRacer by capping the memory usage of key folders")
     parser.add_argument('-m', '--sagemaker_model_cap',
                         help="The cap size (in GB) for the model folder in volumes/minio/bucket/rl-deepracer-sagemaker/model/",
-                        type=float, default=5)
+                        type=float, default=3)
     parser.add_argument('-c', '--checkpoint_cap',
                         help="The cap size (in GB) for the model folder in volumes/robo/checkpoint/checkpoint/",
-                        type=float, default=5)
+                        type=float, default=3)
     args = parser.parse_args()
     manage_memory(args)
