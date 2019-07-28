@@ -25,7 +25,7 @@ ln -s ${SCRIPTPATH}/deepracer/rl_coach/rl_deepracer_coach_robomaker.py ${SCRIPTP
 
 # replace the contents of the rl_deepracer_coach_robomaker.py file with the gpu specific version (this is also where you can edit the hyperparameters)
 # TODO this file should be generated from a gui before running training
-# cat ${SCRIPTPATH}/overrides/rl_deepracer_coach_robomaker.py > ${SCRIPTPATH}/rl_deepracer_coach_robomaker.py
+cat ${SCRIPTPATH}/overrides/rl_deepracer_coach_robomaker.py > ${SCRIPTPATH}/rl_deepracer_coach_robomaker.py
 
 # build rl-coach image with latest code from crr0004's repo
 docker build -f ${SCRIPTPATH}/docker/dockerfiles/rl_coach/Dockerfile -t aschu/rl_coach deepracer/
