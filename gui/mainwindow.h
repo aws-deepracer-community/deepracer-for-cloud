@@ -22,6 +22,8 @@ public:
     ~MainWindow();
 
 private slots:
+    void refresh();
+
     void on_start_button_clicked();
 
     void on_save_button_clicked();
@@ -35,6 +37,8 @@ private slots:
     void on_uploadbutton_clicked();
 
     void on_delete_button_clicked();
+
+    void on_refresh_button_clicked();
 
 private:
     Ui::MainWindow *ui;

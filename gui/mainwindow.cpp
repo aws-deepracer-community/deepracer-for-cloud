@@ -8,7 +8,16 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    this->refresh();
+    ui->log->append("Log:\n");
+}
 
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
+
+void MainWindow::refresh(){
     //Update all the text with what is currently in the targeted files
     QFile reward_func_file(reward_func_path);
     if(!reward_func_file.open(QIODevice::ReadOnly | QFile::Text)){
@@ -64,12 +73,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->action_space->setText(current_action_space);
     ui->hyper_parameters->setText(current_hyperparameters);
     ui->track_name->setText(current_track);
-
-}
-
-MainWindow::~MainWindow()
-{
-    delete ui;
 }
 
 void MainWindow::on_save_button_clicked()
@@ -204,6 +207,7 @@ void MainWindow::on_init_button_clicked()
     if (!QProcess::startDetached("/bin/sh", QStringList{init_script})){
         QMessageBox::warning(this, "Warning", "Failed to run script init.sh");
     }
+    ui->log->append("Wait while the init script runs; this may take a minute or two. Once the init script finishes you may run refresh to see reward function, action space, and hyperparameters.");
 }
 
 void MainWindow::on_uploadbutton_clicked()
@@ -220,4 +224,9 @@ void MainWindow::on_delete_button_clicked()
     if (!QProcess::startDetached("/bin/sh", QStringList{delete_script})){
         QMessageBox::warning(this, "Warning", "Failed to run script delete-last-run.sh");
     }
+}
+
+void MainWindow::on_refresh_button_clicked()
+{
+    this->refresh();
 }
