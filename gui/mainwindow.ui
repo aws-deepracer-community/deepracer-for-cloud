@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>643</width>
-    <height>518</height>
+    <height>487</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,40 +15,68 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="1" column="2">
-     <widget class="QPushButton" name="start_button">
-      <property name="text">
-       <string>Start </string>
+    <item row="21" column="3">
+     <layout class="QVBoxLayout" name="verticalLayout">
+      <property name="spacing">
+       <number>6</number>
       </property>
-     </widget>
-    </item>
-    <item row="1" column="0" rowspan="4">
-     <widget class="QTextEdit" name="action_space"/>
-    </item>
-    <item row="2" column="1" rowspan="3">
-     <widget class="QTextEdit" name="hyper_parameters"/>
+      <item>
+       <widget class="QPushButton" name="start_button">
+        <property name="text">
+         <string>Start </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="stop_button">
+        <property name="text">
+         <string>Stop</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="save_button">
+        <property name="text">
+         <string>Save Changes</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="restart_button">
+        <property name="mouseTracking">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Restart</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="uploadbutton">
+        <property name="text">
+         <string>Upload </string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
     <item row="0" column="0">
      <widget class="QTextEdit" name="reward_function"/>
     </item>
-    <item row="3" column="2">
-     <widget class="QPushButton" name="restart_button">
-      <property name="text">
-       <string>Restart</string>
-      </property>
-     </widget>
+    <item row="1" column="0" rowspan="21">
+     <widget class="QTextEdit" name="action_space"/>
     </item>
-    <item row="2" column="2">
-     <widget class="QPushButton" name="save_button">
-      <property name="text">
-       <string>Save Changes</string>
-      </property>
-     </widget>
+    <item row="21" column="2">
+     <layout class="QVBoxLayout" name="verticalLayout_3">
+      <item>
+       <widget class="QLineEdit" name="track_name"/>
+      </item>
+      <item>
+       <widget class="QTextEdit" name="hyper_parameters"/>
+      </item>
+     </layout>
     </item>
-    <item row="1" column="1">
-     <widget class="QLineEdit" name="world_name"/>
-    </item>
-    <item row="0" column="1" colspan="2">
+    <item row="0" column="1" colspan="3">
      <widget class="QwtPlot" name="reward_plot"/>
     </item>
    </layout>

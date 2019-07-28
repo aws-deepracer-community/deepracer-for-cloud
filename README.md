@@ -43,6 +43,7 @@ The track selection is controled via an environment variable in the **.env** fil
 		* starts the whole environment using docker compose
 		* it will also open a terminal window where you can monitor the log output from the sagemaker training directory
 		* it will also automatically open vncviewer so you can watch the training happening in Gazebo
+		* For the memoryManager.py make sure to enter your user password into the opened terminal in order to run the program in sudo
 	* stop.sh
 		* stops the whole environment
 		* automatically finds and stops the training container which was started from the sagemaker container
