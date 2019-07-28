@@ -13,7 +13,7 @@ mkdir -p ${SCRIPTPATH}/docker/volumes/minio/bucket/custom_files \
 ln -s ${SCRIPTPATH}/$(eval echo "~${USER}")/.aws  ${SCRIPTPATH}/docker/volumes/
 
 # grab local training deepracer repo from crr0004 and log analysis repo from vreadcentric
-git clone --recurse-submodules https://github.com/crr0004/deepracer.git
+git clone --recurse-submodules https://github.com/ARCC-RACE/deepracer.git
 
 git clone https://github.com/breadcentric/aws-deepracer-workshops.git && cd aws-deepracer-workshops && git checkout enhance-log-analysis && cd ..
 
