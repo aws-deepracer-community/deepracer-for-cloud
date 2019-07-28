@@ -44,6 +44,11 @@ private:
     QString current_hyperparameters = "";
     QString current_track = "";
 
+    //List of all editable hyperparameters
+    QStringList hyperparams{"batch_size","num_epochs","stack_size","lr","exploration_type","e_greedy_value","epsilon_steps",
+                            "beta_entropy","discount_factor","loss_type","num_episodes_between_training","term_cond_max_episodes",
+                            "term_cond_avg_score"};
+
     //General status variables
     bool is_running = false;
     bool is_pretrained = false;

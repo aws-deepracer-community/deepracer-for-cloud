@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>643</width>
-    <height>487</height>
+    <height>652</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,7 +21,26 @@
        <number>6</number>
       </property>
       <item>
+       <widget class="QPushButton" name="init_button">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Init</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="start_button">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string>Start </string>
         </property>
@@ -29,6 +48,12 @@
       </item>
       <item>
        <widget class="QPushButton" name="stop_button">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string>Stop</string>
         </property>
@@ -36,13 +61,25 @@
       </item>
       <item>
        <widget class="QPushButton" name="save_button">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
-         <string>Save Changes</string>
+         <string>Save</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="restart_button">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="mouseTracking">
          <bool>false</bool>
         </property>
@@ -53,6 +90,12 @@
       </item>
       <item>
        <widget class="QPushButton" name="uploadbutton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string>Upload </string>
         </property>
@@ -69,15 +112,32 @@
     <item row="21" column="2">
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
-       <widget class="QLineEdit" name="track_name"/>
+       <widget class="QLineEdit" name="track_name">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QTextEdit" name="hyper_parameters"/>
       </item>
+      <item>
+       <widget class="QTextEdit" name="log"/>
+      </item>
      </layout>
     </item>
     <item row="0" column="1" colspan="3">
-     <widget class="QwtPlot" name="reward_plot"/>
+     <widget class="QwtPlot" name="reward_plot">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
