@@ -34,7 +34,7 @@ s3_output_path = 's3://{}/'.format(s3_bucket)  # SDK appends the job name and ou
 # We define variables such as the job prefix for the training jobs and s3_prefix for storing metadata required for synchronization between the training and simulation jobs
 
 
-job_name_prefix = 'rl-deepracer'  # this should be MODEL_S3_PREFIX, but that already ends with "-sagemaker"
+job_name_prefix = 'rl-deepracer'  # this should be MODEL_S3_PREFIX, but that ends with "-sagemaker"
 
 # create unique job name
 tm = gmtime()
