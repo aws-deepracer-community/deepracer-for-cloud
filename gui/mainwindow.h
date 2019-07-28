@@ -32,6 +32,10 @@ private slots:
 
     void on_init_button_clicked();
 
+    void on_uploadbutton_clicked();
+
+    void on_delete_button_clicked();
+
 private:
     Ui::MainWindow *ui;
 
@@ -57,6 +61,7 @@ private:
     QString stop_script =  "../scripts/training/stop.sh";
     QString use_pretrained_script = "../scripts/training/set-last-run-to-pretrained.sh";
     QString upload_script = "../scripts/training/upload-snapshot.sh";
+    QString delete_script = "../scripts/training/delete-last-run.sh";
 
     //General status variables
     bool is_running = false;

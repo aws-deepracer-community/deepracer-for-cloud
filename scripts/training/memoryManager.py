@@ -53,4 +53,8 @@ if __name__ == "__main__":
                         help="The cap size (in GB) for the model folder in volumes/robo/checkpoint/checkpoint/",
                         type=float, default=3)
     args = parser.parse_args()
+    username = os.system("whoami")
+    if username is not "root":
+        print("USAGE ERROR: Run as root!")
+        exit(2)
     manage_memory(args)

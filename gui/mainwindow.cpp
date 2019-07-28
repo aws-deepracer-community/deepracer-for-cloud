@@ -213,3 +213,11 @@ void MainWindow::on_uploadbutton_clicked()
         QMessageBox::warning(this, "Warning", "Failed to run script upload-snapshot.sh");
     }
 }
+
+void MainWindow::on_delete_button_clicked()
+{
+    //Delete last model
+    if (!QProcess::startDetached("/bin/sh", QStringList{delete_script})){
+        QMessageBox::warning(this, "Warning", "Failed to run script delete-last-run.sh");
+    }
+}
