@@ -175,6 +175,11 @@ void MainWindow::on_start_button_clicked()
         QMessageBox::warning(this, "Warning", "Failed to run script start.sh");
     }
     ui->log->append("Starting training...");
+    if(!has_memory_manager){
+        int e = system("gnome-terminal");
+        ui->log->append("In order to run the memory manager copy and paste the following into the terminal that has been opened: sudo python ../scripts/training/memoryManager.py");
+        has_memory_manager = true;
+    }
 }
 
 void MainWindow::on_restart_button_clicked()

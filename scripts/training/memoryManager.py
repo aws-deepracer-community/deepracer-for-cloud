@@ -1,6 +1,7 @@
 import os
 import argparse
 import time
+import sys
 
 
 def get_folder_size(folder):
@@ -30,15 +31,15 @@ def handle_folder_files(path, name, max_size):
             else:
                 os.remove(file_list[1][1])
                 print("Removed: " + os.path.basename(file_list[1][1]))
-        print("")
 
 
 def manage_memory(args):
-    model_path = os.path.join(os.path.abspath(""), "../../docker/volumes/minio/bucket/rl-deepracer-sagemaker/model/")
-    checkpoint_path = os.path.join(os.path.abspath(""), "../../docker/volumes/robo/checkpoint/checkpoint/")
+    model_path = os.path.join(os.path.split(os.path.abspath(__file__))[0], "../../docker/volumes/minio/bucket/rl-deepracer-sagemaker/model/")
+    checkpoint_path = os.path.join(os.path.split(os.path.abspath(__file__))[0], "../../docker/volumes/robo/checkpoint/checkpoint/")
     while True:
         handle_folder_files(model_path, "model", args.sagemaker_model_cap)
         handle_folder_files(checkpoint_path, "checkpoint", args.checkpoint_cap)
+        print("")
 
         time.sleep(30)
 
@@ -53,8 +54,4 @@ if __name__ == "__main__":
                         help="The cap size (in GB) for the model folder in volumes/robo/checkpoint/checkpoint/",
                         type=float, default=3)
     args = parser.parse_args()
-    username = os.system("whoami")
-    if username is not "root":
-        print("USAGE ERROR: Run as root!")
-        exit(2)
     manage_memory(args)

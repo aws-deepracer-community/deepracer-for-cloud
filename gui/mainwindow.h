@@ -70,6 +70,7 @@ private:
     //General status variables
     bool is_running = false;
     bool is_pretrained = false;
+    bool has_memory_manager = false;
 };
 
 #endif // MAINWINDOW_H
