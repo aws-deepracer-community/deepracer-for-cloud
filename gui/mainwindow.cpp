@@ -8,6 +8,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    ui->reward_plot->setTitle("Reward Graph");
+    ui->reward_plot->setAxisTitle(0, "reward");
+    ui->reward_plot->setAxisTitle(2, "iteration");
     this->refresh();
     ui->log->append("Log:\n");
 }
@@ -73,6 +76,33 @@ void MainWindow::refresh(){
     ui->action_space->setText(current_action_space);
     ui->hyper_parameters->setText(current_hyperparameters);
     ui->track_name->setText(current_track);
+}
+
+void MainWindow::parse_logfile(){
+    //Read log file and update QVector of reward per iteration
+    QFile log_file(log_path);
+    if(!log_file.open(QIODevice::ReadOnly | QFile::Text)){
+        QMessageBox::warning(this, "Warning", "Cannot open log file: " + log_file.errorString());
+    } else {
+        int iteration = 0;
+        double reward_per_iteration = 0;
+        while(!log_file.atEnd()){
+            QString line =log_file.readLine();
+            QString marker = "SIM_TRACE_LOG:";
+            QStringList list;
+            if(line.contains(marker)){
+                list = line.right(line.length()-line.indexOf(marker)-marker.length()).split(",");
+                if(list[0].toInt() != iteration){
+                    reward_per_iteration += list[log_format.indexOf("reward")].toDouble();
+                    reward_per_iteration_vector.append(reward_per_iteration);
+                    reward_per_iteration = 0;
+                    iteration++;
+                } else {
+                    reward_per_iteration += list[log_format.indexOf("reward")].toDouble();
+                }
+            }
+        }
+    }
 }
 
 void MainWindow::on_save_button_clicked()
@@ -176,9 +206,20 @@ void MainWindow::on_start_button_clicked()
     }
     ui->log->append("Starting training...");
     if(!has_memory_manager){
-        int e = system("gnome-terminal");
-        ui->log->append("In order to run the memory manager copy and paste the following into the terminal that has been opened: sudo python ../scripts/training/memoryManager.py");
+        //int e = system("gnome-terminal");
+        //qDebug() << e;
+        ui->log->append("In order to run the memory manager copy and paste the following into a terminal: sudo python ../scripts/training/memoryManager.py");
         has_memory_manager = true;
+    }
+    //Access log file forupdating the graph
+    QFile latest_log_file(log_path);
+    if(!latest_log_file.open(QIODevice::ReadOnly | QFile::Text)){
+        QMessageBox::warning(this, "Warning", "Cannot open latest log file: " + latest_log_file.errorString());
+        //Have user enter a file manually as backup
+        log_path = QFileDialog::getOpenFileName(this,"Open the most recently created log file.");
+        ui->log->append("Reading " + log_path);
+    } else {
+        ui->log->append("Reading latest log file");
     }
 }
 
@@ -239,5 +280,16 @@ void MainWindow::on_delete_button_clicked()
 void MainWindow::on_refresh_button_clicked()
 {
     this->refresh();
+
+    parse_logfile();
+    QVector<double> x_vector;
+    for(int i=0;i<reward_per_iteration_vector.length();i++){
+        x_vector.append(i);
+    }
+    QwtArraySeriesData<double> data;
+    reward_per_iteration.setData(&data);
+    reward_per_iteration.attach(ui->reward_plot);
+    ui->reward_plot->replot();
+
     ui->log->append("GUI Refreshed.");
 }

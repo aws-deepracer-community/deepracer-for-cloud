@@ -8,6 +8,11 @@
 #include <QMessageBox>
 #include <QtDebug>
 #include <QProcess>
+#include <QFileDialog>
+#include <QVector>
+#include <qwt_plot.h>
+#include <qwt_plot_curve.h>
+#include <qwt_series_data.h>
 
 namespace Ui {
 class MainWindow;
@@ -22,6 +27,8 @@ public:
     ~MainWindow();
 
 private slots:
+    void parse_logfile();
+
     void refresh();
 
     void on_start_button_clicked();
@@ -66,6 +73,14 @@ private:
     QString use_pretrained_script = "../scripts/training/set-last-run-to-pretrained.sh";
     QString upload_script = "../scripts/training/upload-snapshot.sh";
     QString delete_script = "../scripts/training/delete-last-run.sh";
+
+    //Log file path and graphing vars
+    QString log_path = "../docker/volumes/robo/checkpoint/log/latest";
+    QStringList log_format{"iteration", "steps", "x", "y", "yaw", "steer","throttle", "action", "reward", "done",
+                           "on_track", "progress","closest_waypoint", "track_len", "timestamp"};
+    QVector<double> reward_per_iteration_vector{};
+    QwtPlotCurve reward_per_iteration{"Reward Per Iteration"};
+
 
     //General status variables
     bool is_running = false;
