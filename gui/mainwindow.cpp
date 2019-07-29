@@ -174,6 +174,7 @@ void MainWindow::on_start_button_clicked()
     if (!QProcess::startDetached("/bin/sh", QStringList{start_script})){
         QMessageBox::warning(this, "Warning", "Failed to run script start.sh");
     }
+    ui->log->append("Starting training...");
 }
 
 void MainWindow::on_restart_button_clicked()
@@ -189,6 +190,7 @@ void MainWindow::on_restart_button_clicked()
     if (!QProcess::startDetached("/bin/sh", QStringList{start_script})){
         QMessageBox::warning(this, "Warning", "Failed to run script start.sh");
     }
+    ui->log->append("Restarting...");
 }
 
 void MainWindow::on_stop_button_clicked()
@@ -198,6 +200,7 @@ void MainWindow::on_stop_button_clicked()
     if (!QProcess::startDetached("/bin/sh", QStringList{stop_script})){
         QMessageBox::warning(this, "Warning", "Failed to run script stop.sh");
     }
+    ui->log->append("Stopping training...");
 
 }
 
@@ -216,6 +219,7 @@ void MainWindow::on_uploadbutton_clicked()
     if (!QProcess::startDetached("/bin/sh", QStringList{upload_script})){
         QMessageBox::warning(this, "Warning", "Failed to run script upload-snapshot.sh");
     }
+    ui->log->append("Uploading model to S3...");
 }
 
 void MainWindow::on_delete_button_clicked()
@@ -224,9 +228,11 @@ void MainWindow::on_delete_button_clicked()
     if (!QProcess::startDetached("/bin/sh", QStringList{delete_script})){
         QMessageBox::warning(this, "Warning", "Failed to run script delete-last-run.sh");
     }
+    ui->log->append("Deleting last model...");
 }
 
 void MainWindow::on_refresh_button_clicked()
 {
     this->refresh();
+    ui->log->append("GUI Refreshed.");
 }
