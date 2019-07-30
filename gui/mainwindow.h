@@ -80,6 +80,8 @@ private:
                            "on_track", "progress","closest_waypoint", "track_len", "timestamp"};
     QVector<double> reward_per_iteration_vector{};
     QwtPlotCurve reward_per_iteration{"Reward Per Iteration"};
+    QVector<QPointF>* reward_per_iteration_samples = new QVector<QPointF>;
+    QwtPointSeriesData* reward_per_iteration_data = new QwtPointSeriesData;
 
 
     //General status variables

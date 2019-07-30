@@ -18,6 +18,8 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete reward_per_iteration_data;
+    delete reward_per_iteration_samples;
 }
 
 void MainWindow::refresh(){
@@ -208,7 +210,8 @@ void MainWindow::on_start_button_clicked()
     if(!has_memory_manager){
         //int e = system("gnome-terminal");
         //qDebug() << e;
-        ui->log->append("In order to run the memory manager copy and paste the following into a terminal: sudo python ../scripts/training/memoryManager.py");
+        //ui->log->append("In order to run the memory manager copy and paste the following into a terminal: sudo python ../scripts/training/memoryManager.py");
+        ui->log->append("In order to run the memory manager enter your password into the opened terminal window!");
         has_memory_manager = true;
     }
     //Access log file forupdating the graph
@@ -282,12 +285,11 @@ void MainWindow::on_refresh_button_clicked()
     this->refresh();
 
     parse_logfile();
-    QVector<double> x_vector;
     for(int i=0;i<reward_per_iteration_vector.length();i++){
-        x_vector.append(i);
+        reward_per_iteration_samples->push_back(QPointF(i, reward_per_iteration_vector[i]));
     }
-    QwtArraySeriesData<double> data;
-    reward_per_iteration.setData(&data);
+    reward_per_iteration_data->setSamples(*reward_per_iteration_samples);
+    reward_per_iteration.setData(reward_per_iteration_data);
     reward_per_iteration.attach(ui->reward_plot);
     ui->reward_plot->replot();
 
