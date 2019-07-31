@@ -16,9 +16,9 @@ ln -s ${SCRIPTPATH}/$(eval echo "~${USER}")/.aws  ${SCRIPTPATH}/docker/volumes/
 cd  ${SCRIPTPATH}
 git clone --recurse-submodules https://github.com/ARCC-RACE/deepracer.git
 
-git clone https://github.com/breadcentric/aws-deepracer-workshops.git && cd aws-deepracer-workshops && git checkout enhance-log-analysis && cd ..
+git clone https://github.com/ARCC-RACE/aws-deepracer-workshops.git && cd aws-deepracer-workshops && git checkout enhance-log-analysis && cd ..
 
-ln -s ${SCRIPTPATH}/../../aws-deepracer-workshops/log-analysis  ${SCRIPTPATH}/docker/volumes/log-analysis
+ln -s ${SCRIPTPATH}/aws-deepracer-workshops/log-analysis  ${SCRIPTPATH}/docker/volumes/log-analysis
 
 # setup symlink to rl-coach config file
 ln -s ${SCRIPTPATH}/deepracer/rl_coach/rl_deepracer_coach_robomaker.py ${SCRIPTPATH}/rl_deepracer_coach_robomaker.py
