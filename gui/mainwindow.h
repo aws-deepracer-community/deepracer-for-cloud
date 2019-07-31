@@ -10,9 +10,9 @@
 #include <QProcess>
 #include <QFileDialog>
 #include <QVector>
-#include <qwt_plot.h>
-#include <qwt_plot_curve.h>
-#include <qwt_series_data.h>
+#include <QtWebKitWidgets/QWebView>
+#include <QUrl>
+#include <QTimer>
 
 namespace Ui {
 class MainWindow;
@@ -30,6 +30,8 @@ private slots:
     void parse_logfile();
 
     void refresh();
+
+    void update_log_analysis_browser();
 
     void on_start_button_clicked();
 
@@ -73,15 +75,18 @@ private:
     QString use_pretrained_script = "../scripts/training/set-last-run-to-pretrained.sh";
     QString upload_script = "../scripts/training/upload-snapshot.sh";
     QString delete_script = "../scripts/training/delete-last-run.sh";
+    QString log_analysis_start_script = "../scripts/log-analysis/start.sh";
+    QProcess log_analysis;
+    QString log_analysis_stop_script = "../scripts/log-analysis/stop.sh";
 
     //Log file path and graphing vars
     QString log_path = "../docker/volumes/robo/checkpoint/log/latest";
     QStringList log_format{"iteration", "steps", "x", "y", "yaw", "steer","throttle", "action", "reward", "done",
                            "on_track", "progress","closest_waypoint", "track_len", "timestamp"};
     QVector<double> reward_per_iteration_vector{};
-    QwtPlotCurve reward_per_iteration{"Reward Per Iteration"};
-    QVector<QPointF>* reward_per_iteration_samples = new QVector<QPointF>;
-    QwtPointSeriesData* reward_per_iteration_data = new QwtPointSeriesData;
+
+    //Log analysis URL
+    QString log_analysis_url = "";
 
 
     //General status variables

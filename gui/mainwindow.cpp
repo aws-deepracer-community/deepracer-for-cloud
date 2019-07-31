@@ -8,18 +8,16 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->reward_plot->setTitle("Reward Graph");
-    ui->reward_plot->setAxisTitle(0, "reward");
-    ui->reward_plot->setAxisTitle(2, "iteration");
+    ui->webView->load(QUrl("https://arcc.ai/"));
     this->refresh();
     ui->log->append("Log:\n");
 }
 
 MainWindow::~MainWindow()
 {
+    this->on_stop_button_clicked();
+    log_analysis.kill();
     delete ui;
-    delete reward_per_iteration_data;
-    delete reward_per_iteration_samples;
 }
 
 void MainWindow::refresh(){
@@ -198,6 +196,7 @@ void MainWindow::on_save_button_clicked()
         track_file.close();
     }
 
+    ui->log->append("Saved");
 }
 
 void MainWindow::on_start_button_clicked()
@@ -207,23 +206,50 @@ void MainWindow::on_start_button_clicked()
         QMessageBox::warning(this, "Warning", "Failed to run script start.sh");
     }
     ui->log->append("Starting training...");
+    //Start the log analysis
+    log_analysis.start("/bin/bash", QStringList{log_analysis_start_script});
+    //Open up a memory manager (needs sudo password from user to actually run)
     if(!has_memory_manager){
-        //int e = system("gnome-terminal");
-        //qDebug() << e;
-        //ui->log->append("In order to run the memory manager copy and paste the following into a terminal: sudo python ../scripts/training/memoryManager.py");
         ui->log->append("In order to run the memory manager enter your password into the opened terminal window!");
         has_memory_manager = true;
     }
-    //Access log file forupdating the graph
-    QFile latest_log_file(log_path);
-    if(!latest_log_file.open(QIODevice::ReadOnly | QFile::Text)){
-        QMessageBox::warning(this, "Warning", "Cannot open latest log file: " + latest_log_file.errorString());
-        //Have user enter a file manually as backup
-        log_path = QFileDialog::getOpenFileName(this,"Open the most recently created log file.");
-        ui->log->append("Reading " + log_path);
-    } else {
-        ui->log->append("Reading latest log file");
+    //Access log file for updating the graph and log-analysis tools
+//    QFile latest_log_file(log_path);
+//    if(!latest_log_file.open(QIODevice::ReadOnly | QFile::Text)){
+//        QMessageBox::warning(this, "Warning", "Cannot open latest log file: " + latest_log_file.errorString());
+//        //Have user enter a file manually as backup
+//        log_path = QFileDialog::getOpenFileName(this,"Open the most recently created log file.");
+//        ui->log->append("Reading " + log_path);
+//    } else {
+//        ui->log->append("Reading latest log file");
+//    }
+
+    //Wait a second then try to read the URL and update the web widget
+    QTimer::singleShot(4000, this, SLOT(update_log_analysis_browser()));
+
+}
+
+void MainWindow::update_log_analysis_browser()
+{
+    //If read is ready get parse the URL
+    log_analysis.open();
+    QString log_tool_line = log_analysis.readAllStandardError();
+    qDebug() << log_tool_line;
+    if(log_tool_line.length() > 0){
+        if(log_tool_line.contains(":8888/")){
+            //url in format [I 21:39:38.232 LabApp] http://(a320a8bc2a3d or 127.0.0.1):8888/?token=2aec87a65be6be01f999f751d4c4a0ae35e34e5a7ce004bc
+            log_tool_line = log_tool_line.split('\n')[8];
+            log_analysis_url = "http://127.0.0.1" + log_tool_line.right(log_tool_line.indexOf(":8")+3);
+        }
     }
+    log_analysis.close();
+    if(log_analysis_url==""){
+        QMessageBox::warning(this, "Warning", "Could not read log analysis tool URL, refresh to try again");
+    } else {
+        ui->log->append("Log analysis URL loaded: " + log_analysis_url);
+        ui->webView->load(QUrl(log_analysis_url));
+    }
+
 }
 
 void MainWindow::on_restart_button_clicked()
@@ -250,6 +276,10 @@ void MainWindow::on_stop_button_clicked()
         QMessageBox::warning(this, "Warning", "Failed to run script stop.sh");
     }
     ui->log->append("Stopping training...");
+
+    if (!QProcess::startDetached("/bin/sh", QStringList{log_analysis_stop_script})){
+        QMessageBox::warning(this, "Warning", "Failed to run script log-analysis/stop.sh");
+    }
 
 }
 
@@ -284,14 +314,18 @@ void MainWindow::on_refresh_button_clicked()
 {
     this->refresh();
 
-    parse_logfile();
-    for(int i=0;i<reward_per_iteration_vector.length();i++){
-        reward_per_iteration_samples->push_back(QPointF(i, reward_per_iteration_vector[i]));
+//    parse_logfile();
+//    for(int i=0;i<reward_per_iteration_vector.length();i++){
+//        reward_per_iteration_samples->push_back(QPointF(i, reward_per_iteration_vector[i]));
+//    }
+//    reward_per_iteration_data->setSamples(*reward_per_iteration_samples);
+//    reward_per_iteration.setData(reward_per_iteration_data);
+//    reward_per_iteration.attach(ui->reward_plot);
+//    ui->reward_plot->replot();
+
+    if(log_analysis_url == ""){
+        this->update_log_analysis_browser();
     }
-    reward_per_iteration_data->setSamples(*reward_per_iteration_samples);
-    reward_per_iteration.setData(reward_per_iteration_data);
-    reward_per_iteration.attach(ui->reward_plot);
-    ui->reward_plot->replot();
 
     ui->log->append("GUI Refreshed.");
 }
