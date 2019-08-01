@@ -205,13 +205,30 @@ void MainWindow::on_save_button_clicked()
 
 void MainWindow::on_start_button_clicked()
 {
-    //Start the simulation and training instance
-    if (!QProcess::startDetached("/bin/sh", QStringList{start_script})){
-        QMessageBox::warning(this, "Warning", "Failed to run script start.sh");
-    }
     ui->log->append("Starting training...");
+    //Start the simulation and training instance
+    start_process.start("/bin/sh", QStringList{start_script});
+    connect(&start_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+    [=]  (int exitCode)
+    {
+        if(exitCode){
+            ui->log->append("Failed to start local training");
+        } else {
+            ui->log->append("Local training started successfully");
+        }
+    });
+
     //Start the log analysis
     log_analysis_start_process.start("/bin/bash", QStringList{log_analysis_start_script});
+    connect(&log_analysis_start_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+    [=]  (int exitCode)
+    {
+        if(exitCode){
+            ui->log->append("log analysis started with status ERROR");
+        } else {
+            ui->log->append("log analysis started with status NORMAL");
+        }
+    });
     //Open up a memory manager (needs sudo password from user to actually run)
     if(!has_memory_manager){
         ui->log->append("In order to run the memory manager enter your password into the opened terminal window!");
@@ -260,58 +277,119 @@ void MainWindow::on_restart_button_clicked()
 {
     //Restart the simulation and training instance using model that has been training (ie using pretrained model)
     //This allows you to tweak the parameters incrementally
-    if (!QProcess::startDetached("/bin/sh", QStringList{stop_script})){
-        QMessageBox::warning(this, "Warning", "Failed to run script start.sh");
-    }
-    if (!QProcess::startDetached("/bin/sh", QStringList{use_pretrained_script})){
-        QMessageBox::warning(this, "Warning", "Failed to run script set-last-run-to-pretrained.sh");
-    }
-    if (!QProcess::startDetached("/bin/sh", QStringList{start_script})){
-        QMessageBox::warning(this, "Warning", "Failed to run script start.sh");
-    }
     ui->log->append("Restarting...");
+    ui->log->append("Stoping last training instance...");
+    stop_process.start("/bin/sh", QStringList{stop_script});
+    connect(&stop_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+    [=]  (int exitCode)
+    {
+        if(exitCode){
+            ui->log->append("stopped with status ERROR");
+            ui->log->append("Restart failed!");
+        } else {
+            ui->log->append("stopped with status NORMAL");
+            use_pretrained_process.start("/bin/sh", QStringList{use_pretrained_script});
+            connect(&use_pretrained_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+            [=]  (int exitCode)
+            {
+                if(exitCode){
+                    ui->log->append("pretrained model loaded with status ERROR");
+                    ui->log->append("Restart failed!");
+                } else {
+                    ui->log->append("pretrained model loaded with status NORMAL");
+                    start_process.start("/bin/sh", QStringList{start_script});
+                    connect(&use_pretrained_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+                    [=]  (int exitCode)
+                    {
+                        if(exitCode){
+                            ui->log->append("restarted trainied with status ERROR");
+                            ui->log->append("Restart failed!");
+                        } else {
+                            ui->log->append("restarted training with status NORMAL");
+                        }
+                    });
+                }
+            });
+        }
+    });
 }
 
 void MainWindow::on_stop_button_clicked()
 {
     //Stop the training instance
     //Stop the simulation and training instance
-    if (!QProcess::startDetached("/bin/sh", QStringList{stop_script})){
-        QMessageBox::warning(this, "Warning", "Failed to run script stop.sh");
-    }
     ui->log->append("Stopping training...");
+    stop_process.start("/bin/sh", QStringList{stop_script});
+    connect(&stop_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+    [=]  (int exitCode)
+    {
+        if(exitCode){
+            ui->log->append("training stopped with status ERROR");
+        } else {
+            ui->log->append("training stopped  with status NORMAL");
+        }
+    });
 
-    if (!QProcess::startDetached("/bin/sh", QStringList{log_analysis_stop_script})){
-        QMessageBox::warning(this, "Warning", "Failed to run script log-analysis/stop.sh");
-    }
+    log_analysis_stop_process.start("/bin/sh", QStringList{log_analysis_stop_script});
+    connect(&log_analysis_stop_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+    [=]  (int exitCode)
+    {
+        if(exitCode){
+            ui->log->append("log analysis stopped with status ERROR");
+        } else {
+            ui->log->append("log analysis stopped  with status NORMAL");
+        }
+    });
 
 }
 
 void MainWindow::on_init_button_clicked()
 {
     //Init the Repository, this also can perform recovery if something brakes
-    if (!QProcess::startDetached("/bin/sh", QStringList{init_script})){
-        QMessageBox::warning(this, "Warning", "Failed to run script init.sh");
-    }
+    init_process.start("/bin/sh", QStringList{init_script});
+    connect(&init_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+    [=]  (int exitCode)
+    {
+        if(exitCode){
+            ui->log->append("init finished with status ERROR");
+        } else {
+            ui->log->append("init finished with status NORMAL");
+        }
+    });
+
     ui->log->append("Wait while the init script runs; this may take a minute or two. Once the init script finishes you may run refresh to see reward function, action space, and hyperparameters.");
 }
 
 void MainWindow::on_uploadbutton_clicked()
 {
     //Upload snapshot to S3, make sure envs are set
-    if (!QProcess::startDetached("/bin/sh", QStringList{upload_script})){
-        QMessageBox::warning(this, "Warning", "Failed to run script upload-snapshot.sh");
-    }
     ui->log->append("Uploading model to S3...");
+    upload_process.start("/bin/sh", QStringList{upload_script});
+    connect(&upload_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+    [=]  (int exitCode)
+    {
+        if(exitCode){
+            ui->log->append("upload finished with status ERROR, make sure that the s3 bucket and s3 prefix and filled out!");
+        } else {
+            ui->log->append("upload finished with status NORMAL");
+        }
+    });
 }
 
 void MainWindow::on_delete_button_clicked()
 {
     //Delete last model
-    if (!QProcess::startDetached("/bin/sh", QStringList{delete_script})){
-        QMessageBox::warning(this, "Warning", "Failed to run script delete-last-run.sh");
-    }
     ui->log->append("Deleting last model...");
+    delete_process.start("/bin/sh", QStringList{delete_script});
+    connect(&delete_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+    [=]  (int exitCode)
+    {
+        if(exitCode){
+            ui->log->append("model deleted with status ERROR");
+        } else {
+            ui->log->append("model deleted with status NORMAL");
+        }
+    });
 }
 
 void MainWindow::on_refresh_button_clicked()
