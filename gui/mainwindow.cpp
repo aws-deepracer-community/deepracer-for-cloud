@@ -16,7 +16,11 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     this->on_stop_button_clicked();
-    log_analysis.kill();
+    stop_process.waitForFinished();
+
+    //kill all the processes
+    log_analysis_start_process.kill();
+
     delete ui;
 }
 
@@ -207,7 +211,7 @@ void MainWindow::on_start_button_clicked()
     }
     ui->log->append("Starting training...");
     //Start the log analysis
-    log_analysis.start("/bin/bash", QStringList{log_analysis_start_script});
+    log_analysis_start_process.start("/bin/bash", QStringList{log_analysis_start_script});
     //Open up a memory manager (needs sudo password from user to actually run)
     if(!has_memory_manager){
         ui->log->append("In order to run the memory manager enter your password into the opened terminal window!");
@@ -224,7 +228,7 @@ void MainWindow::on_start_button_clicked()
 //        ui->log->append("Reading latest log file");
 //    }
 
-    //Wait a second then try to read the URL and update the web widget
+    //Wait 4 seconds then try to read the URL and update the web widget
     QTimer::singleShot(4000, this, SLOT(update_log_analysis_browser()));
 
 }
@@ -232,8 +236,8 @@ void MainWindow::on_start_button_clicked()
 void MainWindow::update_log_analysis_browser()
 {
     //If read is ready get parse the URL
-    log_analysis.open();
-    QString log_tool_line = log_analysis.readAllStandardError();
+    log_analysis_start_process.open();
+    QString log_tool_line = log_analysis_start_process.readAllStandardError();
     qDebug() << log_tool_line;
     if(log_tool_line.length() > 0){
         if(log_tool_line.contains(":8888/")){
@@ -242,7 +246,7 @@ void MainWindow::update_log_analysis_browser()
             log_analysis_url = "http://127.0.0.1" + log_tool_line.right(log_tool_line.indexOf(":8")+3);
         }
     }
-    log_analysis.close();
+    log_analysis_start_process.close();
     if(log_analysis_url==""){
         QMessageBox::warning(this, "Warning", "Could not read log analysis tool URL, refresh to try again");
     } else {

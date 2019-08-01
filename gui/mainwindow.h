@@ -68,16 +68,23 @@ private:
     QStringList hyperparams{"batch_size","num_epochs","stack_size","lr","exploration_type","e_greedy_value","epsilon_steps",
                             "beta_entropy","discount_factor","loss_type","num_episodes_between_training","term_cond_max_episodes",
                             "term_cond_avg_score"};
-    //Script Paths
+    //Script Paths and process definintions
     QString init_script =  "../init.sh";
+    QProcess init_process;
     QString start_script =  "../scripts/training/start.sh";
+    QProcess start_process;
     QString stop_script =  "../scripts/training/stop.sh";
+    QProcess stop_process;
     QString use_pretrained_script = "../scripts/training/set-last-run-to-pretrained.sh";
+    QProcess use_pretrained_process;
     QString upload_script = "../scripts/training/upload-snapshot.sh";
+    QProcess upload_process;
     QString delete_script = "../scripts/training/delete-last-run.sh";
+    QProcess delete_process;
     QString log_analysis_start_script = "../scripts/log-analysis/start.sh";
-    QProcess log_analysis;
+    QProcess log_analysis_start_process;
     QString log_analysis_stop_script = "../scripts/log-analysis/stop.sh";
+    QProcess log_analysis_stop_process;
 
     //Log file path and graphing vars
     QString log_path = "../docker/volumes/robo/checkpoint/log/latest";
