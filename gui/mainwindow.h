@@ -51,6 +51,18 @@ private slots:
 
     void go_to_notebook();
 
+    void on_use_pretrained_button_clicked();
+
+    void on_reward_function_textChanged();
+
+    void on_action_space_textChanged();
+
+    void on_track_name_textChanged(const QString &arg1);
+
+    void on_hyper_parameters_textChanged();
+
+    void on_log_textChanged();
+
 private:
     Ui::MainWindow *ui;
 
@@ -83,10 +95,8 @@ private:
     QProcess upload_process;
     QString delete_script = "../scripts/training/delete-last-run.sh";
     QProcess delete_process;
-    QString log_analysis_start_script = "../scripts/log-analysis/start.sh";
-    QProcess log_analysis_start_process;
-    QString log_analysis_stop_script = "../scripts/log-analysis/stop.sh";
-    QProcess log_analysis_stop_process;
+    QString log_analysis_script = "../scripts/log-analysis/start.sh";
+    QProcess log_analysis_process;
 
     //Log file path and graphing vars
     QString log_path = "../docker/volumes/robo/checkpoint/log/latest";
@@ -102,6 +112,9 @@ private:
     bool is_running = false;
     bool is_pretrained = false;
     bool has_memory_manager = false;
+    bool has_log_analysis = false;
+    bool is_saved = true; //Used for warning the user if they are using something that may required something that has not been saved
+    bool use_pretrained = false;
 };
 
 #endif // MAINWINDOW_H

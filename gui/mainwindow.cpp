@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 
 //sudo apt-get install libqt5svg5*
+//sudo apt-get install jupyter
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -9,18 +10,21 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->webView->load(QUrl("https://arcc-race.github.io/deepracer-wiki/#/"));
+    ui->log->append("Log:\n");
 
     this->refresh();
-    ui->log->append("Log:\n");
 }
 
 MainWindow::~MainWindow()
 {
-    this->on_stop_button_clicked();
+    stop_process.start("/bin/sh", QStringList{stop_script});
     stop_process.waitForFinished();
 
     //kill all the processes
-    log_analysis_start_process.kill();
+    log_analysis_process.kill();
+    start_process.kill();
+    stop_process.kill();
+
 
     delete ui;
 }
@@ -63,6 +67,14 @@ void MainWindow::refresh(){
             text += "\n";
         }
         current_hyperparameters = text;
+        //Check if is_using pretrained
+        if(rl_file.contains("# \"pretrained")){
+            is_pretrained = false;
+            ui->log->append("local trainer is NOT using pretrained model");
+        } else {
+            is_pretrained = true;
+            ui->log->append("local trainer is using pretrained model");
+        }
         hyperparameters_file.close();
     }
 
@@ -202,6 +214,7 @@ void MainWindow::on_save_button_clicked()
     }
 
     ui->log->append("Saved");
+    is_saved = true;
 }
 
 void MainWindow::on_start_button_clicked()
@@ -214,48 +227,54 @@ void MainWindow::on_start_button_clicked()
     {
         if(exitCode){
             ui->log->append("Failed to start local training");
+            start_process.kill();
         } else {
             ui->log->append("Local training started successfully");
+            start_process.kill();
         }
     });
 
     //Start the log analysis
-    log_analysis_start_process.start("/bin/bash", QStringList{log_analysis_start_script});
-    connect(&log_analysis_start_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
-    [=]  (int exitCode)
-    {
-        if(exitCode){
-            ui->log->append("log analysis started with status ERROR");
-        } else {
-            ui->log->append("log analysis started with status NORMAL");
+    if(!has_log_analysis){
+        log_analysis_process.start("/bin/bash", QStringList{log_analysis_script});
+        connect(&log_analysis_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+        [=]  (int exitCode)
+        {
+            if(exitCode && !log_analysis_url.contains("http")){
+                ui->log->append("log analysis started with an ERROR");
+                log_analysis_process.kill();
+            } else {
+                ui->log->append("log analysis started correctly");
+                has_log_analysis = true;
+            }
+        });
+        //Open up a memory manager (needs sudo password from user to actually run)
+        if(!has_memory_manager){
+            ui->log->append("In order to run the memory manager enter your password into the opened terminal window!");
+            has_memory_manager = true;
         }
-    });
-    //Open up a memory manager (needs sudo password from user to actually run)
-    if(!has_memory_manager){
-        ui->log->append("In order to run the memory manager enter your password into the opened terminal window!");
-        has_memory_manager = true;
-    }
-    //Access log file for updating the graph and log-analysis tools
-//    QFile latest_log_file(log_path);
-//    if(!latest_log_file.open(QIODevice::ReadOnly | QFile::Text)){
-//        QMessageBox::warning(this, "Warning", "Cannot open latest log file: " + latest_log_file.errorString());
-//        //Have user enter a file manually as backup
-//        log_path = QFileDialog::getOpenFileName(this,"Open the most recently created log file.");
-//        ui->log->append("Reading " + log_path);
-//    } else {
-//        ui->log->append("Reading latest log file");
-//    }
+        //Access log file for updating the graph and log-analysis tools
+        //    QFile latest_log_file(log_path);
+        //    if(!latest_log_file.open(QIODevice::ReadOnly | QFile::Text)){
+        //        QMessageBox::warning(this, "Warning", "Cannot open latest log file: " + latest_log_file.errorString());
+        //        //Have user enter a file manually as backup
+        //        log_path = QFileDialog::getOpenFileName(this,"Open the most recently created log file.");
+        //        ui->log->append("Reading " + log_path);
+        //    } else {
+        //        ui->log->append("Reading latest log file");
+        //    }
 
-    //Wait 4 seconds then try to read the URL and update the web widget
-    QTimer::singleShot(4000, this, SLOT(update_log_analysis_browser()));
+        //Wait 4 seconds then try to read the URL and update the web widget
+        //QTimer::singleShot(4000, this, SLOT(update_log_analysis_browser()));
+    }
 
 }
 
 void MainWindow::update_log_analysis_browser()
 {
     //If read is ready get parse the URL
-    log_analysis_start_process.open();
-    QString log_tool_line = log_analysis_start_process.readAllStandardError();
+    log_analysis_process.open();
+    QString log_tool_line = log_analysis_process.readAllStandardError();
     qDebug() << log_tool_line;
     QStringList jupyter_output = log_tool_line.split('\n');
     log_analysis_url = jupyter_output[jupyter_output.length()-2].replace(" ", "");
@@ -268,7 +287,7 @@ void MainWindow::update_log_analysis_browser()
 //            log_analysis_url = "http://127.0.0.1" + log_tool_line.right(log_tool_line.indexOf(":8")+3);
 //        }
 //    }
-    log_analysis_start_process.close();
+    log_analysis_process.close();
     if(log_analysis_url==""){
         QMessageBox::warning(this, "Warning", "Could not read log analysis tool URL, refresh to try again");
     } else {
@@ -329,46 +348,47 @@ void MainWindow::on_stop_button_clicked()
 {
     //Stop the training instance
     //Stop the simulation and training instance
-    ui->log->append("Stopping training...");
-    stop_process.start("/bin/sh", QStringList{stop_script});
-    connect(&stop_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
-    [=]  (int exitCode)
-    {
-        if(exitCode){
-            ui->log->append("training stopped with status ERROR");
-        } else {
-            ui->log->append("training stopped  with status NORMAL");
-        }
-    });
-
-    log_analysis_stop_process.start("/bin/sh", QStringList{log_analysis_stop_script});
-    connect(&log_analysis_stop_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
-    [=]  (int exitCode)
-    {
-        if(exitCode){
-            ui->log->append("log analysis stopped with status ERROR");
-        } else {
-            ui->log->append("log analysis stopped  with status NORMAL");
-        }
-    });
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Confirmation", "Are you sure you want to stop training?",QMessageBox::Yes|QMessageBox::No);
+    if(reply == QMessageBox::Yes){
+        ui->log->append("Stopping training...");
+        stop_process.start("/bin/sh", QStringList{stop_script});
+        connect(&stop_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+        [=]  (int exitCode)
+        {
+            if(exitCode){
+                ui->log->append("training stopped with status ERROR");
+                stop_process.kill();
+            } else {
+                ui->log->append("training stopped  with status NORMAL");
+                stop_process.kill();
+            }
+        });
+    }
 
 }
 
 void MainWindow::on_init_button_clicked()
 {
     //Init the Repository, this also can perform recovery if something brakes
-    init_process.start("/bin/sh", QStringList{init_script});
-    connect(&init_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
-    [=]  (int exitCode)
-    {
-        if(exitCode){
-            ui->log->append("init finished with status ERROR");
-        } else {
-            ui->log->append("init finished with status NORMAL");
-        }
-    });
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Confirmation", "Are you sure you want to init local training? All files not saved will be lost!",QMessageBox::Yes|QMessageBox::No);
+    if(reply == QMessageBox::Yes){
+        init_process.start("/bin/sh", QStringList{init_script});
+        connect(&init_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+        [=]  (int exitCode)
+        {
+            if(exitCode){
+                ui->log->append("init finished with status ERROR");
+                init_process.kill();
+            } else {
+                ui->log->append("init finished with status NORMAL");
+                init_process.kill();
+            }
+        });
 
-    ui->log->append("Wait while the init script runs; this may take a minute or two. Once the init script finishes you may run refresh to see reward function, action space, and hyperparameters.");
+        ui->log->append("Wait while the init script runs; this may take a minute or two. Once the init script finishes you may run refresh to see reward function, action space, and hyperparameters.");
+    }
 }
 
 void MainWindow::on_uploadbutton_clicked()
@@ -381,8 +401,10 @@ void MainWindow::on_uploadbutton_clicked()
     {
         if(exitCode){
             ui->log->append("upload finished with status ERROR, make sure that the s3 bucket and s3 prefix and filled out!");
+            upload_process.kill();
         } else {
             ui->log->append("upload finished with status NORMAL");
+            upload_process.kill();
         }
     });
 }
@@ -390,35 +412,104 @@ void MainWindow::on_uploadbutton_clicked()
 void MainWindow::on_delete_button_clicked()
 {
     //Delete last model
-    ui->log->append("Deleting last model...");
-    delete_process.start("/bin/sh", QStringList{delete_script});
-    connect(&delete_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
-    [=]  (int exitCode)
-    {
-        if(exitCode){
-            ui->log->append("model deleted with status ERROR");
-        } else {
-            ui->log->append("model deleted with status NORMAL");
-        }
-    });
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Confirmation", "Are you sure you want to delete the most recent local model?",QMessageBox::Yes|QMessageBox::No);
+    if(reply == QMessageBox::Yes){
+        ui->log->append("Deleting last model...");
+        delete_process.start("/bin/sh", QStringList{delete_script});
+        connect(&delete_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+        [=]  (int exitCode)
+        {
+            if(exitCode){
+                ui->log->append("model deleted with status ERROR");
+                delete_process.kill();
+            } else {
+                ui->log->append("model deleted with status NORMAL");
+                delete_process.kill();
+            }
+        });
+    }
 }
 
 void MainWindow::on_refresh_button_clicked()
 {
-    this->refresh();
-
-//    parse_logfile();
-//    for(int i=0;i<reward_per_iteration_vector.length();i++){
-//        reward_per_iteration_samples->push_back(QPointF(i, reward_per_iteration_vector[i]));
-//    }
-//    reward_per_iteration_data->setSamples(*reward_per_iteration_samples);
-//    reward_per_iteration.setData(reward_per_iteration_data);
-//    reward_per_iteration.attach(ui->reward_plot);
-//    ui->reward_plot->replot();
-
-    if(log_analysis_url == ""){
-        this->update_log_analysis_browser();
+    QMessageBox::StandardButton reply;
+    if(!is_saved){
+        reply = QMessageBox::question(this, "Confirmation", "Are you sure you want to refresh the GUI? Not all changes have been saved!",QMessageBox::Yes|QMessageBox::No);
+        if(reply == QMessageBox::Yes){
+            this->refresh();
+            ui->log->append("GUI refreshed.");
+        } else {
+            ui->log->append("GUI refresh aborted.");
+        }
+    } else {
+        this->refresh();
+        ui->log->append("GUI refreshed.");
     }
+}
 
-    ui->log->append("GUI Refreshed.");
+void MainWindow::on_use_pretrained_button_clicked()
+{
+    //Use pretrained lines are in the hyperparameters file
+    QFile hyperparameters_file(hyperparameters_path);
+    if(!hyperparameters_file.open(QIODevice::ReadWrite | QFile::Text)){
+        QMessageBox::warning(this, "Warning", "Cannot open hyperparameters file: " + hyperparameters_file.errorString());
+    } else {
+        QTextStream in(&hyperparameters_file);
+        QString hyperparameters_pretrained = in.readAll();
+        int pretrained_bucket_index = hyperparameters_pretrained.indexOf("pretrained_s3_bucket")-3;
+        int pretrained_prefix_index = hyperparameters_pretrained.indexOf("pretrained_s3_prefix")-3;
+        int pretrained_comma_index = hyperparameters_pretrained.indexOf("# place comma here if using pretrained!")-2;
+        if(!is_pretrained){
+            QMessageBox::StandardButton reply;
+            reply = QMessageBox::question(this, "Confirmation", "Are you sure you want to turn ON use_pretrained? Make sure you have saved all configurations before proceeding!",QMessageBox::Yes|QMessageBox::No);
+            if(reply == QMessageBox::Yes){
+                hyperparameters_pretrained[pretrained_bucket_index] = ' ';
+                hyperparameters_pretrained[pretrained_prefix_index] = ' ';
+                hyperparameters_pretrained[pretrained_comma_index] = ',';
+                is_pretrained = true;
+                ui->log->append("local trainer set to use pretrained model");
+            }
+        } else {
+            QMessageBox::StandardButton reply;
+            reply = QMessageBox::question(this, "Confirmation", "Are you sure you want turn OFF use_pretrained? Make sure you have saved all configurations before proceeding!",QMessageBox::Yes|QMessageBox::No);
+            if(reply == QMessageBox::Yes){
+                hyperparameters_pretrained[pretrained_bucket_index] = '#';
+                hyperparameters_pretrained[pretrained_prefix_index] = '#';
+                hyperparameters_pretrained[pretrained_comma_index] = ' ';
+                is_pretrained = false;
+                ui->log->append("local trainer will not use pretrained model");
+            }
+        }
+        //Write edited text back into file
+        QTextStream out(&hyperparameters_file);
+        hyperparameters_file.resize(0); //clear the existing file
+        out << hyperparameters_pretrained; //First line contains new track name
+    }
+    hyperparameters_file.close();
+}
+
+void MainWindow::on_reward_function_textChanged()
+{
+    is_saved = false;
+}
+
+void MainWindow::on_action_space_textChanged()
+{
+    is_saved = false;
+}
+
+void MainWindow::on_track_name_textChanged(const QString &arg1)
+{
+    is_saved = false;
+}
+
+void MainWindow::on_hyper_parameters_textChanged()
+{
+    is_saved = false;
+}
+
+void MainWindow::on_log_textChanged()
+{
+    is_saved = false;
 }
