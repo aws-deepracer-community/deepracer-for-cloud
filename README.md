@@ -6,10 +6,11 @@ a quick way to get up and running with local deepracer training environment
 
 #### Local Environment Setup
 
-This section provides steps to setup a local environment in a dual-boot configuration and uses the Anaconda python distribution.  It meets the Prerequisites defined below, before being able to run ./init.sh.
+This section provides steps to setup a local environment in a dual-boot configuration and uses the Anaconda python distribution to manage package installation on the host.  It meets the Prerequisites defined below, before being able to run ./init.sh.
 
 * This setup describes a local dual-boot environment with Windows 10 and Ubuntu 18.04.
-* I chose the Anaconda Python distribution to manage Python virtual environments, instead of the standard virtualenv, because Anaconda comes with additional scientific and analytic libraries that are tested working together.  For example, when you install Tensorflow using Anaconda (e.g. conda install tensorflow-gpu), it automatically includes compatible versions of CUDA and cuDNN, which are required to access Nvidia’s GPU parallel processing.
+* I chose the Anaconda Python distribution to install Nvidia Cuda and the cuDNN library.
+* Note - Tensorflow and all other python requirements are taken care of in this repo's Dockerfile.
 
 ##### 1. Install Ubuntu 18.04
 
@@ -21,16 +22,19 @@ https://win10faq.com/shrink-partition-windows-10/?source=post_page--------------
 
 ##### 2. Install Docker.io
 
-	sudo apt install docker.io*
+	sudo apt install docker.io
 
 Additionally, make sure your user-id can run docker without sudo:
 https://docs.docker.com/install/linux/linux-postinstall/
 
 ##### 3. Install nvidia-docker
 
-The NVIDIA Container Toolkit allows users to build and run GPU accelerated Docker containers:  https://github.com/NVIDIA/nvidia-docker
+The NVIDIA Container Toolkit allows users to build and run GPU accelerated Docker containers.  
+Nvidia-docker essentially exposes the GPU to the containers to use:  https://github.com/NVIDIA/nvidia-docker
 
-	curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+	distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+	
+	curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
 
 	curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
 
@@ -48,10 +52,10 @@ Check for driver version here according to your GPU(s):  https://www.nvidia.com/
 	sudo apt-get install screen
 	screen
 	sudo apt install nvidia-driver-430 && sudo reboot 
-(430 is a driver version that is compatible with my GPU, according to that nvidia website)
+Note: 430 is a driver version that is compatible with my GPU, according to that nvidia website
 
+Verify the driver installation:
 	nvidia-smi  
-(Verify driver installation)
 
 ##### 5. Download the Anaconda python distribution
 
@@ -69,52 +73,30 @@ Verify the integrity of the file by matching the md5 hash to the one on the Anac
 
 	bash <enter-the-desired-filename-from-the-Anaconda-repo>
 	"yes" for using the default directory location
-	activate Anaconda:  source ~/.bashrc
+
+Activate Anaconda:  
+	
+	source ~/.bashrc
 	
 Make sure conda works:
 
 	conda list
-
-##### 7. Create your virtual env, making sure to use Python 3.x that is less than or equal to Python 3.6 (i.e. do not use 3.7)
-
-	conda create --name <your_environment_name> python=3.6
-	
-Activate the virtual env:  
-
-	conda activate <your_environment_name>
-
-From now on, you'll also need to activate this env to use this service.
 	
 ##### 8. Install vnc viewer on your local machine
 
 This doc is straight forward: https://www.techspot.com/downloads/5760-vnc-viewer.html
 
-##### 9. Get the necessary, specific conda python packages:
+##### 9. Install libraries to access the GOU hardware:
 
-Another benefit of using Anaconda is that its Tensorflow library uses the Math Kernel library(MKL) more efficiently.
-(source: https://www.kdnuggets.com/2018/10/stop-installing-tensorflow-using-pip-performance-sake.html)  
-
-I specified these versions because I've already verified they work together:
-
-	conda install \
-	tensorflow-gpu==1.13.1 \
-	cudnn==7.3.1 \
-	h5py
-
-Install cuda 10.0 as 10.1 is not compatible with this Tensorflow 1.13.1.
-
+	conda install cudnn==7.3.1
 	conda install -c fragcolor cuda10.0
 
-Verify packages installed.
+Verify libraries installed.
 
 	conda list
 
-##### 10. Easy test to verify that Tensorflow is working:  
-https://www.oreilly.com/library/view/deep-learning-with/9781786469786/3bdee8f3-ca88-438a-8141-42d2a12db71d.xhtml
-
 ##### 11. Setup AWS CLI
 
-	remember: conda activate <env name>
 	pip install -U awscli
 	
 Then Follow this: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
@@ -122,12 +104,11 @@ Then Follow this: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-conf
 ##### 12. Run Init.sh from this repo (refer to the rest of this doc for script details) 
 
 Note init.sh basically performs these steps so you don't have to do them manually:
-1.	Clones Chris's repo:  https://github.com/crr0004/deepracer.git
-2.	Does a pip install -U sagemaker-python-sdk/ awscli ipython pandas "urllib3==1.22" "pyyaml==3.13"
-3.	Does a mkdir -p ~/.sagemaker && cp config.yaml ~/.sagemaker
-4.	Sets the image name in rl_deepracer_coach_robomaker.py  to "crr0004/sagemaker-rl-tensorflow:nvidia”
-5.	Also sets the instance_type in rl_deepracer_coach_robomaker.py to “local_gpu”
-6.	Copies the reward.py and model-metadata files into your Minio bucket
+1. Clones Chris's repo:  https://github.com/crr0004/deepracer.git
+2. Does a mkdir -p ~/.sagemaker && cp config.yaml ~/.sagemaker
+3. Sets the image name in rl_deepracer_coach_robomaker.py  to "crr0004/sagemaker-rl-tensorflow:nvidia”
+4. Also sets the instance_type in rl_deepracer_coach_robomaker.py to “local_gpu”
+5. Copies the reward.py and model-metadata files into your Minio bucket
 
 ---
 #### Prerequisites
