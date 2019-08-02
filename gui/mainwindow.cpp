@@ -8,7 +8,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->webView->load(QUrl("https://arcc.ai/"));
+    ui->webView->load(QUrl("https://arcc-race.github.io/deepracer-wiki/#/"));
+
     this->refresh();
     ui->log->append("Log:\n");
 }
@@ -256,21 +257,31 @@ void MainWindow::update_log_analysis_browser()
     log_analysis_start_process.open();
     QString log_tool_line = log_analysis_start_process.readAllStandardError();
     qDebug() << log_tool_line;
-    if(log_tool_line.length() > 0){
-        if(log_tool_line.contains(":8888/")){
-            //url in format [I 21:39:38.232 LabApp] http://(a320a8bc2a3d or 127.0.0.1):8888/?token=2aec87a65be6be01f999f751d4c4a0ae35e34e5a7ce004bc
-            log_tool_line = log_tool_line.split('\n')[8];
-            log_analysis_url = "http://127.0.0.1" + log_tool_line.right(log_tool_line.indexOf(":8")+3);
-        }
-    }
+    QStringList jupyter_output = log_tool_line.split('\n');
+    log_analysis_url = jupyter_output[jupyter_output.length()-2].replace(" ", "");
+    qDebug() << log_analysis_url;
+// OLD PARSER
+//    if(log_tool_line.length() > 0){
+//        if(log_tool_line.contains(":8888/")){
+//            //url in format [I 21:39:38.232 LabApp] http://(a320a8bc2a3d or 127.0.0.1):8888/?token=2aec87a65be6be01f999f751d4c4a0ae35e34e5a7ce004bc
+//            log_tool_line = log_tool_line.split('\n')[8];
+//            log_analysis_url = "http://127.0.0.1" + log_tool_line.right(log_tool_line.indexOf(":8")+3);
+//        }
+//    }
     log_analysis_start_process.close();
     if(log_analysis_url==""){
         QMessageBox::warning(this, "Warning", "Could not read log analysis tool URL, refresh to try again");
     } else {
         ui->log->append("Log analysis URL loaded: " + log_analysis_url);
         ui->webView->load(QUrl(log_analysis_url));
+        //Refresh the page to get to the notebook
+        //QTimer::singleShot(500, this, SLOT(go_to_notebook()));
     }
 
+}
+
+void MainWindow::go_to_notebook(){
+    ui->webView->load(QUrl("http://localhost:8888/notebooks/DeepRacer%20Log%20Analysis.ipynb"));
 }
 
 void MainWindow::on_restart_button_clicked()

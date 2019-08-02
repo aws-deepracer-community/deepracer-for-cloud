@@ -49,6 +49,8 @@ private slots:
 
     void on_refresh_button_clicked();
 
+    void go_to_notebook();
+
 private:
     Ui::MainWindow *ui;
 
