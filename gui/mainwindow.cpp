@@ -17,6 +17,21 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    delete ui;
+}
+
+void MainWindow::closeEvent (QCloseEvent *event)
+{
+    if(!is_saved){
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, "Confirmation", "Your DeepRacer settings are not saved! Would you like to save them?",QMessageBox::Yes|QMessageBox::No);
+        if(reply == QMessageBox::Yes){
+            this->on_save_button_clicked();
+        }
+    }
+
+    //Cleanup any programs that are still running
+//    ui->log->append("Stopping running programs"); //Causes bug do not use
     stop_process.start("/bin/sh", QStringList{stop_script});
     stop_process.waitForFinished();
 
@@ -25,8 +40,7 @@ MainWindow::~MainWindow()
     start_process.kill();
     stop_process.kill();
 
-
-    delete ui;
+    event->accept();
 }
 
 void MainWindow::refresh(){

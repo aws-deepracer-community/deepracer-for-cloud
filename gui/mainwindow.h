@@ -13,6 +13,7 @@
 #include <QtWebKitWidgets/QWebView>
 #include <QUrl>
 #include <QTimer>
+#include <QCloseEvent>
 
 namespace Ui {
 class MainWindow;
@@ -27,6 +28,7 @@ public:
     ~MainWindow();
 
 private slots:
+
     void parse_logfile();
 
     void refresh();
@@ -63,6 +65,8 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+
+    void closeEvent(QCloseEvent *event); //Do whatever needs to be done before window closes
 
     //File paths for all the files that will be manipulated
     QString reward_func_path =  "../docker/volumes/minio/bucket/custom_files/reward.py";
