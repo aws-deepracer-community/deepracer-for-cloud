@@ -57,11 +57,9 @@ private slots:
 
     void on_action_space_textChanged();
 
-    void on_track_name_textChanged(const QString &arg1);
+    void on_track_name_textChanged();
 
     void on_hyper_parameters_textChanged();
-
-    void on_log_textChanged();
 
 private:
     Ui::MainWindow *ui;

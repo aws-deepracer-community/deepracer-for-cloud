@@ -93,6 +93,8 @@ void MainWindow::refresh(){
     ui->action_space->setText(current_action_space);
     ui->hyper_parameters->setText(current_hyperparameters);
     ui->track_name->setText(current_track);
+
+    is_saved = true;
 }
 
 void MainWindow::parse_logfile(){
@@ -265,7 +267,7 @@ void MainWindow::on_start_button_clicked()
         //    }
 
         //Wait 4 seconds then try to read the URL and update the web widget
-        //QTimer::singleShot(4000, this, SLOT(update_log_analysis_browser()));
+        QTimer::singleShot(4000, this, SLOT(update_log_analysis_browser()));
     }
 
 }
@@ -294,13 +296,16 @@ void MainWindow::update_log_analysis_browser()
         ui->log->append("Log analysis URL loaded: " + log_analysis_url);
         ui->webView->load(QUrl(log_analysis_url));
         //Refresh the page to get to the notebook
-        //QTimer::singleShot(500, this, SLOT(go_to_notebook()));
+        QTimer::singleShot(200, this, SLOT(go_to_notebook()));
     }
 
 }
 
 void MainWindow::go_to_notebook(){
-    ui->webView->load(QUrl("http://localhost:8888/notebooks/DeepRacer%20Log%20Analysis.ipynb"));
+    QString notebook_url = log_analysis_url.left(log_analysis_url.indexOf("\?"));
+    notebook_url += "notebooks/DeepRacer%20Log%20Analysis.ipynb";
+    qDebug() << notebook_url;
+    ui->webView->load(QUrl(notebook_url));
 }
 
 void MainWindow::on_restart_button_clicked()
@@ -459,7 +464,7 @@ void MainWindow::on_use_pretrained_button_clicked()
         QString hyperparameters_pretrained = in.readAll();
         int pretrained_bucket_index = hyperparameters_pretrained.indexOf("pretrained_s3_bucket")-3;
         int pretrained_prefix_index = hyperparameters_pretrained.indexOf("pretrained_s3_prefix")-3;
-        int pretrained_comma_index = hyperparameters_pretrained.indexOf("# place comma here if using pretrained!")-2;
+        int pretrained_comma_index = hyperparameters_pretrained.indexOf("# place comma here")-2;
         if(!is_pretrained){
             QMessageBox::StandardButton reply;
             reply = QMessageBox::question(this, "Confirmation", "Are you sure you want to turn ON use_pretrained? Make sure you have saved all configurations before proceeding!",QMessageBox::Yes|QMessageBox::No);
@@ -469,6 +474,10 @@ void MainWindow::on_use_pretrained_button_clicked()
                 hyperparameters_pretrained[pretrained_comma_index] = ',';
                 is_pretrained = true;
                 ui->log->append("local trainer set to use pretrained model");
+                //Write edited text back into file
+                QTextStream out(&hyperparameters_file);
+                hyperparameters_file.resize(0); //clear the existing file
+                out << hyperparameters_pretrained;
             }
         } else {
             QMessageBox::StandardButton reply;
@@ -479,12 +488,12 @@ void MainWindow::on_use_pretrained_button_clicked()
                 hyperparameters_pretrained[pretrained_comma_index] = ' ';
                 is_pretrained = false;
                 ui->log->append("local trainer will not use pretrained model");
+                //Write edited text back into file
+                QTextStream out(&hyperparameters_file);
+                hyperparameters_file.resize(0); //clear the existing file
+                out << hyperparameters_pretrained;
             }
         }
-        //Write edited text back into file
-        QTextStream out(&hyperparameters_file);
-        hyperparameters_file.resize(0); //clear the existing file
-        out << hyperparameters_pretrained; //First line contains new track name
     }
     hyperparameters_file.close();
 }
@@ -499,17 +508,12 @@ void MainWindow::on_action_space_textChanged()
     is_saved = false;
 }
 
-void MainWindow::on_track_name_textChanged(const QString &arg1)
+void MainWindow::on_track_name_textChanged()
 {
     is_saved = false;
 }
 
 void MainWindow::on_hyper_parameters_textChanged()
-{
-    is_saved = false;
-}
-
-void MainWindow::on_log_textChanged()
 {
     is_saved = false;
 }
