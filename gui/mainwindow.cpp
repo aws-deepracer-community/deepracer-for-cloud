@@ -328,6 +328,9 @@ void MainWindow::on_restart_button_clicked()
                     ui->log->append("Restart failed!");
                 } else {
                     ui->log->append("pretrained model loaded with status NORMAL");
+                    if(!use_pretrained){
+                        this->on_use_pretrained_button_clicked(); //Set rl_coach to use_pretrained model
+                    }
                     start_process.start("/bin/sh", QStringList{start_script});
                     connect(&use_pretrained_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
                     [=]  (int exitCode)
@@ -395,19 +398,26 @@ void MainWindow::on_init_button_clicked()
 void MainWindow::on_uploadbutton_clicked()
 {
     //Upload snapshot to S3, make sure envs are set
-    ui->log->append("Uploading model to S3...");
-    upload_process.start("/bin/sh", QStringList{upload_script});
-    connect(&upload_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
-    [=]  (int exitCode)
-    {
-        if(exitCode){
-            ui->log->append("upload finished with status ERROR, make sure that the s3 bucket and s3 prefix and filled out!");
-            upload_process.kill();
-        } else {
-            ui->log->append("upload finished with status NORMAL");
-            upload_process.kill();
-        }
-    });
+    QDir dir(pretrained_dir);
+    if(!dir.exists()){
+        QMessageBox::warning(this, "Warning", "No model in pretrained directory! Please save current model as pretrained or load a profile!");
+    } else {
+        ui->log->append("Uploading model to S3...");
+        QString s3_bucket = QInputDialog::getText(this, tr("Uploading to S3"), tr("Name of S3 bucket:"), QLineEdit::Normal);
+        QString s3_prefix = QInputDialog::getText(this, tr("Uploading to S3"), tr("S3 prefix:"), QLineEdit::Normal);
+        upload_process.start("/bin/sh", QStringList{upload_script, s3_bucket, s3_prefix});
+        connect(&upload_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+        [=]  (int exitCode)
+        {
+            if(exitCode){
+                ui->log->append("upload finished with status ERROR, make sure that the s3 bucket and s3 prefix and filled out!");
+                upload_process.kill();
+            } else {
+                ui->log->append("upload finished with status NORMAL");
+                upload_process.kill();
+            }
+        });
+    }
 }
 
 void MainWindow::on_delete_button_clicked()
@@ -602,13 +612,11 @@ bool MainWindow::cpDir(const QString &srcPath, const QString &dstPath)
 
 void MainWindow::on_actionLoad_Profile_triggered()
 {
-    QString pretrained_dir = "../docker/volumes/bucket/rl-deepracer-pretrained";
     QDir dir(pretrained_dir);
     if(dir.exists()){
         dir.removeRecursively(); //make sure the that directory is empty
-    } else {
-        dir.mkdir("../docker/volumes/bucket/rl-deepracer-pretrained");
     }
+    dir.mkdir(pretrained_dir);
     QString profile_name = QInputDialog::getText(this, tr("Profile Loading"), tr("Name of profile to load:"), QLineEdit::Normal);
     if(!this->cpDir("../profiles/" + profile_name, pretrained_dir)){
         QMessageBox::warning(this, "Warning", "Error copying profile to pretrained");
