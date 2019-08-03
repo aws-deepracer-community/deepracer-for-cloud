@@ -585,8 +585,6 @@ void MainWindow::on_actionSave_as_Profile_triggered()
 
 bool MainWindow::cpDir(const QString &srcPath, const QString &dstPath)
 {
-    QDir dir(dstPath);
-    dir.removeRecursively(); //make sure the that directory is empty
     QDir parentDstDir(QFileInfo(dstPath).path());
     if (!parentDstDir.mkdir(QFileInfo(dstPath).fileName()))
         return false;
