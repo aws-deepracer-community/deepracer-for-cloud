@@ -16,7 +16,7 @@ ln -s ${SCRIPTPATH}/$(eval echo "~${USER}")/.aws  ${SCRIPTPATH}/docker/volumes/
 cd  ${SCRIPTPATH}
 git clone --recurse-submodules https://github.com/ARCC-RACE/deepracer.git
 
-git clone https://github.com/ARCC-RACE/aws-deepracer-workshops.git #&& cd aws-deepracer-workshops && git checkout enhance-log-analysis && cd ..
+git clone https://github.com/ARCC-RACE/aws-deepracer-workshops.git && cd aws-deepracer-workshops && git checkout enhance-log-analysis && cd ..
 
 # ln -s ${SCRIPTPATH}/aws-deepracer-workshops/log-analysis  ${SCRIPTPATH}/docker/volumes/log-analysis
 
