@@ -554,6 +554,7 @@ void MainWindow::on_actionSave_as_Profile_triggered()
             }
             profile.setAttribute("MaxReward", QString::number(max_reward));
             profile.setAttribute("MaxIteration", QString::number(max_index));
+            profile.setAttribute("LogPath", log_path);
             root.appendChild(profile);
 
             QTextStream stream(&profiles_file);
