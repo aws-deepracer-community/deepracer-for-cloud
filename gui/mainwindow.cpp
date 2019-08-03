@@ -652,6 +652,8 @@ void MainWindow::on_actionLoad_Profile_triggered()
                     ui->hyper_parameters->setText(current_hyperparameters);
                     ui->track_name->setText(current_track);
                     ui->log->append("Log path for loaded profile: " + profile.attribute("LogPath"));
+                    ui->log->append("Iteration with max reward for loaded profile: " + profile.attribute("MaxIteration"));
+                    ui->log->append("Max reward for loaded profile: " + profile.attribute("MaxReward"));
                 }
             }
             profiles_file.close();
