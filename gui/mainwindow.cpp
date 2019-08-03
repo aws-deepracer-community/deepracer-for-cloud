@@ -564,7 +564,7 @@ void MainWindow::on_actionSave_as_Profile_triggered()
             //move model into profiles with correct name
             QDir dir;
             dir.mkdir("../profiles/" + profile_name);
-            if(!cpDir("../docker/volumes/minio/bucket/rl-deepracer-sagemaker", "../profiles/" + profile_name)){
+            if(!this->cpDir("../docker/volumes/minio/bucket/rl-deepracer-sagemaker", "../profiles/" + profile_name)){
                 QMessageBox::warning(this, "Warning", "Error copying model to profiles");
             }
 
@@ -575,6 +575,8 @@ void MainWindow::on_actionSave_as_Profile_triggered()
 
 bool MainWindow::cpDir(const QString &srcPath, const QString &dstPath)
 {
+    QDir dir(dstPath);
+    dir.removeRecursively(); //make sure the that directory is empty
     QDir parentDstDir(QFileInfo(dstPath).path());
     if (!parentDstDir.mkdir(QFileInfo(dstPath).fileName()))
         return false;
@@ -600,5 +602,15 @@ bool MainWindow::cpDir(const QString &srcPath, const QString &dstPath)
 
 void MainWindow::on_actionLoad_Profile_triggered()
 {
-
+    QString pretrained_dir = "../docker/volumes/bucket/rl-deepracer-pretrained";
+    QDir dir(pretrained_dir);
+    if(dir.exists()){
+        dir.removeRecursively(); //make sure the that directory is empty
+    } else {
+        dir.mkdir("../docker/volumes/bucket/rl-deepracer-pretrained");
+    }
+    QString profile_name = QInputDialog::getText(this, tr("Profile Loading"), tr("Name of profile to load:"), QLineEdit::Normal);
+    if(!this->cpDir("../profiles/" + profile_name, pretrained_dir)){
+        QMessageBox::warning(this, "Warning", "Error copying profile to pretrained");
+    }
 }
