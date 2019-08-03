@@ -14,10 +14,12 @@ This section provides steps to setup a local environment in a dual-boot configur
 
 ##### 1. Install Ubuntu 18.04
 
-For a local dual-boot setup with WIndows 10, I found this guide simple to follow.
+For a local dual-boot setup with WIndows 10, I found this guide simple to follow:
+
 https://medium.com/bigdatarepublic/dual-boot-windows-and-linux-aa281c3c01f9
 
-When it gets to the Disk Management part, to make space for your Ubuntu installation, I followed this guide and was only successful using the 2nd method (MiniTool Partition Wizard).
+When it gets to the Disk Management part, to make space for your Ubuntu installation, I followed this guide and was only successful using the 2nd method (MiniTool Partition Wizard):
+
 https://win10faq.com/shrink-partition-windows-10/?source=post_page---------------------------
 
 ##### 2. Install Docker.io
@@ -55,6 +57,7 @@ Check for driver version here according to your GPU(s):  https://www.nvidia.com/
 Note: 430 is a driver version that is compatible with my GPU, according to that nvidia website
 
 Verify the driver installation:
+	
 	nvidia-smi  
 
 ##### 5. Download the Anaconda python distribution
@@ -82,26 +85,26 @@ Make sure conda works:
 
 	conda list
 	
-##### 8. Install vnc viewer on your local machine
+##### 7. Install vnc viewer on your local machine
 
 This doc is straight forward: https://www.techspot.com/downloads/5760-vnc-viewer.html
 
-##### 9. Install libraries to access the GOU hardware:
+##### 8. Install libraries to access the GPU hardware:
 
 	conda install cudnn==7.3.1
 	conda install -c fragcolor cuda10.0
 
-Verify libraries installed.
+Verify installed.
 
 	conda list
 
-##### 11. Setup AWS CLI
+##### 9. Setup AWS CLI
 
 	pip install -U awscli
 	
 Then Follow this: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 
-##### 12. Run Init.sh from this repo (refer to the rest of this doc for script details) 
+##### 10. Run Init.sh from this repo (refer to the rest of this doc for script details) 
 
 Note init.sh basically performs these steps so you don't have to do them manually:
 1. Clones Chris's repo:  https://github.com/crr0004/deepracer.git
