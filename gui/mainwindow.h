@@ -14,6 +14,9 @@
 #include <QUrl>
 #include <QTimer>
 #include <QCloseEvent>
+#include <QtXml>
+#include <QInputDialog>
+#include <QDateTime>
 
 namespace Ui {
 class MainWindow;
@@ -63,10 +66,16 @@ private slots:
 
     void on_hyper_parameters_textChanged();
 
+    void on_actionSave_as_Profile_triggered();
+
+    void on_actionLoad_Profile_triggered();
+
 private:
     Ui::MainWindow *ui;
 
     void closeEvent(QCloseEvent *event); //Do whatever needs to be done before window closes
+
+    bool cpDir(const QString &srcPath, const QString &dstPath);
 
     //File paths for all the files that will be manipulated
     QString reward_func_path =  "../docker/volumes/minio/bucket/custom_files/reward.py";
@@ -108,6 +117,10 @@ private:
 
     //Log analysis URL
     QString log_analysis_url = "";
+
+    //XML for handling current model
+    QDomDocument profiles_xml;
+    QString profiles_path = "../profiles/profiles.xml";
 
 
     //General status variables

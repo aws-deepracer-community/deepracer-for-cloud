@@ -269,16 +269,6 @@ void MainWindow::on_start_button_clicked()
             ui->log->append("In order to run the memory manager enter your password into the opened terminal window!");
             has_memory_manager = true;
         }
-        //Access log file for updating the graph and log-analysis tools
-        //    QFile latest_log_file(log_path);
-        //    if(!latest_log_file.open(QIODevice::ReadOnly | QFile::Text)){
-        //        QMessageBox::warning(this, "Warning", "Cannot open latest log file: " + latest_log_file.errorString());
-        //        //Have user enter a file manually as backup
-        //        log_path = QFileDialog::getOpenFileName(this,"Open the most recently created log file.");
-        //        ui->log->append("Reading " + log_path);
-        //    } else {
-        //        ui->log->append("Reading latest log file");
-        //    }
 
         //Wait 4 seconds then try to read the URL and update the web widget
         QTimer::singleShot(4000, this, SLOT(update_log_analysis_browser()));
@@ -295,14 +285,6 @@ void MainWindow::update_log_analysis_browser()
     QStringList jupyter_output = log_tool_line.split('\n');
     log_analysis_url = jupyter_output[jupyter_output.length()-2].replace(" ", "");
     qDebug() << log_analysis_url;
-// OLD PARSER
-//    if(log_tool_line.length() > 0){
-//        if(log_tool_line.contains(":8888/")){
-//            //url in format [I 21:39:38.232 LabApp] http://(a320a8bc2a3d or 127.0.0.1):8888/?token=2aec87a65be6be01f999f751d4c4a0ae35e34e5a7ce004bc
-//            log_tool_line = log_tool_line.split('\n')[8];
-//            log_analysis_url = "http://127.0.0.1" + log_tool_line.right(log_tool_line.indexOf(":8")+3);
-//        }
-//    }
     log_analysis_process.close();
     if(log_analysis_url==""){
         QMessageBox::warning(this, "Warning", "Could not read log analysis tool URL, refresh to try again");
@@ -530,4 +512,92 @@ void MainWindow::on_track_name_textChanged()
 void MainWindow::on_hyper_parameters_textChanged()
 {
     is_saved = false;
+}
+
+void MainWindow::on_actionSave_as_Profile_triggered()
+{
+    // Open a file for reading
+    QFile profiles_file(profiles_path);
+    if(!profiles_file.open(QIODevice::ReadWrite | QIODevice::Text))
+    {
+        QMessageBox::warning(this, "Warning", "Cannot open profiles file: " + profiles_file.errorString());
+    } else {
+        if(!profiles_xml.setContent(&profiles_file))
+        {
+            QMessageBox::warning(this, "Warning", "Could not read profile xml file");
+        } else {
+            QDomElement root = profiles_xml.firstChildElement();
+            QString profile_name = QInputDialog::getText(this, tr("Profile Naming"), tr("Profile name:"), QLineEdit::Normal);
+            QDomElement profile = profiles_xml.createElement(profile_name);
+            profile.setAttribute("Date", QDateTime::currentDateTime().toString());
+
+            //Access log file for updating the graph and log-analysis tools
+            QFile latest_log_file(log_path);
+            if(!latest_log_file.open(QIODevice::ReadOnly | QFile::Text)){
+                QMessageBox::warning(this, "Warning", "Cannot open latest log file: " + latest_log_file.errorString());
+                //Have user enter a file manually as backup
+                log_path = QFileDialog::getOpenFileName(this,"Open the most recently created log file for this profile.");
+                ui->log->append("Reading " + log_path);
+            } else {
+                ui->log->append("Reading latest log file");
+            }
+            this->parse_logfile(); //Get the reward values from the log file. This will help determine the best model in the profile
+
+            //Find the iteration with the max reward and the max reward and add it to the profile
+            double max_reward = -999999999;
+            int max_index = -1;
+            for(int i=0;i<reward_per_iteration_vector.length();i++){
+                if(reward_per_iteration_vector[i] > max_reward){
+                    max_reward = reward_per_iteration_vector[i];
+                    max_index = i;
+                }
+            }
+            profile.setAttribute("MaxReward", QString::number(max_reward));
+            profile.setAttribute("MaxIteration", QString::number(max_index));
+            root.appendChild(profile);
+
+            QTextStream stream(&profiles_file);
+            profiles_file.resize(0);
+            stream << profiles_xml.toString();
+
+            //move model into profiles with correct name
+            QDir dir;
+            dir.mkdir("../profiles/" + profile_name);
+            if(!cpDir("../docker/volumes/minio/bucket/rl-deepracer-sagemaker", "../profiles/" + profile_name)){
+                QMessageBox::warning(this, "Warning", "Error copying model to profiles");
+            }
+
+        }
+    }
+    profiles_file.close();
+}
+
+bool MainWindow::cpDir(const QString &srcPath, const QString &dstPath)
+{
+    QDir parentDstDir(QFileInfo(dstPath).path());
+    if (!parentDstDir.mkdir(QFileInfo(dstPath).fileName()))
+        return false;
+
+    QDir srcDir(srcPath);
+    foreach(const QFileInfo &info, srcDir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot)) {
+        QString srcItemPath = srcPath + "/" + info.fileName();
+        QString dstItemPath = dstPath + "/" + info.fileName();
+        if (info.isDir()) {
+            if (!cpDir(srcItemPath, dstItemPath)) {
+                return false;
+            }
+        } else if (info.isFile()) {
+            if (!QFile::copy(srcItemPath, dstItemPath)) {
+                return false;
+            }
+        } else {
+            qDebug() << "Unhandled item" << info.filePath() << "in cpDir";
+        }
+    }
+    return true;
+}
+
+void MainWindow::on_actionLoad_Profile_triggered()
+{
+
 }

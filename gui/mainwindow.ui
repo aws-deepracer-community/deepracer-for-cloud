@@ -222,11 +222,23 @@
     <property name="title">
      <string>Profiles</string>
     </property>
+    <addaction name="actionSave_as_Profile"/>
+    <addaction name="actionLoad_Profile"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuProfiles"/>
   </widget>
+  <action name="actionSave_as_Profile">
+   <property name="text">
+    <string>Save as Profile</string>
+   </property>
+  </action>
+  <action name="actionLoad_Profile">
+   <property name="text">
+    <string>Load Profile </string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
