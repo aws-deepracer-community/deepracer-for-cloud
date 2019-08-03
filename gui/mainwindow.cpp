@@ -398,7 +398,7 @@ void MainWindow::on_init_button_clicked()
 void MainWindow::on_uploadbutton_clicked()
 {
     //Upload snapshot to S3, make sure envs are set
-    QDir dir(pretrained_dir);
+    QDir dir(pretrained_path);
     if(!dir.exists()){
         QMessageBox::warning(this, "Warning", "No model in pretrained directory! Please save current model as pretrained or load a profile!");
     } else {
@@ -565,6 +565,10 @@ void MainWindow::on_actionSave_as_Profile_triggered()
             profile.setAttribute("MaxReward", QString::number(max_reward));
             profile.setAttribute("MaxIteration", QString::number(max_index));
             profile.setAttribute("LogPath", log_path);
+            profile.setAttribute("Hyperparameters", current_hyperparameters);
+            profile.setAttribute("Track", current_track);
+            profile.setAttribute("RewardFunction", current_reward_func);
+            profile.setAttribute("ActionSpace", current_action_space);
             root.appendChild(profile);
 
             QTextStream stream(&profiles_file);
@@ -572,11 +576,11 @@ void MainWindow::on_actionSave_as_Profile_triggered()
             stream << profiles_xml.toString();
 
             //move model into profiles with correct name
-            QDir dir;
-            dir.mkdir("../profiles/" + profile_name);
             if(!this->cpDir("../docker/volumes/minio/bucket/rl-deepracer-sagemaker", "../profiles/" + profile_name)){
                 QMessageBox::warning(this, "Warning", "Error copying model to profiles");
             }
+            //copy the log file over
+            QFile::copy(log_path, "../profiles/" + profile_name);
 
         }
     }
@@ -610,13 +614,49 @@ bool MainWindow::cpDir(const QString &srcPath, const QString &dstPath)
 
 void MainWindow::on_actionLoad_Profile_triggered()
 {
-    QDir dir(pretrained_dir);
-    if(dir.exists()){
-        dir.removeRecursively(); //make sure the that directory is empty
-    }
-    dir.mkdir(pretrained_dir);
-    QString profile_name = QInputDialog::getText(this, tr("Profile Loading"), tr("Name of profile to load:"), QLineEdit::Normal);
-    if(!this->cpDir("../profiles/" + profile_name, pretrained_dir)){
-        QMessageBox::warning(this, "Warning", "Error copying profile to pretrained");
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "Confirmation", "Are you sure you want to load a new profile? This will delete your current pretrained model and reset your training files",QMessageBox::Yes|QMessageBox::No);
+    if(reply == QMessageBox::Yes){
+        //Fist copy the model into pretrained directory
+        QString profile_name = QInputDialog::getText(this, tr("Profile Loading"), tr("Name of profile to load:"), QLineEdit::Normal);
+        QDir profile_dir("../profiles/" + profile_name);
+        if(profile_dir.exists()){
+            QDir pretrained_dir(pretrained_path);
+            if(pretrained_dir.exists()){
+                pretrained_dir.removeRecursively(); //make sure the that directory is empty
+            }
+            if(!this->cpDir("../profiles/" + profile_name, pretrained_path)){
+                QMessageBox::warning(this, "Warning", "Error copying profile to pretrained");
+            }
+            //Copy log file into lof dir for analysis
+            QFile::copy("../profiles/" + profile_name, "../docker/volumes/robo/checkpoint/log");
+            //Now update GUI and trainig file with info in the XML
+            QFile profiles_file(profiles_path);
+            if(!profiles_file.open(QIODevice::ReadWrite | QIODevice::Text))
+            {
+                QMessageBox::warning(this, "Warning", "Cannot open profiles file: " + profiles_file.errorString());
+            } else {
+                if(!profiles_xml.setContent(&profiles_file))
+                {
+                    QMessageBox::warning(this, "Warning", "Could not read profile xml file");
+                } else {
+                    QDomElement root=profiles_xml.documentElement();
+                    QDomElement profile = root.lastChildElement(profile_name); //last = most recent
+                    current_hyperparameters = profile.attribute("Hyperparameters");
+                    current_track = profile.attribute("Track");
+                    current_reward_func = profile.attribute("RewardFunction");
+                    current_action_space = profile.attribute("ActionSpace");
+                    //Set all the text on the GUI to the updated strings
+                    ui->reward_function->setText(current_reward_func);
+                    ui->action_space->setText(current_action_space);
+                    ui->hyper_parameters->setText(current_hyperparameters);
+                    ui->track_name->setText(current_track);
+                    ui->log->append("Log path for loaded profile: " + profile.attribute("LogPath"));
+                }
+            }
+            profiles_file.close();
+        } else {
+            QMessageBox::warning(this, "Warning", "Could not find profile: " + profile_name);
+        }
     }
 }
