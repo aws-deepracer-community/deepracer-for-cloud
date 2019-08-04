@@ -1,6 +1,7 @@
 # DeepRacer-For-Dummies
-a quick way to get up and running with local deepracer training environment
-
+Provides a quick and easy way to get up and running with a local deepracer training environment using Docker Compose.
+This repo just creates a wrapper around the amazing work done by Chris found here: https://github.com/crr0004/deepracer
+Please refer to his repo to understand more about what's going on under the covers.
 
 # Getting Started
 
