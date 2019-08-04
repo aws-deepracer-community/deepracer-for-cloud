@@ -32,13 +32,13 @@ void MainWindow::closeEvent (QCloseEvent *event)
 
     //Cleanup any programs that are still running
 //    ui->log->append("Stopping running programs"); //Causes bug do not use
-    stop_process.start("/bin/sh", QStringList{stop_script});
-    stop_process.waitForFinished();
+    stop_process = new QProcess();
+    stop_process->start("/bin/sh", QStringList{stop_script});
+    stop_process->waitForFinished();
 
-    //kill all the processes
-    log_analysis_process.kill();
-    start_process.kill();
-    stop_process.kill();
+    //delete all the processes
+    delete log_analysis_process;
+    delete stop_process;
 
     event->accept();
 }
@@ -237,28 +237,30 @@ void MainWindow::on_start_button_clicked()
 {
     ui->log->append("Starting training...");
     //Start the simulation and training instance
-    start_process.start("/bin/sh", QStringList{start_script});
-    connect(&start_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+    start_process = new QProcess();
+    start_process->start("/bin/sh", QStringList{start_script});
+    connect(start_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
     [=]  (int exitCode)
     {
         if(exitCode){
             ui->log->append("Failed to start local training");
-            start_process.kill();
+            delete start_process;
         } else {
             ui->log->append("Local training started successfully");
-            start_process.kill();
+            delete start_process;
         }
     });
 
     //Start the log analysis
     if(!has_log_analysis){
-        log_analysis_process.start("/bin/bash", QStringList{log_analysis_script});
-        connect(&log_analysis_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+        log_analysis_process = new QProcess();
+        log_analysis_process->start("/bin/bash", QStringList{log_analysis_script});
+        connect(log_analysis_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
         [=]  (int exitCode)
         {
             if(exitCode && !log_analysis_url.contains("http")){
                 ui->log->append("log analysis started with an ERROR");
-                log_analysis_process.kill();
+                delete log_analysis_process;
             } else {
                 ui->log->append("log analysis started correctly");
                 has_log_analysis = true;
@@ -279,13 +281,13 @@ void MainWindow::on_start_button_clicked()
 void MainWindow::update_log_analysis_browser()
 {
     //If read is ready get parse the URL
-    log_analysis_process.open();
-    QString log_tool_line = log_analysis_process.readAllStandardError();
+    log_analysis_process->open();
+    QString log_tool_line = log_analysis_process->readAllStandardError();
     qDebug() << log_tool_line;
     QStringList jupyter_output = log_tool_line.split('\n');
     log_analysis_url = jupyter_output[jupyter_output.length()-2].replace(" ", "");
     qDebug() << log_analysis_url;
-    log_analysis_process.close();
+    log_analysis_process->close();
     if(log_analysis_url==""){
         QMessageBox::warning(this, "Warning", "Could not read log analysis tool URL, refresh to try again");
     } else {
@@ -310,36 +312,45 @@ void MainWindow::on_restart_button_clicked()
     //This allows you to tweak the parameters incrementally
     ui->log->append("Restarting...");
     ui->log->append("Stoping last training instance...");
-    stop_process.start("/bin/sh", QStringList{stop_script});
-    connect(&stop_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+    stop_process = new QProcess();
+    stop_process->start("/bin/sh", QStringList{stop_script});
+    connect(stop_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
     [=]  (int exitCode)
     {
         if(exitCode){
             ui->log->append("stopped with status ERROR");
             ui->log->append("Restart failed!");
+            delete stop_process;
         } else {
             ui->log->append("stopped with status NORMAL");
-            use_pretrained_process.start("/bin/sh", QStringList{use_pretrained_script});
-            connect(&use_pretrained_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+            delete stop_process;
+            use_pretrained_process = new QProcess();
+            use_pretrained_process->start("/bin/sh", QStringList{use_pretrained_script});
+            connect(use_pretrained_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
             [=]  (int exitCode)
             {
                 if(exitCode){
                     ui->log->append("pretrained model loaded with status ERROR");
                     ui->log->append("Restart failed!");
+                    delete use_pretrained_process;
                 } else {
                     ui->log->append("pretrained model loaded with status NORMAL");
+                    delete use_pretrained_process;
                     if(!use_pretrained){
                         this->on_use_pretrained_button_clicked(); //Set rl_coach to use_pretrained model
                     }
-                    start_process.start("/bin/sh", QStringList{start_script});
-                    connect(&use_pretrained_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+                    start_process = new QProcess();
+                    start_process->start("/bin/sh", QStringList{start_script});
+                    connect(start_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
                     [=]  (int exitCode)
                     {
                         if(exitCode){
                             ui->log->append("restarted trainied with status ERROR");
                             ui->log->append("Restart failed!");
+                            delete start_process;
                         } else {
                             ui->log->append("restarted training with status NORMAL");
+                            delete start_process;
                         }
                     });
                 }
@@ -356,16 +367,17 @@ void MainWindow::on_stop_button_clicked()
     reply = QMessageBox::question(this, "Confirmation", "Are you sure you want to stop training?",QMessageBox::Yes|QMessageBox::No);
     if(reply == QMessageBox::Yes){
         ui->log->append("Stopping training...");
-        stop_process.start("/bin/sh", QStringList{stop_script});
-        connect(&stop_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+        stop_process = new QProcess();
+        stop_process->start("/bin/sh", QStringList{stop_script});
+        connect(stop_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
         [=]  (int exitCode)
         {
             if(exitCode){
                 ui->log->append("training stopped with status ERROR");
-                stop_process.kill();
+                delete stop_process;
             } else {
                 ui->log->append("training stopped  with status NORMAL");
-                stop_process.kill();
+                delete stop_process;
             }
         });
     }
@@ -378,16 +390,17 @@ void MainWindow::on_init_button_clicked()
     QMessageBox::StandardButton reply;
     reply = QMessageBox::question(this, "Confirmation", "Are you sure you want to init local training? All files not saved will be lost!",QMessageBox::Yes|QMessageBox::No);
     if(reply == QMessageBox::Yes){
-        init_process.start("/bin/sh", QStringList{init_script});
-        connect(&init_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+        init_process = new QProcess();
+        init_process->start("/bin/sh", QStringList{init_script});
+        connect(init_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
         [=]  (int exitCode)
         {
             if(exitCode){
                 ui->log->append("init finished with status ERROR");
-                init_process.kill();
+                delete init_process;
             } else {
                 ui->log->append("init finished with status NORMAL");
-                init_process.kill();
+                delete init_process;
             }
         });
 
@@ -405,16 +418,17 @@ void MainWindow::on_uploadbutton_clicked()
         ui->log->append("Uploading model to S3...");
         QString s3_bucket = QInputDialog::getText(this, tr("Uploading to S3"), tr("Name of S3 bucket:"), QLineEdit::Normal);
         QString s3_prefix = QInputDialog::getText(this, tr("Uploading to S3"), tr("S3 prefix:"), QLineEdit::Normal);
-        upload_process.start("/bin/sh", QStringList{upload_script, s3_bucket, s3_prefix});
-        connect(&upload_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+        upload_process = new QProcess();
+        upload_process->start("/bin/sh", QStringList{upload_script, s3_bucket, s3_prefix});
+        connect(upload_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
         [=]  (int exitCode)
         {
             if(exitCode){
                 ui->log->append("upload finished with status ERROR, make sure that the s3 bucket and s3 prefix and filled out!");
-                upload_process.kill();
+                delete upload_process;
             } else {
                 ui->log->append("upload finished with status NORMAL");
-                upload_process.kill();
+                delete upload_process;
             }
         });
     }
@@ -427,16 +441,17 @@ void MainWindow::on_delete_button_clicked()
     reply = QMessageBox::question(this, "Confirmation", "Are you sure you want to delete the most recent local model?",QMessageBox::Yes|QMessageBox::No);
     if(reply == QMessageBox::Yes){
         ui->log->append("Deleting last model...");
-        delete_process.start("/bin/sh", QStringList{delete_script});
-        connect(&delete_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+        delete_process = new QProcess();
+        delete_process->start("pkexec", QStringList{qApp->applicationDirPath() + "/" + delete_script});
+        connect(delete_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
         [=]  (int exitCode)
         {
             if(exitCode){
                 ui->log->append("model deleted with status ERROR");
-                delete_process.kill();
+                delete delete_process;
             } else {
                 ui->log->append("model deleted with status NORMAL");
-                delete_process.kill();
+                delete delete_process;
             }
         });
     }
