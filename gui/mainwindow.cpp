@@ -190,7 +190,12 @@ void MainWindow::on_save_button_clicked()
                 new_value+=text[param_index];
                 param_index++;
             }
-            if(hyperparams[i] != "term_cond_avg_score"){
+            //This makes sure that comma formatting in the hyperparameters python file is correct
+            if(hyperparams[i] == "term_cond_avg_score" && is_pretrained == false){
+                new_value += "  # place comma here if using pretrained!";
+            } else if(hyperparams[i] == "term_cond_avg_score" && is_pretrained == true) {
+                new_value += ", # place comma here if using pretrained!";
+            } else {
                 new_value += ",";
             }
             rl_file.replace(re,new_value);
@@ -440,15 +445,19 @@ void MainWindow::on_uploadbutton_clicked()
         QString s3_bucket = QInputDialog::getText(this, tr("Uploading to S3"), tr("Name of S3 bucket:"), QLineEdit::Normal);
         QString s3_prefix = QInputDialog::getText(this, tr("Uploading to S3"), tr("S3 prefix:"), QLineEdit::Normal);
         upload_process = new QProcess();
-        upload_process->start("/bin/sh", QStringList{upload_script, s3_bucket, s3_prefix});
+        upload_process->start(upload_script, QStringList{s3_bucket, s3_prefix});
         connect(upload_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
         [=]  (int exitCode)
         {
             if(exitCode){
                 ui->log->append("upload finished with status ERROR, make sure that the s3 bucket and s3 prefix and filled out!");
+                qDebug() << upload_process->readAllStandardOutput();
+                qDebug() << upload_process->readAllStandardError();
                 delete upload_process;
             } else {
                 ui->log->append("upload finished with status NORMAL");
+                qDebug() << upload_process->readAllStandardOutput();
+                qDebug() << upload_process->readAllStandardError();
                 delete upload_process;
             }
         });
