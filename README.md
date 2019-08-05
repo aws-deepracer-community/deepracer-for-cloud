@@ -16,7 +16,7 @@ We've made a GUI to make training locally as simple as possible. Follow [this gu
 
 #### Environment
 
-If you are running Windows and would like to use this repo, you will need to modify the process to get everything to run on Windows (not recommended as you will not be able to take advantage of the GPU during training) Many users have found it useful to dual-boot (Windows/Linux). There are many tutorials online for how to do this. You can follow the instructions provided below as guidance.
+This guide was built to run on Ubuntu 18.04. We know it runs on Ubuntu 16.04, and there's reports on it running on OS X and Windows as well, if you've managed to make it run on those platforms, submit a issue ticket and let us know, we'd love to know how you did it! 
 
 Follow these guides for setting up the environment and getting started:
 
