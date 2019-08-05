@@ -4,3 +4,5 @@ aws-deepracer-workshops/
 deepracer/
 
 docker/volumes/
+/profiles/*
+/build-gui-Desktop-Debug/

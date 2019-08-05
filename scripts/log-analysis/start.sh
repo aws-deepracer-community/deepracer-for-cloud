@@ -9,4 +9,8 @@ SCRIPTPATH=`dirname ${SCRIPT}`
 # aschu/log-analysis
 
 cd ${SCRIPTPATH}/../../aws-deepracer-workshops/log-analysis
+source log-analysis.venv/bin/activate
+ipython kernel install --user --name=log-analysis.venv
+ln -s ${SCRIPTPATH}/../../docker/volumes/robo/checkpoint/log ${SCRIPTPATH}/../../aws-deepracer-workshops/log-analysis/logs
+ln -s ${SCRIPTPATH}/../../docker/volumes/minio/bucket/custom_files/reward.py ${SCRIPTPATH}/../../aws-deepracer-workshops/log-analysis/reward/reward.py
 jupyter notebook --no-browser

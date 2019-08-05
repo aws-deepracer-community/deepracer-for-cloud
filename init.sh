@@ -12,13 +12,13 @@ mkdir -p ${SCRIPTPATH}/docker/volumes/minio/bucket/custom_files \
 # https://docs.aws.amazon.com/cli/latest/userguide/install-linux-al2017.html
 ln -s ${SCRIPTPATH}/$(eval echo "~${USER}")/.aws  ${SCRIPTPATH}/docker/volumes/
 
-# grab local training deepracer repo from crr0004 and log analysis repo from vreadcentric
+# grab local training deepracer repo from crr0004 and log analysis repo from breadcentric
 cd  ${SCRIPTPATH}
 git clone --recurse-submodules https://github.com/ARCC-RACE/deepracer.git
 
 git clone https://github.com/ARCC-RACE/aws-deepracer-workshops.git && cd aws-deepracer-workshops && git checkout enhance-log-analysis && cd ..
 
-ln -s ${SCRIPTPATH}/aws-deepracer-workshops/log-analysis  ${SCRIPTPATH}/docker/volumes/log-analysis
+# ln -s ${SCRIPTPATH}/aws-deepracer-workshops/log-analysis  ${SCRIPTPATH}/docker/volumes/log-analysis
 
 # setup symlink to rl-coach config file
 ln -s ${SCRIPTPATH}/deepracer/rl_coach/rl_deepracer_coach_robomaker.py ${SCRIPTPATH}/rl_deepracer_coach_robomaker.py

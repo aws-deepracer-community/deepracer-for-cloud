@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-S3_BUCKET={replace with your own S3 bucket name}
-S3_PREFIX={replace with your own S3 prefix}
+S3_BUCKET=$1
+S3_PREFIX=$2
 
 SCRIPT=`realpath $0`
 SCRIPTPATH=`dirname $SCRIPT`
 
-MODEL_DIR=${SCRIPTPATH}/../../docker/volumes/minio/bucket/rl-deepracer-sagemaker/model/
+MODEL_DIR=${SCRIPTPATH}/../../docker/volumes/minio/bucket/rl-deepracer-pretrained/model/
 
 display_usage() { 
     echo -e "\nUsage:\n./upload-snapshot.sh -c checkpoint \n"

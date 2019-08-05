@@ -13,6 +13,10 @@
 #include <QtWebKitWidgets/QWebView>
 #include <QUrl>
 #include <QTimer>
+#include <QCloseEvent>
+#include <QtXml>
+#include <QInputDialog>
+#include <QDateTime>
 
 namespace Ui {
 class MainWindow;
@@ -27,6 +31,7 @@ public:
     ~MainWindow();
 
 private slots:
+
     void parse_logfile();
 
     void refresh();
@@ -51,8 +56,26 @@ private slots:
 
     void go_to_notebook();
 
+    void on_use_pretrained_button_clicked();
+
+    void on_reward_function_textChanged();
+
+    void on_action_space_textChanged();
+
+    void on_track_name_textChanged();
+
+    void on_hyper_parameters_textChanged();
+
+    void on_actionSave_as_Profile_triggered();
+
+    void on_actionLoad_Profile_triggered();
+
 private:
     Ui::MainWindow *ui;
+
+    void closeEvent(QCloseEvent *event); //Do whatever needs to be done before window closes
+
+    bool cpDir(const QString &srcPath, const QString &dstPath);
 
     //File paths for all the files that will be manipulated
     QString reward_func_path =  "../docker/volumes/minio/bucket/custom_files/reward.py";
@@ -72,21 +95,22 @@ private:
                             "term_cond_avg_score"};
     //Script Paths and process definintions
     QString init_script =  "../init.sh";
-    QProcess init_process;
+    QProcess* init_process;
     QString start_script =  "../scripts/training/start.sh";
-    QProcess start_process;
+    QProcess* start_process;
+    QString memory_manager_script =  "../scripts/training/memory-manager.sh";
+    QProcess* memory_manager_process;
     QString stop_script =  "../scripts/training/stop.sh";
-    QProcess stop_process;
+    QProcess* stop_process;
     QString use_pretrained_script = "../scripts/training/set-last-run-to-pretrained.sh";
-    QProcess use_pretrained_process;
+    QString pretrained_path = "../docker/volumes/minio/bucket/rl-deepracer-pretrained";
+    QProcess* use_pretrained_process;
     QString upload_script = "../scripts/training/upload-snapshot.sh";
-    QProcess upload_process;
+    QProcess* upload_process;
     QString delete_script = "../scripts/training/delete-last-run.sh";
-    QProcess delete_process;
-    QString log_analysis_start_script = "../scripts/log-analysis/start.sh";
-    QProcess log_analysis_start_process;
-    QString log_analysis_stop_script = "../scripts/log-analysis/stop.sh";
-    QProcess log_analysis_stop_process;
+    QProcess* delete_process;
+    QString log_analysis_script = "../scripts/log-analysis/start.sh";
+    QProcess* log_analysis_process;
 
     //Log file path and graphing vars
     QString log_path = "../docker/volumes/robo/checkpoint/log/latest";
@@ -97,11 +121,18 @@ private:
     //Log analysis URL
     QString log_analysis_url = "";
 
+    //XML for handling current model
+    QDomDocument profiles_xml;
+    QString profiles_path = "../profiles/profiles.xml";
+
 
     //General status variables
     bool is_running = false;
     bool is_pretrained = false;
     bool has_memory_manager = false;
+    bool has_log_analysis = false;
+    bool is_saved = true; //Used for warning the user if they are using something that may required something that has not been saved
+    bool use_pretrained = false;
 };
 
 #endif // MAINWINDOW_H
