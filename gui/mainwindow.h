@@ -98,6 +98,8 @@ private:
     QProcess* init_process;
     QString start_script =  "../scripts/training/start.sh";
     QProcess* start_process;
+    QString memory_manager_script =  "../scripts/training/memory-manager.sh";
+    QProcess* memory_manager_process;
     QString stop_script =  "../scripts/training/stop.sh";
     QProcess* stop_process;
     QString use_pretrained_script = "../scripts/training/set-last-run-to-pretrained.sh";

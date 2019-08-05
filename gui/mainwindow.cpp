@@ -17,6 +17,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    //delete all the processes
+    delete memory_manager_process;
+    delete log_analysis_process;
+    delete stop_process;
     delete ui;
 }
 
@@ -32,13 +36,12 @@ void MainWindow::closeEvent (QCloseEvent *event)
 
     //Cleanup any programs that are still running
 //    ui->log->append("Stopping running programs"); //Causes bug do not use
+    if(has_memory_manager){
+        memory_manager_process->kill();
+    }
     stop_process = new QProcess();
     stop_process->start("/bin/sh", QStringList{stop_script});
     stop_process->waitForFinished();
-
-    //delete all the processes
-    delete log_analysis_process;
-    delete stop_process;
 
     event->accept();
 }
@@ -266,16 +269,34 @@ void MainWindow::on_start_button_clicked()
                 has_log_analysis = true;
             }
         });
-        //Open up a memory manager (needs sudo password from user to actually run)
-        if(!has_memory_manager){
-            ui->log->append("In order to run the memory manager enter your password into the opened terminal window!");
+    }
+    //Wait 4 seconds then try to read the URL and update the web widget
+    QTimer::singleShot(4000, this, SLOT(update_log_analysis_browser()));
+
+    //Open up a memory manager (needs sudo password from user to actually run)
+    if(!has_memory_manager){
+        QMessageBox::StandardButton reply;
+        reply = QMessageBox::question(this, "Memory Manager", "Would you like memory manager to clip model and checkpoint memory usage to 3GB?",QMessageBox::Yes|QMessageBox::No);
+        if(reply == QMessageBox::Yes){
+            ui->log->append("In order to run the memory manager enter your root password!");
+            memory_manager_process = new QProcess();
+            memory_manager_process->start("pkexec", QStringList{qApp->applicationDirPath() + "/" + memory_manager_script});
+            connect(memory_manager_process, static_cast<void(QProcess::*)(int, QProcess::ExitStatus)>(&QProcess::finished),
+            [=]  (int exitCode)
+            {
+                if(exitCode){
+                    ui->log->append("memory manager failed to start :(");
+                    delete memory_manager_process;
+                    has_memory_manager = false;
+                } else {
+                    ui->log->append("memory memory manager stopped?????");
+                    delete memory_manager_process;
+                    has_memory_manager = false;
+                }
+            });
             has_memory_manager = true;
         }
-
-        //Wait 4 seconds then try to read the URL and update the web widget
-        QTimer::singleShot(4000, this, SLOT(update_log_analysis_browser()));
     }
-
 }
 
 void MainWindow::update_log_analysis_browser()
@@ -595,7 +616,8 @@ void MainWindow::on_actionSave_as_Profile_triggered()
                 QMessageBox::warning(this, "Warning", "Error copying model to profiles");
             }
             //copy the log file over
-            QFile::copy(log_path, "../profiles/" + profile_name);
+            QFile::copy(log_path, "../profiles/" + profile_name + "/" + profile_name + ".log");
+            qDebug() << log_path;
 
         }
     }
@@ -643,8 +665,8 @@ void MainWindow::on_actionLoad_Profile_triggered()
             if(!this->cpDir("../profiles/" + profile_name, pretrained_path)){
                 QMessageBox::warning(this, "Warning", "Error copying profile to pretrained");
             }
-            //Copy log file into lof dir for analysis
-            QFile::copy("../profiles/" + profile_name, "../docker/volumes/robo/checkpoint/log");
+            //Copy log file into log dir for analysis (May not be working)
+            QFile::copy( "../profiles/" + profile_name + "/" + profile_name + ".log", "../docker/volumes/robo/checkpoint/log/" + profile_name + ".log");
             //Now update GUI and trainig file with info in the XML
             QFile profiles_file(profiles_path);
             if(!profiles_file.open(QIODevice::ReadWrite | QIODevice::Text))
@@ -666,7 +688,8 @@ void MainWindow::on_actionLoad_Profile_triggered()
                     ui->action_space->setText(current_action_space);
                     ui->hyper_parameters->setText(current_hyperparameters);
                     ui->track_name->setText(current_track);
-                    ui->log->append("Log path for loaded profile: " + profile.attribute("LogPath"));
+                    ui->log->append("Log path for loaded profile: " + profile.attribute("LogPath") +
+                                    " If the log file has been deleted, manually copy the log file (profile_name.log) in the respective profiles directory to the docker log directory.");
                     ui->log->append("Iteration with max reward for loaded profile: " + profile.attribute("MaxIteration"));
                     ui->log->append("Max reward for loaded profile: " + profile.attribute("MaxReward"));
                 }

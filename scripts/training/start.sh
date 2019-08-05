@@ -17,5 +17,5 @@ gnome-terminal -x sh -c "docker logs -f $(docker ps | awk ' /sagemaker/ { print 
 echo 'Attempting to open vnc viewer...'
 gnome-terminal -x sh -c "echo vncviewer;vncviewer localhost:8080"
 
-echo 'Starting memory manager...'
-gnome-terminal -x sh -c "echo memory manager;sudo python $SCRIPTPATH/memory-manager.py"
+#echo 'Starting memory manager...'
+#gnome-terminal -x sh -c "echo memory manager;sudo python $SCRIPTPATH/memory-manager.py"
