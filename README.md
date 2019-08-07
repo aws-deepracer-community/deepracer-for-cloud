@@ -22,60 +22,106 @@ When it gets to the Disk Management part, to make space for your Ubuntu installa
 
 https://win10faq.com/shrink-partition-windows-10/?source=post_page---------------------------
 
-##### 2. Install Docker.io
+##### 2. Install Docker-ce  (steps from https://docs.docker.com/install/linux/docker-ce/ubuntu/ )
 
-	sudo apt install docker.io
+	sudo apt-get remove docker docker-engine docker.io containerd runc
+	sudo apt-get update
+	
+	sudo apt-get install \
+        apt-transport-https \
+        ca-certificates \
+        curl \
+        gnupg-agent \
+        software-properties-common
 
-Additionally, make sure your user-id can run docker without sudo:
-https://docs.docker.com/install/linux/linux-postinstall/
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+        sudo apt-key fingerprint 0EBFCD88
+	
+	sudo add-apt-repository \
+        "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+        $(lsb_release -cs) \
+        stable"
+        
+	sudo apt-get update
+        sudo apt-get install docker-ce docker-ce-cli containerd.io
 
-##### 3. Install nvidia-docker
+Verify docker works
+
+	sudo docker run hello-world
+
+##### 3. Install Docker-compose (from https://docs.docker.com/compose/install/#install-compose )
+        
+	curl -L https://github.com/docker/compose/releases/download/1.24.1/docker-compose-`uname -s`-`uname -m` -o     /usr/local/bin/docker-compose
+
+        sudo chmod +x /usr/local/bin/docker-compose
+
+Verify installation
+
+        docker-compose --version
+	
+Note: You can also choose to install docker-compose via another package manager (i.e. pip or conda), but if you do, make sure to do so in a virtual env.  Many OS’s have python system packages that conflict with docker-compose dependencies.
+
+Additionally, make sure your user-id can run docker without sudo (from https://docs.docker.com/install/linux/linux-postinstall/ )
+        
+	sudo groupadd docker
+	sudo usermod -aG docker $USER
+
+And configure Docker to start on boot:
+
+        sudo systemctl enable docker
+
+##### 4. Install nvidia-docker
 
 The NVIDIA Container Toolkit allows users to build and run GPU accelerated Docker containers.  
 Nvidia-docker essentially exposes the GPU to the containers to use:  https://github.com/NVIDIA/nvidia-docker
 
-	distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+Note what you may have installed already:
+
+        sudo apt list --installed | grep nvidia
+
+Prepare for clean installation of Nvidia drivers:
+
+        sudo apt-get purge nvidia*  
+
+Install nvidia-docker runtime (from https://github.com/NVIDIA/nvidia-docker/wiki/Installation-(version-2.0) )
+
+        distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
 	
 	curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
 
 	curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
 
 	sudo apt-get update
-	sudo apt-get install -y nvidia-container-toolkit  (note: nvidia-docker2 packages are deprecated)
-	sudo systemctl restart docker
+	sudo apt-get install nvidia-docker2
+	sudo pkill -SIGHUP dockerd
 
-##### 4. Install the proper nvidia drivers
+##### 5. Install the proper nvidia drivers
 
 Check for driver version here according to your GPU(s):  https://www.nvidia.com/Download/index.aspx?lang=en-us
+In the dropdown for OS, choose “show all OS’s” to see if there are Ubuntu specific choices.  Otherwise choose Linux.
+If you get a dropdown for “cuda toolkit”, choose 10.0)
 
-	sudo apt-get purge nvidia*
 	sudo add-apt-repository ppa:graphics-drivers
 	sudo apt-get update
-	sudo apt-get install screen
-	screen
-	sudo apt install nvidia-driver-430 && sudo reboot 
-Note: 430 is a driver version that is compatible with my GPU, according to that nvidia website
+	sudo apt install nvidia-driver-410 && sudo reboot 
+	
+Note: 410 is a driver version that is compatible with my GPU, according to that nvidia website
 
 Verify the driver installation:
 	
 	nvidia-smi  
 
-##### 5. Download the Anaconda python distribution
-
-Grab the latest version here for Linux-x86_64: https://repo.anaconda.com/archive/
+##### 6. Download Anaconda
 
 	sudo apt-get update -y && sudo apt-get upgrade -y
 	cd /tmp/
-	wget https://repo.anaconda.com/archive/<enter-the-desired-filename-from-the-Anaconda-repo>
-	
-Verify the integrity of the file by matching the md5 hash to the one on the Anaconda repo site for your file:  
+	sudo wget https://repo.anaconda.com/archive/Anaconda3-2019.03-Linux-x86_64.sh
 
-	md5sum <enter-the-desired-filename-from-the-Anaconda-repo>
+##### 7. Install Anaconda
 
-##### 6. Install Anaconda
-
-	bash <enter-the-desired-filename-from-the-Anaconda-repo>
+	bash Anaconda3-2019.03-Linux-x86_64.sh
 	"yes" for using the default directory location
+	“yes” for running conda init
 
 Activate Anaconda:  
 	
@@ -85,26 +131,26 @@ Make sure conda works:
 
 	conda list
 	
-##### 7. Install vnc viewer on your local machine
+##### 8. Install vnc viewer on your local machine
 
 This doc is straight forward: https://www.techspot.com/downloads/5760-vnc-viewer.html
 
-##### 8. Install libraries to access the GPU hardware:
+##### 9. Install the necessary, specific packages to access the Nvidia GPU:
 
 	conda install cudnn==7.3.1
 	conda install -c fragcolor cuda10.0
 
 Verify installed.
 
-	conda list
+	conda list | grep cud
 
-##### 9. Setup AWS CLI
+##### 10. Setup AWS CLI
 
 	pip install -U awscli
 	
 Then Follow this: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 
-##### 10. Run Init.sh from this repo (refer to the rest of this doc for script details) 
+##### 11. Run Init.sh from this repo (refer to the rest of this doc for script details) 
 
 Note init.sh basically performs these steps so you don't have to do them manually:
 1. Clones Chris's repo:  https://github.com/crr0004/deepracer.git
