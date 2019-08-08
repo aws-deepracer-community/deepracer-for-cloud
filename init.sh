@@ -28,3 +28,11 @@ docker build -f ./docker/dockerfiles/rl_coach/Dockerfile -t aschu/rl_coach deepr
 
 # copy reward function and model-metadata files to bucket 
 cp deepracer/custom_files/* docker/volumes/minio/bucket/custom_files/
+
+# create the network sagemaker-local if it doesn't exit
+SAGEMAKER_NW='sagemaker-local'
+docker network ls | grep -q $SAGEMAKER_NW
+if [ $? -ne 0 ]
+then
+	  docker network create $SAGEMAKER_NW
+fi
