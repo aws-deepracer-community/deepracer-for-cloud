@@ -31,45 +31,95 @@ When it gets to the Disk Management part, to make space for your Ubuntu installa
 
 https://win10faq.com/shrink-partition-windows-10/?source=post_page---------------------------
 
+=======
 ##### * Installing the AWS CLI
 
 	pip install -U awscli
 	
 Then Follow this: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 
-##### * Installing Docker
+##### * Installing Docker-ce (steps from https://docs.docker.com/install/linux/docker-ce/ubuntu/ )
 
-	sudo apt install docker.io
+	sudo apt-get remove docker docker-engine docker.io containerd runc
+	sudo apt-get update
+	
+	  sudo apt-get install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg-agent \
+    software-properties-common
 
-Additionally, make sure your user-id can run docker without sudo:
-https://docs.docker.com/install/linux/linux-postinstall/
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    sudo apt-key fingerprint 0EBFCD88
+	
+    sudo add-apt-repository \
+    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) \
+    stable"
+        
+	  sudo apt-get update
+    sudo apt-get install docker-ce docker-ce-cli containerd.io
 
-##### * Installing nvidia-docker
+Verify docker works
+
+	sudo docker run hello-world
+
+##### 3. Installing Docker-compose (from https://docs.docker.com/compose/install/#install-compose )
+        
+    curl -L https://github.com/docker/compose/releases/download/1.24.1/docker-compose-`uname -s`-`uname -m` -o     /usr/local/bin/docker-compose
+    sudo chmod +x /usr/local/bin/docker-compose
+
+Verify installation
+
+    docker-compose --version
+	
+###### NOTE: You can also choose to install docker-compose via another package manager (i.e. pip or conda), but if you do, make sure to do so in a virtual env.  Many OS’s have python system packages that conflict with docker-compose dependencies. ######
+
+Additionally, make sure your user-id can run docker without sudo (from https://docs.docker.com/install/linux/linux-postinstall/ )
+        
+	sudo groupadd docker
+	sudo usermod -aG docker $USER
+
+Log out and log back in so that your group membership is re-evaluated.
+
+And configure Docker to start on boot.
+
+    sudo systemctl enable docker
+
+##### * Preparing for nvidia-docker
 
 The NVIDIA Container Toolkit allows users to build and run GPU accelerated Docker containers.  
 Nvidia-docker essentially exposes the GPU to the containers to use:  https://github.com/NVIDIA/nvidia-docker
 
-	distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
-	
+You may want to note what you have installed currently.
+
+        sudo apt list --installed | grep nvidia
+
+Then prepare for clean installation of Nvidia drivers.
+
+        sudo apt-get purge nvidia*  
+
+##### Installing nvidia-docker runtime (from https://github.com/NVIDIA/nvidia-docker/wiki/Installation-(version-2.0) )
+
+    distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
 	curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
-
 	curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
-
 	sudo apt-get update
-	sudo apt-get install -y nvidia-container-toolkit  (note: nvidia-docker2 packages are deprecated)
-	sudo systemctl restart docker
+	sudo apt-get install nvidia-docker2
+	sudo pkill -SIGHUP dockerd
 
 ##### * Installing the proper nvidia drivers
 
 Check for driver version here according to your GPU(s):  https://www.nvidia.com/Download/index.aspx?lang=en-us
+In the dropdown for OS, choose “show all OS’s” to see if there are Ubuntu specific choices.  Otherwise choose Linux.
+If you get a dropdown for “cuda toolkit”, choose 10.0)
 
-	sudo apt-get purge nvidia*
 	sudo add-apt-repository ppa:graphics-drivers
 	sudo apt-get update
-	sudo apt-get install screen
-	screen
-	sudo apt install nvidia-driver-430 && sudo reboot 
-Note: 430 is a driver version that is compatible with my GPU, according to that nvidia website
+	sudo apt install nvidia-driver-410 && sudo reboot 
+	
+###### NOTE: 410 is a driver version that is compatible with the GPU I selected on the Nvidia website. ######
 
 Verify the driver installation:
 	
@@ -84,15 +134,41 @@ This doc is straight forward: https://www.techspot.com/downloads/5760-vnc-viewer
 
 This guide goes through how to install CUDA & CUDNN : https://medium.com/@zhanwenchen/install-cuda-and-cudnn-for-tensorflow-gpu-on-ubuntu-79306e4ac04e
 
-###### NOTE: You can apparently use Anaconda instead to install CUDA/CUDNN. I have not tried this, however some users have and have reported success with this method. If you use this approach, you will need to source your Anaconda environment in every terminal window you use to run the code in this repo in order for the Docker containers to be able to utilize the GPU. ######
+###### NOTE: You can apparently use Anaconda instead to install CUDA/CUDNN. I have not tried this, however some users have and have reported that this method is much easier. If you use this approach, you will need to first install Anaconda.  Once installed you can then use the conda package manager to install the desired versions of CUDA and cuDNN.  The following installation configuration has been reported to work together successfully ######
 
-e.g.: ``` conda install cudnn==7.3.1 && conda install -c fragcolor cuda10.0 ```
+##### Downloading Anaconda
+
+	sudo apt-get update -y && sudo apt-get upgrade -y
+	cd /tmp/
+	sudo wget https://repo.anaconda.com/archive/Anaconda3-2019.03-Linux-x86_64.sh
+
+##### Installing Anaconda
+
+	bash Anaconda3-2019.03-Linux-x86_64.sh
+	"yes" for using the default directory location
+	“yes” for running conda init
+
+##### Activating Anaconda  
+	
+	source ~/.bashrc
+	
+##### Verifying the conda package manager works
+
+    conda list
+
+##### Installing CUDA/CUDNN
+
+    conda install cudnn==7.3.1 && conda install -c fragcolor cuda10.0
 
 
 #### Initialization (After all prerequisites have been installed)
 
+
+##### 11. Run Init.sh from this repo (refer to the rest of this doc for script details) 
+
 In a command prompt, simply run "./init.sh".
 This will set everything up so you can run the deepracer local training environment.
+
 
 **init.sh** performs these steps so you don't have to do them manually:
 1. Clones Chris's repo:  https://github.com/crr0004/deepracer.git
