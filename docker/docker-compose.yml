@@ -29,10 +29,9 @@ services:
     - minio
   robomaker:
     image: crr0004/deepracer_robomaker:console
-    # entrypoint: ["/bin/bash", "-c"]
-    # command: run.sh build ${ROBOMAKER_RUN_TYPE}.launch
+    command: ["${ROBOMAKER_COMMAND}"]
     volumes:
-      - ../deepracer/simulation/aws-robomaker-sample-application-deepracer/simulation_ws/src:/app/robomaker-deepracer/simulation_ws/src 
+      - ../deepracer/simulation/aws-robomaker-sample-application-deepracer/simulation_ws/src:/app/robomaker-deepracer/simulation_ws/src
       - ./volumes/robo/checkpoint:/root/.ros/
     ports:
       - "8080:5900"

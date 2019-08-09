@@ -202,7 +202,13 @@ Here is a brief overview of the available scripts:
 
 
 * evaluation
-	* work in progress
+	* start.sh
+		* starts the whole environment using docker compose to run an evaluation run
+		* it will also open a terminal window where you can monitor the log output from the sagemaker training directory
+		* it will also automatically open vncviewer so you can watch the training happening in Gazebo
+	* stop.sh
+		* stops the whole environment
+		* automatically finds and stops the training container which was started from the sagemaker container
 
 * log-analysis
 	* start.sh
