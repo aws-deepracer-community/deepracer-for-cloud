@@ -3,6 +3,9 @@ Provides a quick and easy way to get up and running with a local deepracer train
 This repo just creates a wrapper around the amazing work done by Chris found here: https://github.com/crr0004/deepracer
 Please refer to his repo to understand more about what's going on under the covers.
 
+# Video Instructions
+[![Video Instructions](https://img.youtube.com/vi/CFNcKmtVRSI/0.jpg)](https://www.youtube.com/watch?v=CFNcKmtVRSI)
+
 # Getting Started
 
 ---
