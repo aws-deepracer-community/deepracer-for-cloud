@@ -8,8 +8,24 @@ echo 'waiting for containers to start up...'
 #sleep for 20 seconds to allow the containers to start
 sleep 15
 
-echo 'attempting to pull up sagemaker logs...'
-gnome-terminal -x sh -c "!!; docker logs -f $(docker ps | awk ' /sagemaker/ { print $1 }')"
+if ! [ -x "$(command -v gnome-terminal)" ]; 
+then
+  echo 'Error: skip showing sagemaker logs because gnome-terminal is not installed.  This is normal if you are on a different OS to Ubuntu.'
+else	
+  echo 'attempting to pull up sagemaker logs...'
+  gnome-terminal -x sh -c "!!; docker logs -f $(docker ps | awk ' /sagemaker/ { print $1 }')"
+fi
 
-echo 'attempting to open vnc viewer...'
-gnome-terminal -x sh -c "!!; vncviewer localhost:8080"
+if ! [ -x "$(command -v gnome-terminal)" ]; 
+then
+  if ! [ -x "$(command -v vncviewer)" ]; 
+  then
+    echo 'Error: vncviewer is not present on the PATH.  Make sure you install it and add it to the PATH.'
+  else	
+    echo 'attempting to open vnc viewer...'
+    vncviewer localhost:8080
+  fi
+else	
+  echo 'attempting to open vnc viewer...'
+  gnome-terminal -x sh -c "!!; vncviewer localhost:8080"
+fi
