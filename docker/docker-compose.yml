@@ -24,7 +24,7 @@ services:
     - '//var/run/docker.sock:/var/run/docker.sock'
     - '../deepracer/sagemaker-python-sdk:/deepracer/sagemaker-python-sdk'
     - '../deepracer/rl_coach:/deepracer/rl_coach'
-    - './volumes/robo/container:/robo/container'
+    - '/robo/container:/robo/container'
     depends_on:
     - minio
   robomaker:
