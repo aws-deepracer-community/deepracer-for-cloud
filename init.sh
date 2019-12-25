@@ -21,10 +21,23 @@ ln -s deepracer/rl_coach/rl_deepracer_coach_robomaker.py rl_deepracer_coach_robo
 
 # replace the contents of the rl_deepracer_coach_robomaker.py file with the gpu specific version (this is also where you can edit the hyperparameters)
 # TODO this file should be genrated from a gui before running training
-cat overrides/rl_deepracer_coach_robomaker.py > rl_deepracer_coach_robomaker.py 
+cat overrides/rl_deepracer_coach_robomaker.py > rl_deepracer_coach_robomaker.py
+
+#set proxys if required
+for arg in "$@";
+do
+    IFS='=' read -ra part <<< "$arg"
+    if [ "${part[0]}" == "--http_proxy" ] || [ "${part[0]}" == "--https_proxy" ] || [ "${part[0]}" == "--no_proxy" ]; then
+        var=${part[0]:2}=${part[1]}
+        envs=$'\n'"${var}${envs}"
+        args="${args} --build-arg ${var}"
+    fi
+done
+
+echo -e "$envs" >> ./docker/.env
 
 # build rl-coach image with latest code from crr0004's repo
-docker build -f ./docker/dockerfiles/rl_coach/Dockerfile -t aschu/rl_coach deepracer/
+docker build ${args} -f ./docker/dockerfiles/rl_coach/Dockerfile -t aschu/rl_coach deepracer/
 
 # copy reward function and model-metadata files to bucket 
 cp deepracer/custom_files/* docker/volumes/minio/bucket/custom_files/
