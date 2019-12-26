@@ -29,12 +29,9 @@ do
     IFS='=' read -ra part <<< "$arg"
     if [ "${part[0]}" == "--http_proxy" ] || [ "${part[0]}" == "--https_proxy" ] || [ "${part[0]}" == "--no_proxy" ]; then
         var=${part[0]:2}=${part[1]}
-        envs=$'\n'"${var}${envs}"
         args="${args} --build-arg ${var}"
     fi
 done
-
-echo -e "$envs" >> ./docker/.env
 
 # build rl-coach image with latest code from crr0004's repo
 docker build ${args} -f ./docker/dockerfiles/rl_coach/Dockerfile -t aschu/rl_coach deepracer/
