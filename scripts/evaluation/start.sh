@@ -11,10 +11,16 @@ echo 'waiting for containers to start up...'
 #sleep for 20 seconds to allow the containers to start
 sleep 15
 
-if ! [ -x "$(command -v gnome-terminal)" ]; 
+if xhost >& /dev/null;
 then
-  docker logs -f robomaker
-else	
-  echo 'attempting to pull up robomaker logs...'
-  gnome-terminal -x sh -c "!!; docker logs -f docker logs -f robomaker"
+  echo "Display exists, using gnome-terminal for logs and starting vncviewer."
+
+  echo 'attempting to pull up sagemaker logs...'
+  gnome-terminal -x sh -c "!!; docker logs -f $(docker ps | awk ' /sagemaker/ { print $1 }')"
+
+  echo 'attempting to open vnc viewer...'
+  gnome-terminal -x sh -c "!!; vncviewer localhost:8080"
+else
+  echo "No display. Falling back to CLI mode."
+  docker logs -f $(docker ps | awk ' /sagemaker/ { print $1 }')
 fi

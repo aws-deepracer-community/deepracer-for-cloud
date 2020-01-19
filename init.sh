@@ -34,8 +34,18 @@ cd deepracer/ && patch simulation/aws-robomaker-sample-application-deepracer/sim
 # TODO this file should be genrated from a gui before running training
 cp defaults/template-run.env current-run.env
 
+#set proxys if required
+for arg in "$@";
+do
+    IFS='=' read -ra part <<< "$arg"
+    if [ "${part[0]}" == "--http_proxy" ] || [ "${part[0]}" == "--https_proxy" ] || [ "${part[0]}" == "--no_proxy" ]; then
+        var=${part[0]:2}=${part[1]}
+        args="${args} --build-arg ${var}"
+    fi
+done
+
 # build rl-coach image with latest code from crr0004's repo
-docker build -f ./docker/dockerfiles/rl_coach/Dockerfile -t aschu/rl_coach deepracer/
+docker build ${args} -f ./docker/dockerfiles/rl_coach/Dockerfile -t aschu/rl_coach deepracer/
 docker build -f ./docker/dockerfiles/deepracer_robomaker/Dockerfile -t larsll/deepracer_robomaker
 docker build -f ./docker/dockerfiles/log-analysis/Dockerfile -t larsll/log-analysis
 docker pull crr0004/sagemaker-rl-tensorflow:nvidia
