@@ -7,7 +7,7 @@ sudo chown -R $(id -u):$(id -g) /mnt/deepracer
 
 if [[ -f "$DIR/current-run.env" ]]
 then
-    export $(grep -v '^#' current-run.env | xargs)
+    export $(grep -v '^#' $DIR/current-run.env | xargs)
 else
     echo "File current-run.env does not exist."
     exit 1
