@@ -6,11 +6,11 @@ docker-compose -f ../../docker/docker-compose.yml up -d
 echo 'waiting for containers to start up...'
 
 #sleep for 20 seconds to allow the containers to start
-sleep 15
+sleep 20
 
 if ! [ -x "$(command -v gnome-terminal)" ]; 
 then
-  echo 'Error: skip showing sagemaker logs because gnome-terminal is not installed.  This is normal if you are on a different OS to Ubuntu.'
+  docker logs -f $(docker ps | awk ' /sagemaker/ { print $1 }')
 else	
   echo 'attempting to pull up sagemaker logs...'
   gnome-terminal -x sh -c "!!; docker logs -f $(docker ps | awk ' /sagemaker/ { print $1 }')"

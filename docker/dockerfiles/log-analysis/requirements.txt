@@ -9,3 +9,6 @@ shapely
 boto3
 awscli
 plotly
+tensorflow==1.15.0
+Pillow
+python-resize-image

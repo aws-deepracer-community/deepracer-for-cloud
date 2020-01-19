@@ -1,6 +1,7 @@
-
-aws-deepracer-workshops/
-
-deepracer/
-
+.vscode/
+custom_files/
+analysis/
 docker/volumes/
+recording/
+recording
+current-run.env
