@@ -6,18 +6,6 @@ networks:
       name: sagemaker-local
 
 services:
-  minio:
-    image: minio/minio
-    ports:
-      - "9000:9000"
-    container_name: minio
-    command: gateway azure
-    restart: unless-stopped
-    environment:
-      - MINIO_ACCESS_KEY=${LOCAL_ACCESS_KEY_ID}
-      - MINIO_SECRET_KEY=${LOCAL_SECRET_ACCESS_KEY}
-      - AWS_ACCESS_KEY_ID=${LOCAL_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${LOCAL_SECRET_ACCESS_KEY}
   minio-log:
     image: minio/minio
     ports:
@@ -39,7 +27,6 @@ services:
       - PRETRAINED_S3_BUCKET
       - MODEL_S3_PREFIX=${LOCAL_S3_MODEL_PREFIX}
       - MODEL_S3_BUCKET=${LOCAL_S3_BUCKET}
-      - S3_ENDPOINT_URL=${LOCAL_S3_ENDPOINT_URL}
       - MODEL_METADATA_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/model_metadata.json
       - REWARD_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/reward.py
       - METRICS_S3_BUCKET=${LOCAL_S3_BUCKET}
@@ -55,8 +42,6 @@ services:
     - '../deepracer/sagemaker-python-sdk:/deepracer/sagemaker-python-sdk'
     - '../deepracer/rl_coach:/deepracer/rl_coach'
     - '/robo/container:/robo/container'
-    depends_on:
-    - minio
   robomaker:
     image: larsll/deepracer_robomaker:latest
     command: ["${ROBOMAKER_COMMAND}"]
@@ -73,7 +58,6 @@ services:
       - WORLD_NAME
       - MODEL_S3_PREFIX=${LOCAL_S3_MODEL_PREFIX}
       - MODEL_S3_BUCKET=${LOCAL_S3_BUCKET}
-      - S3_ENDPOINT_URL=${LOCAL_S3_ENDPOINT_URL}
       - MODEL_METADATA_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/model_metadata.json
       - REWARD_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/reward.py
       - METRICS_S3_BUCKET=${LOCAL_S3_BUCKET}

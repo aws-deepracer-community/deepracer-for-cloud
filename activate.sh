@@ -16,11 +16,21 @@ fi
 export LOCAL_ACCESS_KEY_ID=$(aws --profile $LOCAL_S3_PROFILE configure get aws_access_key_id | xargs)
 export LOCAL_SECRET_ACCESS_KEY=$(aws --profile $LOCAL_S3_PROFILE configure get aws_secret_access_key | xargs)
 
+if [ $CLOUD = "Azure" ]
+then
+    ENDPOINT="--endpoint-url http://localhost:9000"
+    
+fi
+export LOCAL_PROFILE_ENDPOINT_URL="--profile $LOCAL_S3_PROFILE $ENDPOINT"
+
 function dr-upload-local-custom-files {
+  if [ $CLOUD = "Azure" ]
+  then
+	  ROBOMAKER_COMMAND="" docker-compose -f $DIR/docker/docker-compose.yml -f $DIR/docker/docker-compose-azure.yml up -d minio
+  fi
   eval CUSTOM_TARGET=$(echo s3://$LOCAL_S3_BUCKET/$LOCAL_S3_CUSTOM_FILES_PREFIX/)
-  ROBOMAKER_COMMAND="" docker-compose -f $DIR/docker/docker-compose.yml up -d minio
   echo "Uploading files to $CUSTOM_TARGET"
-  aws --profile $LOCAL_S3_PROFILE s3 sync custom_files/ $CUSTOM_TARGET
+  aws $LOCAL_PROFILE_ENDPOINT_URL s3 sync custom_files/ $CUSTOM_TARGET
 }
 
 function dr-start-local-training {
