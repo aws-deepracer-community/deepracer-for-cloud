@@ -14,10 +14,10 @@ services:
     command: gateway azure
     restart: unless-stopped
     environment:
-      - MINIO_ACCESS_KEY=${AZ_ACCESS_KEY_ID}
-      - MINIO_SECRET_KEY=${AZ_SECRET_ACCESS_KEY}
-      - AWS_ACCESS_KEY_ID=${AZ_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AZ_SECRET_ACCESS_KEY}
+      - MINIO_ACCESS_KEY=${LOCAL_ACCESS_KEY_ID}
+      - MINIO_SECRET_KEY=${LOCAL_SECRET_ACCESS_KEY}
+      - AWS_ACCESS_KEY_ID=${LOCAL_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${LOCAL_SECRET_ACCESS_KEY}
   minio-log:
     image: minio/minio
     ports:
@@ -28,8 +28,8 @@ services:
       - /mnt/deepracer/robo/checkpoint:/data
     restart: unless-stopped
     environment:
-      - MINIO_ACCESS_KEY=${AZ_ACCESS_KEY_ID}
-      - MINIO_SECRET_KEY=${AZ_SECRET_ACCESS_KEY}
+      - MINIO_ACCESS_KEY=${LOCAL_ACCESS_KEY_ID}
+      - MINIO_SECRET_KEY=${LOCAL_SECRET_ACCESS_KEY}
   rl_coach:
     image: aschu/rl_coach
     environment:
@@ -37,8 +37,17 @@ services:
       - PRETRAINED
       - PRETRAINED_S3_PREFIX
       - PRETRAINED_S3_BUCKET
-      - AWS_ACCESS_KEY_ID=${AZ_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AZ_SECRET_ACCESS_KEY}
+      - MODEL_S3_PREFIX=${LOCAL_S3_MODEL_PREFIX}
+      - MODEL_S3_BUCKET=${LOCAL_S3_BUCKET}
+      - S3_ENDPOINT_URL=${LOCAL_S3_ENDPOINT_URL}
+      - MODEL_METADATA_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/model_metadata.json
+      - REWARD_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/reward.py
+      - METRICS_S3_BUCKET=${LOCAL_S3_BUCKET}
+      - HYPERPARAMETER_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/hyperparameters.json
+      - SAGEMAKER_SHARED_S3_PREFIX=${LOCAL_S3_MODEL_PREFIX}
+      - SAGEMAKER_SHARED_S3_BUCKET=${LOCAL_S3_BUCKET}
+      - AWS_ACCESS_KEY_ID=${LOCAL_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${LOCAL_SECRET_ACCESS_KEY}
     env_file: .env
     container_name: rl_coach
     volumes:
@@ -62,8 +71,17 @@ services:
     environment:
       - CHANGE_START_POSITION
       - WORLD_NAME
-      - AWS_ACCESS_KEY_ID=${AZ_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AZ_SECRET_ACCESS_KEY}
+      - MODEL_S3_PREFIX=${LOCAL_S3_MODEL_PREFIX}
+      - MODEL_S3_BUCKET=${LOCAL_S3_BUCKET}
+      - S3_ENDPOINT_URL=${LOCAL_S3_ENDPOINT_URL}
+      - MODEL_METADATA_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/model_metadata.json
+      - REWARD_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/reward.py
+      - METRICS_S3_BUCKET=${LOCAL_S3_BUCKET}
+      - HYPERPARAMETER_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/hyperparameters.json
+      - SAGEMAKER_SHARED_S3_PREFIX=${LOCAL_S3_MODEL_PREFIX}
+      - SAGEMAKER_SHARED_S3_BUCKET=${LOCAL_S3_BUCKET}
+      - AWS_ACCESS_KEY_ID=${LOCAL_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${LOCAL_SECRET_ACCESS_KEY}
     env_file: .env
     depends_on:
     - rl_coach

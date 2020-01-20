@@ -26,9 +26,16 @@ boto_session = boto3.session.Session(
     aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID", "minio"),
     aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY", "miniokey"),
     region_name=os.environ.get("AWS_REGION", "us-east-1"))
-s3Client = boto_session.resource("s3", use_ssl=False,
+
+endpoint_url = os.environ.get("S3_ENDPOINT_URL", "")
+
+if endpoint_url == "":
+	s3Client = boto_session.resource("s3")
+	s3Client_c = boto_session.client("s3")
+else:
+	s3Client = boto_session.resource("s3", use_ssl=False,
                                  endpoint_url=os.environ.get("S3_ENDPOINT_URL", "http://127.0.0.1:9000"))
-s3Client_c = boto_session.client("s3", use_ssl=False,
+	s3Client_c = boto_session.client("s3", use_ssl=False,
                                  endpoint_url=os.environ.get("S3_ENDPOINT_URL", "http://127.0.0.1:9000"))
 
 sage_session = sagemaker.local.LocalSession(

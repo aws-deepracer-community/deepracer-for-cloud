@@ -3,7 +3,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # create directory structure for docker volumes
 sudo mkdir -p /mnt/deepracer /mnt/deepracer/recording
-sudo chown -R $(id -u):$(id -g) /mnt/deepracer 
+sudo chown $(id -u):$(id -g) /mnt/deepracer 
 
 if [[ -f "$DIR/current-run.env" ]]
 then
@@ -13,15 +13,14 @@ else
     exit 1
 fi
 
-export AZ_ACCESS_KEY_ID=$(aws --profile $AZURE_S3_PROFILE configure get aws_access_key_id | xargs)
-export AZ_SECRET_ACCESS_KEY=$(aws --profile $AZURE_S3_PROFILE configure get aws_secret_access_key | xargs)
+export LOCAL_ACCESS_KEY_ID=$(aws --profile $LOCAL_S3_PROFILE configure get aws_access_key_id | xargs)
+export LOCAL_SECRET_ACCESS_KEY=$(aws --profile $LOCAL_S3_PROFILE configure get aws_secret_access_key | xargs)
 
 function dr-upload-local-custom-files {
-  eval $(cat $DIR/docker/.env | grep 'MODEL_S3_BUCKET\|MODEL_CUSTOM_FILES_S3_PREFIX' | xargs )
-  eval CUSTOM_TARGET=$(echo s3://$MODEL_S3_BUCKET/$MODEL_CUSTOM_FILES_S3_PREFIX)
+  eval CUSTOM_TARGET=$(echo s3://$LOCAL_S3_BUCKET/$LOCAL_S3_CUSTOM_FILES_PREFIX/)
   ROBOMAKER_COMMAND="" docker-compose -f $DIR/docker/docker-compose.yml up -d minio
   echo "Uploading files to $CUSTOM_TARGET"
-  aws --profile $AZURE_S3_PROFILE --endpoint-url http://localhost:9000 s3 sync custom_files/ s3://$MODEL_S3_BUCKET/$MODEL_CUSTOM_FILES_S3_PREFIX
+  aws --profile $LOCAL_S3_PROFILE s3 sync custom_files/ $CUSTOM_TARGET
 }
 
 function dr-start-local-training {

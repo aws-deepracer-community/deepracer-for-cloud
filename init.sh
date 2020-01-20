@@ -18,7 +18,7 @@ ln -s $(eval echo "~${USER}")/.aws  $DIR/docker/volumes/
 # git clone https://github.com/breadcentric/aws-deepracer-workshops.git && cd aws-deepracer-workshops && git checkout enhance-log-analysis && cd ..
 git submodule init && git submodule update
 
-ln -sf ./aws-deepracer-workshops/log-analysis  ./docker/volumes/log-analysis
+ln -sf $DIR/aws-deepracer-workshops/log-analysis  $DIR/docker/volumes/log-analysis
 cp deepracer/simulation/aws-robomaker-sample-application-deepracer/simulation_ws/src/deepracer_simulation/routes/* docker/volumes/log-analysis/tracks/
 
 # copy rewardfunctions
@@ -45,9 +45,9 @@ do
 done
 
 # build rl-coach image with latest code from crr0004's repo
-docker build ${args} -f ./docker/dockerfiles/rl_coach/Dockerfile -t aschu/rl_coach deepracer/
-docker build -f ./docker/dockerfiles/deepracer_robomaker/Dockerfile -t larsll/deepracer_robomaker
-docker build -f ./docker/dockerfiles/log-analysis/Dockerfile -t larsll/log-analysis
+docker build ${args} -f $DIR/docker/dockerfiles/rl_coach/Dockerfile -t aschu/rl_coach deepracer/
+docker build $DIR/docker/dockerfiles/deepracer_robomaker/Dockerfile -t larsll/deepracer_robomaker deepracer/
+docker build $DIR/docker/dockerfiles/log-analysis/Dockerfile -t larsll/log-analysis deepracer/
 docker pull crr0004/sagemaker-rl-tensorflow:nvidia
 
 # create the network sagemaker-local if it doesn't exit
