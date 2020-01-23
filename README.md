@@ -43,11 +43,11 @@ Azure:
 	
 ## Installation
 
-A step by step [installation guide](https://github.com/larsll/deepracer-for-azure/wiki/Install-DeepRacer-in-Azure) for manual installation in Azure is available.
+A step by step [installation guide](https://github.com/larsll/deepracer-for-cloud/wiki/Install-DeepRacer-in-Azure) for manual installation in Azure is available.
 
 The package comes with preparation and setup scripts that would allow a turn-key setup for a fresh virtual machine.
 
-	git clone https://github.com/larsll/deepracer-for-azure.git
+	git clone https://github.com/larsll/deepracer-for-cloud.git
 	cd deepracer-for-azure && ./bin/prepare.sh
 	
 This will prepare the VM by partitioning additional drives as well as installing all prerequisites. After a reboot it will continuee to run `./bin/init.sh` setting up the full repository and downloading the core Docker images.
