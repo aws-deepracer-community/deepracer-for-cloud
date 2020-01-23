@@ -57,7 +57,7 @@ done
 # docker build ./docker/dockerfiles/log-analysis/ -t larsll/deepracer-loganalysis
 docker pull larsll/deepracer-rlcoach
 docker pull larsll/deepracer-robomaker
-docker pull larsll/deepracer-loganalysis
+# docker pull larsll/deepracer-loganalysis
 docker pull crr0004/sagemaker-rl-tensorflow:nvidia
 
 # create the network sagemaker-local if it doesn't exit
