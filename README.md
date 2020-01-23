@@ -24,26 +24,35 @@ Main differences to the work done by Alex is:
 Depending on your needs as well as specific needs of the cloud platform you can configure your VM to your liking.
 
 AWS:
-* EC2 instance of type G3, G4, P2 or P3.
+* EC2 instance of type G3, G4, P2 or P3 - recommendation is g4dn.2xlarge
 	* Ubuntu 18.04
 	* Minimum 30 GB, preferred 40 GB of OS disk.
 	* Ephemeral Drive connected
 	* Minimum 8 GB GPU-RAM
-	* Recommended at least 6 VCPUs.
+	* Recommended at least 6 VCPUs
 * S3 bucket. Preferrably in same region as EC2 instance.
 
 Azure:
-* N-Series VM that comes with NVIDIA Graphics Adapter. 
+* N-Series VM that comes with NVIDIA Graphics Adapter - recommendation is NC6_Standard
 	* Ubuntu 18.04
 	* Standard 30 GB OS drive is sufficient to get started. 
 	* Recommended to add an additional 32 GB data disk if you want to use the Log Analysis container.
+	* Minimum 8 GB GPU-RAM
+	* Recommended at least 6 VCPUs
 * Storage Account with one Blob container configured for Access Key authentication.
 	
 ## Installation
 
-A step by step [installation guide](https://github.com/larsll/deepracer-for-azure/wiki/Install-DeepRacer-in-Azure) is available.
+A step by step [installation guide](https://github.com/larsll/deepracer-for-azure/wiki/Install-DeepRacer-in-Azure) for manual installation in Azure is available.
 
-TODO: Create an end-to-end installation script.
+The package comes with preparation and setup scripts that would allow a turn-key setup for a fresh virtual machine.
+
+	git clone https://github.com/larsll/deepracer-for-azure.git
+	cd deepracer-for-azure && ./bin/prepare.sh
+	
+This will prepare the VM by partitioning additional drives as well as installing all prerequisites. After a reboot it will continuee to run `./bin/init.sh` setting up the full repository and downloading the core Docker images.
+
+TODO: Setup of environment.
 
 ## Usage
 
