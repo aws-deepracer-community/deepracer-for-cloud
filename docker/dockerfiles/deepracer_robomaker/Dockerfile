@@ -11,8 +11,7 @@ ca-certificates apt-transport-https gnupg-curl && \
     echo "$NVIDIA_GPGKEY_SUM  cudasign.pub" | sha256sum -c --strict - && rm cudasign.pub && \
     echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/cuda.list && \
     echo "deb https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/nvidia-ml.list && \
-    apt-get purge --auto-remove -y gnupg-curl && \
-rm -rf /var/lib/apt/lists/*
+    apt-get purge --auto-remove -y gnupg-curl 
 
 ENV CUDA_VERSION 9.0.176
 ENV CUDNN_VERSION 7.6.4.38

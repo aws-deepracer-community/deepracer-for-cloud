@@ -31,7 +31,7 @@ services:
       - MINIO_ACCESS_KEY=${AZ_ACCESS_KEY_ID}
       - MINIO_SECRET_KEY=${AZ_SECRET_ACCESS_KEY}
   rl_coach:
-    image: aschu/rl_coach
+    image: larsll/deepracer-rlcoach
     environment:
       - WORLD_NAME
       - PRETRAINED
@@ -49,7 +49,7 @@ services:
     depends_on:
     - minio
   robomaker:
-    image: larsll/deepracer_robomaker:latest
+    image: larsll/deepracer-robomaker:latest
     command: ["${ROBOMAKER_COMMAND}"]
     volumes:
       - ../deepracer/simulation/aws-robomaker-sample-application-deepracer/simulation_ws/src:/app/robomaker-deepracer/simulation_ws/src

@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+GPUS=$(docker run --gpus all nvidia/cuda:10.2-base nvidia-smi "-L" | awk  '/GPU .:/' | wc -l)
+if [ $? -ne 0 ] || [ $GPUS -eq 0 ]
+then
+	echo "No GPU detected in docker. Please check setup".
+	exit 1
+fi
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $DIR
 
@@ -18,7 +25,7 @@ ln -s $(eval echo "~${USER}")/.aws  $DIR/docker/volumes/
 # git clone https://github.com/breadcentric/aws-deepracer-workshops.git && cd aws-deepracer-workshops && git checkout enhance-log-analysis && cd ..
 git submodule init && git submodule update
 
-ln -sf ./aws-deepracer-workshops/log-analysis  ./docker/volumes/log-analysis
+ln -sf $DIR/aws-deepracer-workshops/log-analysis  $DIR/docker/volumes/log-analysis
 cp deepracer/simulation/aws-robomaker-sample-application-deepracer/simulation_ws/src/deepracer_simulation/routes/* docker/volumes/log-analysis/tracks/
 
 # copy rewardfunctions
@@ -44,10 +51,13 @@ do
     fi
 done
 
-# build rl-coach image with latest code from crr0004's repo
-docker build ${args} -f ./docker/dockerfiles/rl_coach/Dockerfile -t aschu/rl_coach deepracer/
-docker build -f ./docker/dockerfiles/deepracer_robomaker/Dockerfile -t larsll/deepracer_robomaker
-docker build -f ./docker/dockerfiles/log-analysis/Dockerfile -t larsll/log-analysis
+# Download docker images. Change to build statements if locally built images are desired.
+# docker build ${args} -f ./docker/dockerfiles/rl_coach/Dockerfile -t larsll/deepracer-rlcoach ./
+# docker build ./docker/dockerfiles/deepracer_robomaker/ -t larsll/deepracer-robomaker
+# docker build ./docker/dockerfiles/log-analysis/ -t larsll/deepracer-loganalysis
+docker pull larsll/deepracer-rlcoach
+docker pull larsll/deepracer-robomaker
+docker pull larsll/deepracer-loganalysis
 docker pull crr0004/sagemaker-rl-tensorflow:nvidia
 
 # create the network sagemaker-local if it doesn't exit

@@ -5,9 +5,10 @@ LABEL maintainer="lars@ludvig.no" \
 	  version=1.0
 
 # Container Dependency Setup
-RUN apt-get update
-RUN apt-get upgrade -y
-RUN apt-get install software-properties-common libsm6 libxext6 libxrender-dev git wget python3-pip -y
+RUN apt-get update && apt-get upgrade -y && \ 
+	apt-get install software-properties-common libsm6 libxext6 libxrender-dev git wget python3-pip -y && \
+	rm -rf /var/lib/apt/lists/*
+
 RUN pip3 install virtualenv
 RUN virtualenv /workspace/venv
 WORKDIR /workspace/venv
