@@ -29,10 +29,10 @@ then
     fi
 elif  [ -n $ADDL_DISK ] && [ -n $ADDL_PART] 
 then
-    echo "Found $ADDL_DISK - $ADDL_PART already mounted, taking no action."
+    echo "Found $ADDL_DISK - $ADDL_PART already mounted. Installing into present drive/directory structure."
 
 else
-    echo "Did not find $ADDL_DISK, taking no action."
+    echo "Did not find $ADDL_DISK. Installing into present drive/directory structure."
 fi
 
 ## Adding Nvidia Drivers
