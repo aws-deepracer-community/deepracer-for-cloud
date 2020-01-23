@@ -19,7 +19,7 @@ services:
       - MINIO_ACCESS_KEY=${LOCAL_ACCESS_KEY_ID}
       - MINIO_SECRET_KEY=${LOCAL_SECRET_ACCESS_KEY}
   rl_coach:
-    image: aschu/rl_coach
+    image: larsll/deepracer-rlcoach
     environment:
       - WORLD_NAME
       - PRETRAINED
@@ -43,7 +43,7 @@ services:
     - '../deepracer/rl_coach:/deepracer/rl_coach'
     - '/robo/container:/robo/container'
   robomaker:
-    image: larsll/deepracer_robomaker:latest
+    image: larsll/deepracer-robomaker:latest
     command: ["${ROBOMAKER_COMMAND}"]
     volumes:
       - ../deepracer/simulation/aws-robomaker-sample-application-deepracer/simulation_ws/src:/app/robomaker-deepracer/simulation_ws/src

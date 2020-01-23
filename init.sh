@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
+GPUS=$(docker run --gpus all nvidia/cuda:10.2-base nvidia-smi "-L" | awk  '/GPU .:/' | wc -l)
+if [ $? -ne 0 ] || [ $GPUS -eq 0 ]
+then
+	echo "No GPU detected in docker. Please check setup".
+	exit 1
+fi
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $DIR
 
@@ -44,10 +51,13 @@ do
     fi
 done
 
-# build rl-coach image with latest code from crr0004's repo
-docker build ${args} -f $DIR/docker/dockerfiles/rl_coach/Dockerfile -t aschu/rl_coach deepracer/
-docker build $DIR/docker/dockerfiles/deepracer_robomaker/Dockerfile -t larsll/deepracer_robomaker deepracer/
-docker build $DIR/docker/dockerfiles/log-analysis/Dockerfile -t larsll/log-analysis deepracer/
+# Download docker images. Change to build statements if locally built images are desired.
+# docker build ${args} -f ./docker/dockerfiles/rl_coach/Dockerfile -t larsll/deepracer-rlcoach ./
+# docker build ./docker/dockerfiles/deepracer_robomaker/ -t larsll/deepracer-robomaker
+# docker build ./docker/dockerfiles/log-analysis/ -t larsll/deepracer-loganalysis
+docker pull larsll/deepracer-rlcoach
+docker pull larsll/deepracer-robomaker
+docker pull larsll/deepracer-loganalysis
 docker pull crr0004/sagemaker-rl-tensorflow:nvidia
 
 # create the network sagemaker-local if it doesn't exit
