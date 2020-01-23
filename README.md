@@ -13,6 +13,7 @@ Main differences to the work done by Alex is:
 	* `current-run.env` contains user session configuration (pretraining, track etc.) as well as information about where to upload your model (S3 bucket and prefix).
 	* `docker/.env` remains the home for more static configuration. This is not expected to change between sessions.
 * Uses the Azure temporary drive on `/mnt` to store robomaker files (checkpoints, logs); these will be deleted between runs, but provides ~300GB of 'free' storage as long as the VM is running. Archiving of logs and additional checkpoint files required if desired.
+* Robomaker, RL Coach and Log Analysis Docker images are now available as downloads in [Docker Hub](https://hub.docker.com/search?q=larsll%2Fdeepracer&type=image), which reduces the time to build a new VM.
 
 ## Installation
 
