@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
 ## Do I have a GPU
 GPUS=$(lspci | awk '/NVIDIA/ && /3D controller/' | wc -l)
 if [ $? -ne 0 ] || [ $GPUS -eq 0 ]
@@ -8,7 +10,7 @@ then
         exit 1
 fi
 
-## Do I have an additional disk?
+## Do I have an additional disk for Docker images - looking for /dev/sdc (Azure)
 
 ADDL_DISK=$(lsblk | awk  '/^sdc/ {print $1}')
 ADDL_PART=$(lsblk -l | awk -v DISK="$ADDL_DISK" '($0 ~ DISK) && ($0 ~ /part/) {print $1}')
@@ -33,6 +35,34 @@ then
 
 else
     echo "Did not find $ADDL_DISK. Installing into present drive/directory structure."
+fi
+
+
+## Do I have an ephemeral disk / temporary storage for runtime output - looking for /dev/nvme0n1 (AWS)?
+
+ADDL_DISK=$(lsblk | awk  '/^nvme0n1/ {print $1}')
+ADDL_PART=$(lsblk -l | awk -v DISK="$ADDL_DISK" '($0 ~ DISK) && ($0 ~ /part/) {print $1}')
+
+if [ -n $ADDL_DISK ] && [ -z $ADDL_PART]
+then
+    echo "Found $ADDL_DISK, preparing it for use"
+    echo -e "g\nn\np\n1\n\n\nw\n" | sudo fdisk /dev/$ADDL_DISK
+    ADDL_DEVICE=$(echo "/dev/"$ADDL_DISK"p1")
+    sudo mkfs.ext4 $ADDL_DEVICE
+    sudo mkdir -p /mnt
+    echo "$ADDL_DEVICE   /mnt   auto    rw,user,auto    0    0" | sudo tee -a /etc/fstab
+    mount /mnt
+    if [ $? -ne 0 ]
+    then
+        echo "Error during preparing of temporary disk. Exiting."
+        exit 1
+    fi
+elif  [ -n $ADDL_DISK ] && [ -n $ADDL_PART]
+then
+    echo "Found $ADDL_DISK - $ADDL_PART already mounted, taking no action."
+
+else
+    echo "Did not find $ADDL_DISK, taking no action."
 fi
 
 ## Adding Nvidia Drivers
@@ -69,7 +99,9 @@ sudo usermod -a -G docker $(id -un)
 
 ## Installing Docker Compose
 sudo curl -L https://github.com/docker/compose/releases/download/1.25.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compos
 
-## Reboot to load driver
+## Reboot to load driver -- continue install
+cd $DIR
+./runonce.sh init.sh
 sudo reboot
