@@ -1,4 +1,4 @@
-FROM tensorflow/tensorflow:latest-gpu
+FROM  nvidia/cuda:10.0-cudnn7-runtime-ubuntu18.04
 
 LABEL maintainer="lars@ludvig.no" \
 	  description="Log Analysis for DeepRacer Training Run" \
@@ -6,19 +6,19 @@ LABEL maintainer="lars@ludvig.no" \
 
 # Container Dependency Setup
 RUN apt-get update && apt-get upgrade -y && \ 
-	apt-get install software-properties-common libsm6 libxext6 libxrender-dev git wget python3-pip -y && \
-	rm -rf /var/lib/apt/lists/*
+	apt-get install --no-install-recommends software-properties-common libsm6 libxext6 libxrender-dev git wget python3-pip -y && \
+	apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install virtualenv
-RUN virtualenv /workspace/venv
+ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda-10.0/targets/x86_64-linux/lib
+
+RUN pip3 install virtualenv && virtualenv /workspace/venv
 WORKDIR /workspace/venv
 RUN mkdir -p /workspace/venv/data /workspace/venv/logs /workspace/venv/workbook
 
 # Install common pip packages
 WORKDIR /workspace/venv
 COPY requirements.txt ./
-RUN ls -lrt
-RUN . /workspace/venv/bin/activate && pip install -r requirements.txt
+RUN . /workspace/venv/bin/activate && pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 8888
 VOLUME ["/workspace/venv/data", "/workspace/venv/logs", "/root/.aws", "/workspace/venv/workbook"]

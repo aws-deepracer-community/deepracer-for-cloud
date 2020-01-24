@@ -24,7 +24,7 @@ ln -s $(eval echo "~${USER}")/.aws  $INSTALL_DIR/docker/volumes/
 # Now as submodules!
 # git clone --recurse-submodules https://github.com/crr0004/deepracer.git
 # git clone https://github.com/breadcentric/aws-deepracer-workshops.git && cd aws-deepracer-workshops && git checkout enhance-log-analysis && cd ..
-git submodule init && git submodule update
+git submodule update --init --recursive
 
 ln -sf $INSTALL_DIR/aws-deepracer-workshops/log-analysis  $INSTALL_DIR/docker/volumes/log-analysis
 cp $INSTALL_DIR/deepracer/simulation/aws-robomaker-sample-application-deepracer/simulation_ws/src/deepracer_simulation/routes/* docker/volumes/log-analysis/tracks/

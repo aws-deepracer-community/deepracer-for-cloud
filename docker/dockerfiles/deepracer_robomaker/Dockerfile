@@ -45,15 +45,15 @@ RUN apt-get install -y --no-install-recommends \
     cuda-cublas-9-0=9.0.176.4-1 \
     cuda-cusolver-$CUDA_PKG_VERSION \
     libnccl2=$NCCL_VERSION-1+cuda9.0 && \
-    apt-mark hold libnccl2 
-
-RUN apt-get install -y --no-install-recommends \
+    apt-mark hold libnccl2 && \
+    apt-get install -y --no-install-recommends \
     libcudnn7=$CUDNN_VERSION-1+cuda9.0 && \
     apt-mark hold libcudnn7 && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 
 ENV PATH /usr/local/nvidia/bin:/usr/local/cuda/bin:${PATH}
 ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda-9.0/targets/x86_64-linux/lib
 
-RUN pip install tensorflow-gpu==1.11.0
+RUN pip install --no-cache-dir tensorflow-gpu==1.11.0
