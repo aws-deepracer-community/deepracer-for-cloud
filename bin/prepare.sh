@@ -4,7 +4,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 ## Do I have a GPU
 GPUS=$(lspci | awk '/NVIDIA/ && /3D controller/' | wc -l)
-if [ $? -ne 0 ] || [ $GPUS -eq 0 ]
+if [ $? -ne 0 ] || [ $GPUS -eq 0 ];
 then
         echo "No NVIDIA GPU detected. Exiting".
         exit 1
@@ -15,21 +15,22 @@ fi
 ADDL_DISK=$(lsblk | awk  '/^sdc/ {print $1}')
 ADDL_PART=$(lsblk -l | awk -v DISK="$ADDL_DISK" '($0 ~ DISK) && ($0 ~ /part/) {print $1}')
 
-if [ -n $ADDL_DISK ] && [ -z $ADDL_PART] 
+if [ -n $ADDL_DISK ] && [ -z $ADDL_PART];
 then
     echo "Found $ADDL_DISK, preparing it for use"
     echo -e "g\nn\np\n1\n\n\nw\n" | sudo fdisk /dev/$ADDL_DISK
+    sleep 1s
     ADDL_DEVICE=$(echo "/dev/"$ADDL_DISK"1")
     sudo mkfs.ext4 $ADDL_DEVICE
     sudo mkdir -p /var/lib/docker
-    echo "$ADDL_DEVICE   /var/lib/docker   auto    rw,user,auto    0    0" | sudo tee -a /etc/fstab
+    echo "$ADDL_DEVICE   /var/lib/docker   ext4    rw,user,auto    0    0" | sudo tee -a /etc/fstab
     mount /var/lib/docker
     if [ $? -ne 0 ]
     then
         echo "Error during preparing of additional disk. Exiting."
         exit 1
     fi
-elif  [ -n $ADDL_DISK ] && [ -n $ADDL_PART] 
+elif  [ -n $ADDL_DISK ] && [ -n $ADDL_PART];
 then
     echo "Found $ADDL_DISK - $ADDL_PART already mounted. Installing into present drive/directory structure."
 
@@ -43,21 +44,22 @@ fi
 ADDL_DISK=$(lsblk | awk  '/^nvme0n1/ {print $1}')
 ADDL_PART=$(lsblk -l | awk -v DISK="$ADDL_DISK" '($0 ~ DISK) && ($0 ~ /part/) {print $1}')
 
-if [ -n $ADDL_DISK ] && [ -z $ADDL_PART]
+if [ -n $ADDL_DISK ] && [ -z $ADDL_PART];
 then
     echo "Found $ADDL_DISK, preparing it for use"
     echo -e "g\nn\np\n1\n\n\nw\n" | sudo fdisk /dev/$ADDL_DISK
+    sleep 1s
     ADDL_DEVICE=$(echo "/dev/"$ADDL_DISK"p1")
     sudo mkfs.ext4 $ADDL_DEVICE
     sudo mkdir -p /mnt
-    echo "$ADDL_DEVICE   /mnt   auto    rw,user,auto    0    0" | sudo tee -a /etc/fstab
+    echo "$ADDL_DEVICE   /mnt   ext4    rw,user,noauto    0    0" | sudo tee -a /etc/fstab
     mount /mnt
     if [ $? -ne 0 ]
     then
         echo "Error during preparing of temporary disk. Exiting."
         exit 1
     fi
-elif  [ -n $ADDL_DISK ] && [ -n $ADDL_PART]
+elif [ -n $ADDL_DISK ] && [ -n $ADDL_PART];
 then
     echo "Found $ADDL_DISK - $ADDL_PART already mounted, taking no action."
 
@@ -75,15 +77,9 @@ sudo bash -c 'apt update && apt install -y nvidia-driver-440 cuda-minimal-build-
 sudo apt-get install -y awscli jq
 
 ## Installing Docker
-sudo add-apt-repository    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-$(lsb_release -cs) \
-stable"
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-$(lsb_release -cs) \
-stable"
-sudo apt-get update
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+sudo add-apt-repository    "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
 
 distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
 curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
@@ -99,9 +95,11 @@ sudo usermod -a -G docker $(id -un)
 
 ## Installing Docker Compose
 sudo curl -L https://github.com/docker/compose/releases/download/1.25.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compos
+sudo chmod +x /usr/local/bin/docker-compose
 
 ## Reboot to load driver -- continue install
+echo "Rebooting in 5 seconds. Will continue with install."
 cd $DIR
-./runonce.sh init.sh
+./runonce.sh ./init.sh
+sleep 5s
 sudo reboot

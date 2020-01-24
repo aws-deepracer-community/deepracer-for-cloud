@@ -2,6 +2,9 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # create directory structure for docker volumes
+if ! (mount | grep /mnt > /dev/null); then
+  mount /mnt
+fi
 sudo mkdir -p /mnt/deepracer /mnt/deepracer/recording
 sudo chown $(id -u):$(id -g) /mnt/deepracer 
 
