@@ -52,10 +52,12 @@ The package comes with preparation and setup scripts that would allow a turn-key
 	
 This will prepare the VM by partitioning additional drives as well as installing all prerequisites. After a reboot it will continuee to run `./bin/init.sh` setting up the full repository and downloading the core Docker images.
 
+The installation script will adapt `.profile` to ensure that all settings are applied on login.
+
 TODO: Setup of environment.
 
 ## Usage
 
-Before every session run `source activate.sh` to ensure that the environment variables are set correctly. This also creates a set of aliases/commands that makes it easier to operate the setup.
+Before every session run `dr-update` to ensure that the environment variables are set correctly. This also creates a set of aliases/commands that makes it easier to operate the setup. (If `dr-update` is not found, try `source activate.sh` to get aliases defined.
 
-Ensure that the configuration files are uploaded into the bucket `dr-upload-local-custom-files`. Start a training with `dr-start-local-training`.
+Ensure that the configuration files are uploaded into the bucket `dr-upload-custom-files`. Start a training with `dr-start-training`.
