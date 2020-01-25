@@ -39,6 +39,7 @@ sage_session = sagemaker.local.LocalSession(
     boto_session=boto_session, s3_client=s3Client)
 # sage_session.default_bucket()
 s3_bucket = os.environ.get("MODEL_S3_BUCKET", "bucket")
+s3_prefix = os.environ.get("MODEL_S3_PREFIX", "rl-deepracer-sagemaker")
 pretrained = str2bool(os.environ.get("PRETRAINED", False))
 s3_pretrained_bucket = os.environ.get("PRETRAINED_S3_BUCKET", "bucket")
 s3_pretrained_prefix = os.environ.get(
@@ -61,7 +62,7 @@ job_name_prefix = 'rl-deepracer'
 # create unique job name
 tm = gmtime()
 # -" + strftime("%y%m%d-%H%M%S", tm) #Ensure S3 prefix contains SageMaker
-job_name = s3_prefix = job_name_prefix + "-sagemaker"
+job_name = job_name_prefix + "-sagemaker"
 # -" + strftime("%y%m%d-%H%M%S", tm) #Ensure that the S3 prefix contains the keyword 'robomaker'
 s3_prefix_robomaker = job_name_prefix + "-robomaker"
 

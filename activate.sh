@@ -37,29 +37,49 @@ fi
 export COMPOSE_FILE
 export LOCAL_PROFILE_ENDPOINT_URL
 
-function dr-upload-local-custom-files {
+function dr-upload-custom-files {
   if [[ "${CLOUD,,}" == "azure" ]];
   then
 	  ROBOMAKER_COMMAND="" docker-compose $COMPOSE_FILES up -d minio
   fi
   eval CUSTOM_TARGET=$(echo s3://$LOCAL_S3_BUCKET/$LOCAL_S3_CUSTOM_FILES_PREFIX/)
   echo "Uploading files to $CUSTOM_TARGET"
-  aws $LOCAL_PROFILE_ENDPOINT_URL s3 sync custom_files/ $CUSTOM_TARGET
+  aws $LOCAL_PROFILE_ENDPOINT_URL s3 sync $DIR/custom_files/ $CUSTOM_TARGET
 }
 
-function dr-start-local-training {
+function dr-upload-logs {
+  if [[ "${CLOUD,,}" == "azure" ]];
+  then
+	  ROBOMAKER_COMMAND="" docker-compose $COMPOSE_FILES up -d minio
+  fi
+  eval CUSTOM_TARGET=$(echo s3://$LOCAL_S3_BUCKET/$LOCAL_S3_LOGS_PREFIX/)
+  echo "Uploading files to $CUSTOM_TARGET"
+  aws $LOCAL_PROFILE_ENDPOINT_URL s3 sync /mnt/deepracer/robo/checkpoint/log $CUSTOM_TARGET --exclude "*" --include "rl_coach*.log*" --no-follow-symlinks
+}
+
+function dr-download-custom-files {
+  if [[ "${CLOUD,,}" == "azure" ]];
+  then
+	  ROBOMAKER_COMMAND="" docker-compose $COMPOSE_FILES up -d minio
+  fi
+  eval CUSTOM_TARGET=$(echo s3://$LOCAL_S3_BUCKET/$LOCAL_S3_CUSTOM_FILES_PREFIX/)
+  echo "Downloading files from $CUSTOM_TARGET"
+  aws $LOCAL_PROFILE_ENDPOINT_URL s3 sync $CUSTOM_TARGET $DIR/custom_files/
+}
+
+function dr-start-training {
   bash -c "cd $DIR/scripts/training && ./start.sh"
 }
 
-function dr-stop-local-training {
+function dr-stop-training {
   ROBOMAKER_COMMAND="" bash -c "cd $DIR/scripts/training && ./stop.sh"
 }
 
-function dr-start-local-evaluation {
+function dr-start-evaluation {
   bash -c "cd $DIR/scripts/evaluation && ./start.sh"
 }
 
-function dr-stop-local-evaluation {
+function dr-stop-evaluation {
   ROBOMAKER_COMMAND="" bash -c "cd $DIR/scripts/evaluation && ./stop.sh"
 }
 
@@ -74,7 +94,7 @@ function dr-stop-loganalysis {
   else
     echo "Log-analysis is not running."
   fi
-  
+
 }
 
 function dr-logs-sagemaker {
