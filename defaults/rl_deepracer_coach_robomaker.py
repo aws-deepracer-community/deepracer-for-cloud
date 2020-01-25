@@ -22,10 +22,7 @@ def str2bool(v):
   return v.lower() in ("yes", "true", "t", "1")
 
 # S3 bucket
-boto_session = boto3.session.Session(
-    aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID", "minio"),
-    aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY", "miniokey"),
-    region_name=os.environ.get("AWS_REGION", "us-east-1"))
+boto_session = boto3.session.Session(region_name=os.environ.get("AWS_REGION", "us-east-1"))
 
 endpoint_url = os.environ.get("S3_ENDPOINT_URL", "")
 

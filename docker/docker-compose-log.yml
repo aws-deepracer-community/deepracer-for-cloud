@@ -1,0 +1,19 @@
+version: '3.7'
+networks:
+  default:
+    external:
+      name: sagemaker-local
+
+services:
+  minio-log:
+    image: minio/minio
+    ports:
+      - "9001:9001"
+    container_name: minio-log
+    command: server --address :9001 /data
+    volumes:
+      - /mnt/deepracer/robo/checkpoint:/data
+    restart: unless-stopped
+    environment:
+      - MINIO_ACCESS_KEY=${LOGS_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${LOGS_ACCESS_SECRET}

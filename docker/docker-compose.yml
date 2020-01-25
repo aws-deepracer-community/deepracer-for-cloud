@@ -6,18 +6,6 @@ networks:
       name: sagemaker-local
 
 services:
-  minio-log:
-    image: minio/minio
-    ports:
-      - "9001:9001"
-    container_name: minio-log
-    command: server --address :9001 /data
-    volumes:
-      - /mnt/deepracer/robo/checkpoint:/data
-    restart: unless-stopped
-    environment:
-      - MINIO_ACCESS_KEY=${LOCAL_ACCESS_KEY_ID}
-      - MINIO_SECRET_KEY=${LOCAL_SECRET_ACCESS_KEY}
   rl_coach:
     image: larsll/deepracer-rlcoach
     environment:
@@ -33,8 +21,6 @@ services:
       - HYPERPARAMETER_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/hyperparameters.json
       - SAGEMAKER_SHARED_S3_PREFIX=${LOCAL_S3_MODEL_PREFIX}
       - SAGEMAKER_SHARED_S3_BUCKET=${LOCAL_S3_BUCKET}
-      - AWS_ACCESS_KEY_ID=${LOCAL_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${LOCAL_SECRET_ACCESS_KEY}
     env_file: .env
     container_name: rl_coach
     volumes:
@@ -64,8 +50,6 @@ services:
       - HYPERPARAMETER_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/hyperparameters.json
       - SAGEMAKER_SHARED_S3_PREFIX=${LOCAL_S3_MODEL_PREFIX}
       - SAGEMAKER_SHARED_S3_BUCKET=${LOCAL_S3_BUCKET}
-      - AWS_ACCESS_KEY_ID=${LOCAL_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${LOCAL_SECRET_ACCESS_KEY}
     env_file: .env
     depends_on:
     - rl_coach

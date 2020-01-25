@@ -36,7 +36,13 @@ cp $INSTALL_DIR/defaults/hyperparameters.json $INSTALL_DIR/custom_files/
 
 # setup symlink to rl-coach config file
 ln -f $INSTALL_DIR/defaults/rl_deepracer_coach_robomaker.py $INSTALL_DIR/deepracer/rl_coach/rl_deepracer_coach_robomaker.py 
-cd $INSTALL_DIR/deepracer/ && patch simulation/aws-robomaker-sample-application-deepracer/simulation_ws/src/sagemaker_rl_agent/markov/environments/deepracer_racetrack_env.py < ../defaults/deepracer_racetrack_env.py.patch && cd ..
+
+# patching files in submodules that don't entirely fit our needs
+cd $INSTALL_DIR/deepracer/
+patch simulation/aws-robomaker-sample-application-deepracer/simulation_ws/src/sagemaker_rl_agent/markov/environments/deepracer_racetrack_env.py < ../defaults/deepracer_racetrack_env.py.patch 
+patch robomaker.env < ../defaults/robomaker.env.patch
+patch rl_coach/env.sh < ../defaults/rl_coach_env.sh.patch
+cd ..
 
 # replace the contents of the rl_deepracer_coach_robomaker.py file with the gpu specific version (this is also where you can edit the hyperparameters)
 # TODO this file should be genrated from a gui before running training
@@ -68,3 +74,6 @@ if [ $? -ne 0 ]
 then
 	  docker network create $SAGEMAKER_NW
 fi
+
+# ensure our variables are set on startup
+echo "source $INSTALL_DIR/activate.sh" >> $HOME/.profile

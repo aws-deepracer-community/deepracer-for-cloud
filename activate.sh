@@ -16,18 +16,26 @@ else
     exit 1
 fi
 
-export LOCAL_ACCESS_KEY_ID=$(aws --profile $LOCAL_S3_PROFILE configure get aws_access_key_id | xargs)
-export LOCAL_SECRET_ACCESS_KEY=$(aws --profile $LOCAL_S3_PROFILE configure get aws_secret_access_key | xargs)
 
 if [[ "${CLOUD,,}" == "azure" ]];
 then
-    ENDPOINT="--endpoint-url http://localhost:9000"
+    LOCAL_PROFILE_ENDPOINT_URL="--profile $LOCAL_S3_PROFILE --endpoint-url http://localhost:9000"
     COMPOSE_FILE="$DIR/docker/docker-compose.yml:$DIR/docker/docker-compose-azure.yml"
 else
+    LOCAL_PROFILE_ENDPOINT_URL=""
     COMPOSE_FILE="$DIR/docker/docker-compose.yml"
 fi
+
+## Check if we have an AWS IAM assumed role, or if we need to set specific credentials.
+if [ $(aws sts get-caller-identity | jq '.Arn' | awk /assumed-role/ | wc -l) -eq 0 ];
+then
+    export LOCAL_ACCESS_KEY_ID=$(aws --profile $LOCAL_S3_PROFILE configure get aws_access_key_id | xargs)
+    export LOCAL_SECRET_ACCESS_KEY=$(aws --profile $LOCAL_S3_PROFILE configure get aws_secret_access_key | xargs)
+    COMPOSE_FILE="$COMPOSE_FILE:$DIR/docker/docker-compose-keys.yml"
+fi
+
 export COMPOSE_FILE
-export LOCAL_PROFILE_ENDPOINT_URL="--profile $LOCAL_S3_PROFILE $ENDPOINT"
+export LOCAL_PROFILE_ENDPOINT_URL
 
 function dr-upload-local-custom-files {
   if [[ "${CLOUD,,}" == "azure" ]];
@@ -95,4 +103,16 @@ function dr-logs-loganalysis {
     echo "Log-analysis is not running."
   fi
   
+}
+
+function dr-logs-proxy-start {
+   docker-compose -f $DIR/docker/docker-compose-log.yml up -d
+}
+
+function dr-logs-proxy-stop {
+   docker-compose -f $DIR/docker/docker-compose-log.yml down
+}
+
+function dr-update {
+   source $DIR/activate.sh
 }
