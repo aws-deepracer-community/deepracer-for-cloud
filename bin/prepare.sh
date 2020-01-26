@@ -3,7 +3,7 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 ## Patch system
-sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o \
+sudo apt-get update && sudo apt-mark hold grub-pc && sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o \
                         DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" -qq --force-yes upgrade
 
 ## Do I have a GPU
