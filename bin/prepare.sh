@@ -3,7 +3,8 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 ## Patch system
-sudo apt-get update && sudo apt-get upgrade -y
+sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o \
+                        DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" -qq --force-yes upgrade
 
 ## Do I have a GPU
 GPUS=$(lspci | awk '/NVIDIA/ && /3D controller/' | wc -l)
