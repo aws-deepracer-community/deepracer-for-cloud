@@ -10,6 +10,7 @@ services:
     image: larsll/deepracer-rlcoach
     environment:
       - WORLD_NAME
+      - NUMBER_OF_TRIALS=${NUMBER_OF_TRIALS}
       - PRETRAINED
       - PRETRAINED_S3_PREFIX
       - PRETRAINED_S3_BUCKET
@@ -19,8 +20,6 @@ services:
       - REWARD_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/reward.py
       - METRICS_S3_BUCKET=${LOCAL_S3_BUCKET}
       - HYPERPARAMETER_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/hyperparameters.json
-      - SAGEMAKER_SHARED_S3_PREFIX=${LOCAL_S3_MODEL_PREFIX}
-      - SAGEMAKER_SHARED_S3_BUCKET=${LOCAL_S3_BUCKET}
     env_file: .env
     container_name: rl_coach
     volumes:
@@ -42,6 +41,7 @@ services:
     environment:
       - CHANGE_START_POSITION
       - WORLD_NAME
+      - NUMBER_OF_TRIALS=${NUMBER_OF_TRIALS}
       - MODEL_S3_PREFIX=${LOCAL_S3_MODEL_PREFIX}
       - MODEL_S3_BUCKET=${LOCAL_S3_BUCKET}
       - MODEL_METADATA_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/model_metadata.json

@@ -10,12 +10,11 @@ sudo chown $(id -u):$(id -g) /mnt/deepracer
 
 if [[ -f "$DIR/current-run.env" ]]
 then
-    export $(grep -v '^#' $DIR/current-run.env | xargs)
+  export $(grep -v '^#' $DIR/current-run.env | xargs)
 else
-    echo "File current-run.env does not exist."
-    exit 1
+  echo "File current-run.env does not exist."
+  exit 1
 fi
-
 
 if [[ "${CLOUD,,}" == "azure" ]];
 then
@@ -52,9 +51,14 @@ function dr-upload-logs {
   then
 	  ROBOMAKER_COMMAND="" docker-compose $COMPOSE_FILES up -d minio
   fi
-  eval CUSTOM_TARGET=$(echo s3://$LOCAL_S3_BUCKET/$LOCAL_S3_LOGS_PREFIX/)
-  echo "Uploading files to $CUSTOM_TARGET"
-  aws $LOCAL_PROFILE_ENDPOINT_URL s3 sync /mnt/deepracer/robo/checkpoint/log $CUSTOM_TARGET --exclude "*" --include "rl_coach*.log*" --no-follow-symlinks
+  if [ -d /mnt/deepracer/robo/checkpoint/log/ ];
+  then
+    eval CUSTOM_TARGET=$(echo s3://$LOCAL_S3_BUCKET/$LOCAL_S3_LOGS_PREFIX/)
+    echo "Uploading files to $CUSTOM_TARGET"
+    aws $LOCAL_PROFILE_ENDPOINT_URL s3 sync /mnt/deepracer/robo/checkpoint/log $CUSTOM_TARGET --exclude "*" --include "rl_coach*.log*" --no-follow-symlinks
+  else
+    echo "No logfiles to upload"
+  fi
 }
 
 function dr-download-custom-files {
@@ -68,18 +72,22 @@ function dr-download-custom-files {
 }
 
 function dr-start-training {
+  dr-update-env
   bash -c "cd $DIR/scripts/training && ./start.sh"
 }
 
 function dr-stop-training {
+  dr-upload-logs
   ROBOMAKER_COMMAND="" bash -c "cd $DIR/scripts/training && ./stop.sh"
 }
 
 function dr-start-evaluation {
+  dr-update-env
   bash -c "cd $DIR/scripts/evaluation && ./start.sh"
 }
 
 function dr-stop-evaluation {
+  dr-upload-logs
   ROBOMAKER_COMMAND="" bash -c "cd $DIR/scripts/evaluation && ./stop.sh"
 }
 
@@ -125,6 +133,11 @@ function dr-logs-loganalysis {
   
 }
 
+function dr-clean-local {
+  dr-stop-training
+  sudo rm -rf /robo/* && sudo rm -rf /mnt/deepracer/robo/checkpoint/*
+}
+
 function dr-logs-proxy-start {
    docker-compose -f $DIR/docker/docker-compose-log.yml up -d
 }
@@ -135,4 +148,14 @@ function dr-logs-proxy-stop {
 
 function dr-update {
    source $DIR/activate.sh
+}
+
+function dr-update-env {
+  if [[ -f "$DIR/current-run.env" ]]
+  then
+    export $(grep -v '^#' $DIR/current-run.env | xargs)
+  else
+    echo "File current-run.env does not exist."
+    exit 1
+  fi
 }
