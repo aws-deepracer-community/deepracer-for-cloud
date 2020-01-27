@@ -23,7 +23,7 @@ Main differences to the work done by Alex is:
 
 Depending on your needs as well as specific needs of the cloud platform you can configure your VM to your liking.
 
-AWS:
+**AWS**:
 * EC2 instance of type G3, G4, P2 or P3 - recommendation is g4dn.2xlarge
 	* Ubuntu 18.04
 	* Minimum 30 GB, preferred 40 GB of OS disk.
@@ -32,7 +32,7 @@ AWS:
 	* Recommended at least 6 VCPUs
 * S3 bucket. Preferrably in same region as EC2 instance.
 
-Azure:
+**Azure**:
 * N-Series VM that comes with NVIDIA Graphics Adapter - recommendation is NC6_Standard
 	* Ubuntu 18.04
 	* Standard 30 GB OS drive is sufficient to get started. 
@@ -48,16 +48,114 @@ A step by step [installation guide](https://github.com/larsll/deepracer-for-clou
 The package comes with preparation and setup scripts that would allow a turn-key setup for a fresh virtual machine.
 
 	git clone https://github.com/larsll/deepracer-for-cloud.git
-	cd deepracer-for-azure && ./bin/prepare.sh
+	cd deepracer-for-cloud && ./bin/prepare.sh
 	
-This will prepare the VM by partitioning additional drives as well as installing all prerequisites. After a reboot it will continuee to run `./bin/init.sh` setting up the full repository and downloading the core Docker images.
+This will prepare the VM by partitioning additional drives as well as installing all prerequisites. After a reboot it will continuee to run `./bin/init.sh` setting up the full repository and downloading the core Docker images. Depending on your environment this may take up to 30 minutes. The scripts will create a file `DONE` once completed.
 
 The installation script will adapt `.profile` to ensure that all settings are applied on login.
 
-TODO: Setup of environment.
+*TODO: Document how to configure via cloud-init.*
+
+## Environment Setup
+
+### AWS
+
+In AWS it is possible to set up authentication to S3 in two ways: Integrated sign-on using [IAM Roles](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html) or using access keys.
+
+#### IAM Roles
+
+To use IAM Roles:
+* An empty S3 bucket in the same region as the EC2 instance.
+* An IAM Role that has permissions to access both the *new* S3 bucket as well as the DeepRacer bucket.
+* An EC2 instance with the IAM Role assigned.
+* Configure `current-run.env` as follows:
+  * `LOCAL_S3_PROFILE=default`
+  * `LOCAL_S3_BUCKET=<bucketname>`
+  * `UPLOAD_S3_PROFILE=default`
+  * `UPLOAD_S3_BUCKET=<your-aws-deepracer-bucket>`
+* Run `dr-update` for configuration to take effect.
+
+
+#### Manual setup
+For access with IAM user:
+* An empty S3 bucket in the same region as the EC2 instance.
+* A real AWS IAM user set up with access keys:
+  * User should have permissions to access the *new* bucket as well as the dedicated DeepRacer S3 bucket.
+  * Use `aws configure` to configure this into the default profile. 
+* Configure `current-run.env` as follows:
+  * `LOCAL_S3_PROFILE=default`
+  * `LOCAL_S3_BUCKET=<bucketname>`
+  * `UPLOAD_S3_PROFILE=default`
+  * `UPLOAD_S3_BUCKET=<your-aws-deepracer-bucket>`
+* Run `dr-update` for configuration to take effect.
+
+### Azure
+
+In Azure mode the script-set requires the following:
+* A storage account with a blob container set up with access keys:
+	* Use `aws configure --profile <myprofile>` to configure this into a specific profile. 
+    	* Access Key ID is the Storage Account name. 
+    	* Secret Access Key is the Access Key for the Storage Account.
+  	* The blob container is equivalent to the S3 bucket.
+* A real AWS IAM user configured with `aws configure` to enable upload of models into AWS DeepRacer.
+* Configure `current-run.env` as follows:
+  * `LOCAL_S3_PROFILE=<myprofile>`
+  * `LOCAL_S3_BUCKET=<blobcontainer-name>`
+  * `UPLOAD_S3_PROFILE=default`
+  * `UPLOAD_S3_BUCKET=<your-aws-deepracer-bucket>`
+* Run `dr-update` for configuration to take effect.
+
+As Azure does not natively support S3 a [minio](https://min.io/product/overview) proxy is set up on port 9000 to allow the containers to communicate and store models.
+
+If you want to use awscli (`aws`) to manually move files then use `aws $LOCAL_PROFILE_ENDPOINT_URL s3 ...`, as this will set both `--profile` and `--endpoint-url` parameters to match your configuration.
+
+### Local
+
+*TODO*. The current script-set does not provide a direct way to host all files locally within the VM. It is possible to work around this by changing `docker\docker-compose-azure.yml` to put minio in a server and not an azure gateway mode.
+
+### Environment Variables
+The scripts assume that a file `current-run.env` is populated with the required values.
+
+| Variable | Description |
+|----------|-------------|
+| `CLOUD` | Can be `Azure` or `AWS`; determines how the storage will be configured.|
+| `WORLD_NAME` | Defines the track to be used.| 
+| `NUMBER_OF_TRIALS` | Defines the number of trials in an evaluation session.| 
+| `CHANGE_START_POSITION` | Determines if the racer shall round-robin the starting position during training sessions. (Recommended to be `True` for initial training.)| 
+| `PRETRAINED` | Determines if training or evaluation shall be based on the model created in a previous session, held in `s3://{PRETRAINED_S3_BUCKET}/{PRETRAINED_S3_PREFIX}`, accessible by credentials held in profile `{LOCAL_S3_PROFILE}`.| 
+| `PRETRAINED_S3_BUCKET` | Name of S3 bucket which holds the pretrained model.|
+| `PRETRAINED_S3_PREFIX` | Prefix of pretrained model within S3 bucket.|
+| `LOCAL_S3_PROFILE` | Name of AWS profile with credentials to be used. Stored in `~/.aws/credentials` unless AWS IAM Roles are used.|
+| `LOCAL_S3_BUCKET` | Name of S3 bucket which will be used during the session.|
+| `LOCAL_S3_MODEL_PREFIX` | Prefix of model within S3 bucket.|
+| `LOCAL_S3_CUSTOM_FILES_PREFIX` | Prefix of configuration files within S3 bucket.|
+| `LOCAL_S3_LOGS_PREFIX` | Prefix of log files within S3 bucket. |
+| `LOGS_ACCESS_KEY` | Username for local S3 log proxy (minio container).|
+| `LOGS_ACCESS_SECRET` | Password for local S3 log proxy (minio container).|
+
 
 ## Usage
 
-Before every session run `dr-update` to ensure that the environment variables are set correctly. This also creates a set of aliases/commands that makes it easier to operate the setup. (If `dr-update` is not found, try `source activate.sh` to get aliases defined.
+Before every session run `dr-update` to ensure that the environment variables are set correctly. This also creates a set of aliases/commands that makes it easier to operate the setup. If `dr-update` is not found, try `source activate.sh` to get aliases defined.
 
 Ensure that the configuration files are uploaded into the bucket `dr-upload-custom-files`. Start a training with `dr-start-training`.
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `dr-update` | Loads in all scripts and environment variables again.| 
+| `dr-update-env` | Loads in all environment variables from `current-run.env`.|
+| `dr-upload-custom-files` | Uploads changed configuration files from `custom_files/` into `s3://{LOCAL_S3_BUCKET}/custom_files`.|
+| `dr-download-custom-files` | Downloads changed configuration files from `s3://{LOCAL_S3_BUCKET}/custom_files` into `custom_files/`.|
+| `dr-upload-logs` | Uploads changed Robomaker log files from `/mnt/deepracer/robo/checkpoint/log` into `s3://{LOCAL_S3_BUCKET}/${LOCAL_S3_LOGS_PREFIX}`.|
+| `dr-start-training` | Starts a training session in the local VM based on current configuration.|
+| `dr-stop-training` | Stops the current local training session. Uploads log files.|
+| `dr-start-evaluation` | Starts a evaluation session in the local VM based on current configuration.|
+| `dr-stop-evaluation` | Stops the current local evaluation session. Uploads log files.|
+| `dr-start-loganalysis` | Starts a Jupyter log-analysis container, available on port 8888.|
+| `dr-start-loganalysis` | Stops the Jupyter log-analysis container.|
+| `dr-logs-sagemaker` | Displays the logs from the running Sagemaker container.|
+| `dr-logs-robomaker` | Displays the logs from the running Robomaker container.|
+| `dr-logs-start-proxy` | Starts a local Minio S3 instance on port 9001 to expose files in `/mnt/deepracer/robo/checkpoint/log`. Useful if doing log analysis outside of VM.
+| `dr-logs-stop-proxy` | Stops the local Minio S3 instance on port 9001. 

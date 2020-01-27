@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-GPUS=$(docker run --gpus all nvidia/cuda:10.2-base nvidia-smi "-L" | awk  '/GPU .:/' | wc -l)
+GPUS=$(docker run --rm --gpus all nvidia/cuda:10.2-base nvidia-smi "-L" | awk  '/GPU .:/' | wc -l)
 if [ $? -ne 0 ] || [ $GPUS -eq 0 ]
 then
 	echo "No GPU detected in docker. Please check setup".
@@ -77,3 +77,6 @@ fi
 
 # ensure our variables are set on startup
 echo "source $INSTALL_DIR/activate.sh" >> $HOME/.profile
+
+# mark as done
+date | tee $INSTALL_DIR/DONE
