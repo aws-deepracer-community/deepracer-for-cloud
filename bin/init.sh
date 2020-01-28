@@ -18,6 +18,7 @@ mkdir -p $INSTALL_DIR/docker/volumes
 # create symlink to current user's home .aws directory 
 # NOTE: AWS cli must be installed for this to work
 # https://docs.aws.amazon.com/cli/latest/userguide/install-linux-al2017.html
+mkdir -p $(eval echo "~${USER}")/.aws
 ln -s $(eval echo "~${USER}")/.aws  $INSTALL_DIR/docker/volumes/
 
 # grab local training deepracer repo from crr0004 and log analysis repo from vreadcentric
