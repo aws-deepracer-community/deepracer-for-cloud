@@ -132,6 +132,10 @@ The scripts assume that a file `current-run.env` is populated with the required 
 | `LOCAL_S3_LOGS_PREFIX` | Prefix of log files within S3 bucket. |
 | `LOGS_ACCESS_KEY` | Username for local S3 log proxy (minio container).|
 | `LOGS_ACCESS_SECRET` | Password for local S3 log proxy (minio container).|
+| `UPLOAD_S3_PROFILE` | AWS Cli profile to be used that holds the 'real' S3 credentials needed to upload a model into AWS DeepRacer.|
+| `UPLOAD_S3_BUCKET` | Name of the AWS DeepRacer bucket where models will be uploaded. (Typically starts with `aws-deepracer-`.)|
+| `UPLOAD_S3_PREFIX` | Prefix of the target location. (Typically starts with `DeepRacer-SageMaker-RoboMaker-comm-`|
+| `UPLOAD_MODEL_NAME` | Display name of model, not currently used; `dr-set-upload-model` sets it for readability purposes.|
 
 
 ## Usage
@@ -158,4 +162,7 @@ Ensure that the configuration files are uploaded into the bucket `dr-upload-cust
 | `dr-logs-sagemaker` | Displays the logs from the running Sagemaker container.|
 | `dr-logs-robomaker` | Displays the logs from the running Robomaker container.|
 | `dr-logs-start-proxy` | Starts a local Minio S3 instance on port 9001 to expose files in `/mnt/deepracer/robo/checkpoint/log`. Useful if doing log analysis outside of VM.
-| `dr-logs-stop-proxy` | Stops the local Minio S3 instance on port 9001. 
+| `dr-logs-stop-proxy` | Stops the local Minio S3 instance on port 9001. |
+| `dr-list-aws-models` | Lists the models that are currently stored in your AWS DeepRacer S3 bucket. |
+| `dr-set-upload-model` | Updates the `current-run.env` with the prefix and name of your selected model. |
+| `dr-upload-model` | Uploads the model defined in `LOCAL_S3_MODEL_PREFIX` to the AWS DeepRacer S3 prefix defined in `UPLOAD_S3_PREFIX` |

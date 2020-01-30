@@ -5,4 +5,5 @@ docker/volumes/
 recording/
 recording
 current-run.env
+current-run.env.bak
 DONE
