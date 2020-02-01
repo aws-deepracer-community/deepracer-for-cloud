@@ -58,7 +58,7 @@ WORK_DIR=/mnt/deepracer/tmp/
 mkdir -p ${WORK_DIR} && rm -rf ${WORK_DIR} && mkdir -p ${WORK_DIR}model
 
 # Download information on model.
-PARAM_FILE=$(aws s3 sync s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX} ${WORK_DIR} --exclude "*" --include "training_params*" --no-progress | awk '{print $4}' | xargs readlink -f)
+PARAM_FILE=$(aws ${UPLOAD_PROFILE} s3 sync s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX} ${WORK_DIR} --exclude "*" --include "training_params*" --no-progress | awk '{print $4}' | xargs readlink -f)
 if [ -n "$PARAM_FILE" ];
 then
   TARGET_METADATA_FILE_S3_KEY="s3://${TARGET_S3_BUCKET}/"$(awk '/MODEL_METADATA_FILE_S3_KEY/ {print $2}' $PARAM_FILE | sed "s/^\([\"']\)\(.*\)\1\$/\2/g")
@@ -136,8 +136,8 @@ fi
 
 touch ${WORK_DIR}model/.ready 
 cd ${WORK_DIR}
-aws s3 sync ${WORK_DIR}model/ s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/model/ ${OPT_DRYRUN} ${OPT_WIPE}
-aws s3 cp ${REWARD_FILE} ${TARGET_REWARD_FILE_S3_KEY} ${OPT_DRYRUN}
-aws s3 cp ${METADATA_FILE} ${TARGET_METADATA_FILE_S3_KEY} ${OPT_DRYRUN}
-aws s3 cp ${METRICS_FILE} ${TARGET_METRICS_FILE_S3_KEY} ${OPT_DRYRUN}
-aws s3 cp ${HYPERPARAM_FILE} ${TARGET_HYPERPARAM_FILE_S3_KEY} ${OPT_DRYRUN}
+aws ${UPLOAD_PROFILE} s3 sync ${WORK_DIR}model/ s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/model/ ${OPT_DRYRUN} ${OPT_WIPE}
+aws ${UPLOAD_PROFILE} s3 cp ${REWARD_FILE} ${TARGET_REWARD_FILE_S3_KEY} ${OPT_DRYRUN}
+aws ${UPLOAD_PROFILE} s3 cp ${METADATA_FILE} ${TARGET_METADATA_FILE_S3_KEY} ${OPT_DRYRUN}
+aws ${UPLOAD_PROFILE} s3 cp ${METRICS_FILE} ${TARGET_METRICS_FILE_S3_KEY} ${OPT_DRYRUN}
+aws ${UPLOAD_PROFILE} s3 cp ${HYPERPARAM_FILE} ${TARGET_HYPERPARAM_FILE_S3_KEY} ${OPT_DRYRUN}

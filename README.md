@@ -122,14 +122,13 @@ The scripts assume that a file `current-run.env` is populated with the required 
 | `WORLD_NAME` | Defines the track to be used.| 
 | `NUMBER_OF_TRIALS` | Defines the number of trials in an evaluation session.| 
 | `CHANGE_START_POSITION` | Determines if the racer shall round-robin the starting position during training sessions. (Recommended to be `True` for initial training.)| 
-| `PRETRAINED` | Determines if training or evaluation shall be based on the model created in a previous session, held in `s3://{PRETRAINED_S3_BUCKET}/{PRETRAINED_S3_PREFIX}`, accessible by credentials held in profile `{LOCAL_S3_PROFILE}`.| 
-| `PRETRAINED_S3_BUCKET` | Name of S3 bucket which holds the pretrained model.|
-| `PRETRAINED_S3_PREFIX` | Prefix of pretrained model within S3 bucket.|
 | `LOCAL_S3_PROFILE` | Name of AWS profile with credentials to be used. Stored in `~/.aws/credentials` unless AWS IAM Roles are used.|
 | `LOCAL_S3_BUCKET` | Name of S3 bucket which will be used during the session.|
 | `LOCAL_S3_MODEL_PREFIX` | Prefix of model within S3 bucket.|
 | `LOCAL_S3_CUSTOM_FILES_PREFIX` | Prefix of configuration files within S3 bucket.|
 | `LOCAL_S3_LOGS_PREFIX` | Prefix of log files within S3 bucket. |
+| `LOCAL_S3_PRETRAINED` | Determines if training or evaluation shall be based on the model created in a previous session, held in `s3://{LOCAL_S3_BUCKET}/{LOCAL_S3_PRETRAINED_PREFIX}`, accessible by credentials held in profile `{LOCAL_S3_PROFILE}`.| 
+| `LOCAL_S3_PRETRAINED_PREFIX` | Prefix of pretrained model within S3 bucket.|
 | `LOGS_ACCESS_KEY` | Username for local S3 log proxy (minio container).|
 | `LOGS_ACCESS_SECRET` | Password for local S3 log proxy (minio container).|
 | `UPLOAD_S3_PROFILE` | AWS Cli profile to be used that holds the 'real' S3 credentials needed to upload a model into AWS DeepRacer.|
@@ -154,6 +153,7 @@ Ensure that the configuration files are uploaded into the bucket `dr-upload-cust
 | `dr-download-custom-files` | Downloads changed configuration files from `s3://{LOCAL_S3_BUCKET}/custom_files` into `custom_files/`.|
 | `dr-upload-logs` | Uploads changed Robomaker log files from `/mnt/deepracer/robo/checkpoint/log` into `s3://{LOCAL_S3_BUCKET}/${LOCAL_S3_LOGS_PREFIX}`.|
 | `dr-start-training` | Starts a training session in the local VM based on current configuration.|
+| `dr-increment-training` | Updates configuration, setting the current model prefix to pretrained, and incrementing a serial.|
 | `dr-stop-training` | Stops the current local training session. Uploads log files.|
 | `dr-start-evaluation` | Starts a evaluation session in the local VM based on current configuration.|
 | `dr-stop-evaluation` | Stops the current local evaluation session. Uploads log files.|
