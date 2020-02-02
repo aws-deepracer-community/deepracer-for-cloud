@@ -119,7 +119,7 @@ function dr-start-loganalysis {
 }
 
 function dr-stop-loganalysis {
-  eval LOG_ANALYSIS_ID=$(docker ps | awk ' /log-analysis/ { print $1 }')
+  eval LOG_ANALYSIS_ID=$(docker ps | awk ' /loganalysis/ { print $1 }')
   if [ -n "$LOG_ANALYSIS_ID" ]; then
     ROBOMAKER_COMMAND="" bash -c "cd $DIR/scripts/log-analysis && ./stop.sh"
   else
