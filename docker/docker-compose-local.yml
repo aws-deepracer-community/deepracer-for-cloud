@@ -1,0 +1,23 @@
+version: '3.7'
+
+services:
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+    container_name: minio
+    command: server /data
+    restart: unless-stopped
+    environment:
+      - MINIO_ACCESS_KEY=${LOCAL_ACCESS_KEY_ID}
+      - MINIO_SECRET_KEY=${LOCAL_SECRET_ACCESS_KEY}
+    volumes:
+      - /mnt/deepracer/minio:/data
+  rl_coach:
+    environment:
+      - S3_ENDPOINT_URL=http://minio:9000
+    depends_on:
+      - minio
+  robomaker:
+    environment:
+      - S3_ENDPOINT_URL=http://minio:9000

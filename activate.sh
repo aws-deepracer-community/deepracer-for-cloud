@@ -21,6 +21,10 @@ if [[ "${CLOUD,,}" == "azure" ]];
 then
     LOCAL_PROFILE_ENDPOINT_URL="--profile $LOCAL_S3_PROFILE --endpoint-url http://localhost:9000"
     COMPOSE_FILE="$DIR/docker/docker-compose.yml:$DIR/docker/docker-compose-azure.yml"
+elif [[ "${CLOUD,,}" == "local" ]];
+then
+    LOCAL_PROFILE_ENDPOINT_URL="--profile $LOCAL_S3_PROFILE --endpoint-url http://localhost:9000"
+    COMPOSE_FILE="$DIR/docker/docker-compose.yml:$DIR/docker/docker-compose-local.yml"
 else
     LOCAL_PROFILE_ENDPOINT_URL=""
     COMPOSE_FILE="$DIR/docker/docker-compose.yml"
@@ -39,7 +43,7 @@ export COMPOSE_FILE
 export LOCAL_PROFILE_ENDPOINT_URL
 
 function dr-upload-custom-files {
-  if [[ "${CLOUD,,}" == "azure" ]];
+  if [[ "${CLOUD,,}" == "azure" || "${CLOUD,,}" == "local" ]];
   then
 	  ROBOMAKER_COMMAND="" docker-compose $COMPOSE_FILES up -d minio
   fi
@@ -62,7 +66,7 @@ function dr-set-upload-model {
 
 
 function dr-upload-logs {
-  if [[ "${CLOUD,,}" == "azure" ]];
+  if [[ "${CLOUD,,}" == "azure" || "${CLOUD,,}" == "local" ]];
   then
 	  ROBOMAKER_COMMAND="" docker-compose $COMPOSE_FILES up -d minio
   fi
@@ -77,7 +81,7 @@ function dr-upload-logs {
 }
 
 function dr-download-custom-files {
-  if [[ "${CLOUD,,}" == "azure" ]];
+  if [[ "${CLOUD,,}" == "azure" || "${CLOUD,,}" == "local" ]];
   then
 	  ROBOMAKER_COMMAND="" docker-compose $COMPOSE_FILES up -d minio
   fi

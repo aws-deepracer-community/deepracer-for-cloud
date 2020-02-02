@@ -1,4 +1,24 @@
 #!/usr/bin/env bash
+
+trap ctrl_c INT
+
+function ctrl_c() {
+        echo "Requested to stop."
+        exit 1
+}
+
+while getopts ":m:c:" opt; do
+case $opt in
+m) OPT_MOUNT="$OPTARG"
+;; 
+c) OPT_CLOUD="$OPTARG"
+;;
+\?) echo "Invalid option -$OPTARG" >&2
+exit 1
+;;
+esac
+done
+
 GPUS=$(docker run --rm --gpus all nvidia/cuda:10.2-base nvidia-smi "-L" | awk  '/GPU .:/' | wc -l)
 if [ $? -ne 0 ] || [ $GPUS -eq 0 ]
 then
@@ -10,8 +30,12 @@ INSTALL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd 
 cd $INSTALL_DIR
 
 # create directory structure for docker volumes
-mount /mnt
-sudo mkdir -p /mnt/deepracer /mnt/deepracer/recording /mnt/deepracer/robo/checkpoint 
+
+if [[ -n "$OPT_MOUNT" ]];
+then
+    mount "${OPT_MOUNT}"
+fi
+sudo mkdir -p /mnt/deepracer /mnt/deepracer/recording /mnt/deepracer/robo/checkpoint /mnt/deepracer/minio/bucket
 sudo chown -R $(id -u):$(id -g) /mnt/deepracer 
 mkdir -p $INSTALL_DIR/docker/volumes
 
@@ -19,7 +43,7 @@ mkdir -p $INSTALL_DIR/docker/volumes
 # NOTE: AWS cli must be installed for this to work
 # https://docs.aws.amazon.com/cli/latest/userguide/install-linux-al2017.html
 mkdir -p $(eval echo "~${USER}")/.aws
-ln -s $(eval echo "~${USER}")/.aws  $INSTALL_DIR/docker/volumes/
+ln -sf $(eval echo "~${USER}")/.aws  $INSTALL_DIR/docker/volumes/
 
 # grab local training deepracer repo from crr0004 and log analysis repo from vreadcentric
 # Now as submodules!
@@ -48,6 +72,10 @@ cd ..
 # replace the contents of the rl_deepracer_coach_robomaker.py file with the gpu specific version (this is also where you can edit the hyperparameters)
 # TODO this file should be genrated from a gui before running training
 cp $INSTALL_DIR/defaults/template-run.env $INSTALL_DIR/current-run.env
+if [[ -n "$OPT_CLOUD" ]];
+then
+    sed -i "s/<CLOUD_REPLACE>/$OPT_CLOUD/g" $INSTALL_DIR/current-run.env
+fi
 
 #set proxys if required
 for arg in "$@";
