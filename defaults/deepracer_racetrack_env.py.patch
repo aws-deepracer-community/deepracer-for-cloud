@@ -1,27 +1,67 @@
 diff --git a/simulation/aws-robomaker-sample-application-deepracer/simulation_ws/src/sagemaker_rl_agent/markov/environments/deepracer_racetrack_env.py b/simulation/aws-robomaker-sample-application-deepracer/simulation_ws/src/sagemaker_rl_agent/markov/environments/deepracer_racetrack_env.py
-index 569b33c..9f43d62 100644
+index 569b33c..81727af 100644
 --- a/simulation/aws-robomaker-sample-application-deepracer/simulation_ws/src/sagemaker_rl_agent/markov/environments/deepracer_racetrack_env.py
 +++ b/simulation/aws-robomaker-sample-application-deepracer/simulation_ws/src/sagemaker_rl_agent/markov/environments/deepracer_racetrack_env.py
-@@ -467,7 +467,7 @@ class DeepRacerRacetrackEnv(gym.Env):
+@@ -220,7 +220,7 @@ class DeepRacerRacetrackEnv(gym.Env):
+ 
+         self.racecar_reset()
+         self.steps = 0
+-        self.simulation_start_time = time.time()
++        self.simulation_start_time = rospy.get_time()
+         self.infer_reward_state(0, 0)
+ 
+         return self.next_state
+@@ -430,7 +430,7 @@ class DeepRacerRacetrackEnv(gym.Env):
+             current_progress,
+             closest_waypoint_index,
+             self.track_length,
+-            time.time()))
++            rospy.get_time()))
+ 
+         # Terminate this episode when ready
+         if done and node_type == SIMULATION_WORKER:
+@@ -456,6 +456,7 @@ class DeepRacerRacetrackEnv(gym.Env):
+ 
+     def finish_episode(self, progress):
+         # Increment episode count, update start position and direction
++        simulation_end_time = rospy.get_time()
+         self.episodes += 1
+         if self.change_start:
+             self.start_ndist = (self.start_ndist + ROUND_ROBIN_ADVANCE_DIST) % 1.0
+@@ -467,31 +468,36 @@ class DeepRacerRacetrackEnv(gym.Env):
          # Update metrics based on job type
          if self.job_type == TRAINING_JOB:
              self.send_reward_to_cloudwatch(self.reward_in_episode)
 -            self.update_training_metrics()
-+            self.update_training_metrics(progress)
++            self.update_training_metrics(progress, simulation_end_time)
              self.write_metrics_to_s3()
              if self.is_training_done():
                  self.cancel_simulation_job()
-@@ -485,13 +485,18 @@ class DeepRacerRacetrackEnv(gym.Env):
+         elif self.job_type == EVALUATION_JOB:
+             self.number_of_trials += 1
+-            self.update_eval_metrics(progress)
++            self.update_eval_metrics(progress, simulation_end_time)
+             self.write_metrics_to_s3()
+ 
+-    def update_eval_metrics(self, progress):
++    def update_eval_metrics(self, progress, simulation_end_time):
+         eval_metric = {}
+         eval_metric['completion_percentage'] = int(progress)
+         eval_metric['metric_time'] = int(round(time.time() * 1000))
+         eval_metric['start_time'] = int(round(self.simulation_start_time * 1000))
+-        eval_metric['elapsed_time_in_milliseconds'] = int(round((time.time() - self.simulation_start_time) * 1000))
++        eval_metric['elapsed_time_in_milliseconds'] = int(round((simulation_end_time - self.simulation_start_time) * 1000))
          eval_metric['trial'] = int(self.number_of_trials)
          self.metrics.append(eval_metric)
  
 -    def update_training_metrics(self):
-+    def update_training_metrics(self, progress = 1):
++    def update_training_metrics(self, progress, simulation_end_time):
          training_metric = {}
          training_metric['reward_score'] = int(round(self.reward_in_episode))
          training_metric['metric_time'] = int(round(time.time() * 1000))
          training_metric['start_time'] = int(round(self.simulation_start_time * 1000))
-         training_metric['elapsed_time_in_milliseconds'] = int(round((time.time() - self.simulation_start_time) * 1000))
+-        training_metric['elapsed_time_in_milliseconds'] = int(round((time.time() - self.simulation_start_time) * 1000))
++        training_metric['elapsed_time_in_milliseconds'] = int(round((simulation_end_time - self.simulation_start_time) * 1000))
          training_metric['episode'] = int(self.episodes)
 +        training_metric['completion_percentage'] = int(progress)
 +        if int(progress) == 100:
