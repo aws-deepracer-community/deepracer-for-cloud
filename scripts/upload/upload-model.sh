@@ -45,6 +45,18 @@ fi
 TARGET_S3_BUCKET=${UPLOAD_S3_BUCKET}
 TARGET_S3_PREFIX=${UPLOAD_S3_PREFIX}
 
+if [[ -z "${UPLOAD_S3_BUCKET}" ]];
+then
+  echo "No upload bucket defined. Exiting."
+  exit 1
+fi
+
+if [[ -z "${UPLOAD_S3_PREFIX}" ]];
+then
+  echo "No upload prefix defined. Exiting."
+  exit 1
+fi
+
 SOURCE_S3_BUCKET=${LOCAL_S3_BUCKET}
 if [[ -n "${OPT_PREFIX}" ]];
 then
@@ -58,7 +70,7 @@ WORK_DIR=/mnt/deepracer/tmp/
 mkdir -p ${WORK_DIR} && rm -rf ${WORK_DIR} && mkdir -p ${WORK_DIR}model
 
 # Download information on model.
-PARAM_FILE=$(aws ${UPLOAD_PROFILE} s3 sync s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX} ${WORK_DIR} --exclude "*" --include "training_params*" --no-progress | awk '{print $4}' | xargs readlink -f)
+PARAM_FILE=$(aws ${UPLOAD_PROFILE} s3 sync s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX} ${WORK_DIR} --exclude "*" --include "training_params*" --no-progress | awk '{print $4}' | xargs readlink -f 2> /dev/null)
 if [ -n "$PARAM_FILE" ];
 then
   TARGET_METADATA_FILE_S3_KEY="s3://${TARGET_S3_BUCKET}/"$(awk '/MODEL_METADATA_FILE_S3_KEY/ {print $2}' $PARAM_FILE | sed "s/^\([\"']\)\(.*\)\1\$/\2/g")
