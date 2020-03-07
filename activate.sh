@@ -158,7 +158,8 @@ function dr-logs-loganalysis {
 
 function dr-clean-local {
   dr-stop-training
-  sudo rm -rf /robo/* && sudo rm -rf /mnt/deepracer/robo/checkpoint/*
+  dr-stop-loganalysis
+  sudo rm -rf /robo/* && sudo rm -rf /mnt/deepracer/robo/*
 }
 
 function dr-logs-start-proxy {
