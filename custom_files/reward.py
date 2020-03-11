@@ -588,7 +588,7 @@ def reward_function(params):
         heading_reward = (1 + (1 - best_heading_diff / 360)) ** 2
         # reward *= (position_reward * heading_reward + speed_reward) ** 2
         reward *= (position_reward * heading_reward) ** 2
-        reward *= progress / steps
+        reward *= (progress / steps) ** 2
 
     # Always return a float value
     return float(reward)
