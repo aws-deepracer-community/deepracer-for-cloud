@@ -43,7 +43,7 @@ CONFIG_FILE=$(echo $DR_DIR/current-run.env)
 echo "Configuration file $CONFIG_FILE will be updated."
 
 ## Read in data
-CURRENT_RUN_MODEL=$(awk '/LOCAL_S3_MODEL_PREFIX/ {print $1}' ${CONFIG_FILE} | awk '{split($0,a,"="); print a[2] }')
+CURRENT_RUN_MODEL=$(grep -e "^DR_LOCAL_S3_MODEL_PREFIX" ${CONFIG_FILE} | awk '{split($0,a,"="); print a[2] }')
 CURRENT_RUN_MODEL_NUM=$(echo "${CURRENT_RUN_MODEL}" | \
                     awk -v DELIM="${OPT_DELIM}" '{ n=split($0,a,DELIM); if (a[n] ~ /[0-9]*/) print a[n]; else print ""; }')
 if [[ -z ${CURRENT_RUN_MODEL_NUM} ]];
@@ -66,7 +66,7 @@ then
             exit 1
         fi
     fi
-    sed -i.bak -re "s/(LOCAL_S3_PRETRAINED_PREFIX=).*$/\1$CURRENT_RUN_MODEL/g; s/(LOCAL_S3_PRETRAINED=).*$/\1True/g; ; s/(LOCAL_S3_MODEL_PREFIX=).*$/\1$NEW_RUN_MODEL/g" "$CONFIG_FILE" && echo "Done."
+    sed -i.bak -re "s/(DR_LOCAL_S3_PRETRAINED_PREFIX=).*$/\1$CURRENT_RUN_MODEL/g; s/(DR_LOCAL_S3_PRETRAINED=).*$/\1True/g; ; s/(DR_LOCAL_S3_MODEL_PREFIX=).*$/\1$NEW_RUN_MODEL/g" "$CONFIG_FILE" && echo "Done."
 else
     echo    "Error in determining new model. Aborting."
     exit 1
@@ -74,10 +74,10 @@ fi
 
 if [[ -n "${OPT_WIPE}" ]];
 then
-    MODEL_DIR_S3=$(aws $LOCAL_PROFILE_ENDPOINT_URL s3 ls s3://${LOCAL_S3_BUCKET}/${NEW_RUN_MODEL} )
+    MODEL_DIR_S3=$(aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 ls s3://${DR_LOCAL_S3_BUCKET}/${NEW_RUN_MODEL} )
     if [[ -n "${MODEL_DIR_S3}" ]];
     then
-        echo "The new model's S3 prefix s3://${LOCAL_S3_BUCKET}/${NEW_RUN_MODEL} exists. Will wipe."
+        echo "The new model's S3 prefix s3://${DR_LOCAL_S3_BUCKET}/${NEW_RUN_MODEL} exists. Will wipe."
     fi
     if [[ -z "${OPT_FORCE}" ]]; 
     then
@@ -88,5 +88,5 @@ then
             exit 1
         fi
     fi
-    aws $LOCAL_PROFILE_ENDPOINT_URL s3 rm s3://${LOCAL_S3_BUCKET}/${NEW_RUN_MODEL} --recursive
+    aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 rm s3://${DR_LOCAL_S3_BUCKET}/${NEW_RUN_MODEL} --recursive
 fi

@@ -94,7 +94,7 @@ sudo bash -c 'echo "deb http://developer.download.nvidia.com/compute/machine-lea
 sudo bash -c 'apt update && apt install -y nvidia-driver-440 cuda-minimal-build-10-2 -o Dpkg::Options::="--force-overwrite"'
 
 ## Adding AWSCli
-sudo apt-get install -y awscli 
+sudo apt-get install -y awscli python3-boto3
 
 ## Installing Docker
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -

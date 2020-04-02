@@ -29,7 +29,7 @@ usage
 esac
 done
 
-TARGET_S3_BUCKET=${UPLOAD_S3_BUCKET}
+TARGET_S3_BUCKET=${DR_UPLOAD_S3_BUCKET}
 WORK_DIR=/mnt/deepracer/tmp-list
 mkdir -p ${WORK_DIR} 
 
@@ -38,7 +38,7 @@ then
     PARAM_FILES=$(ls -t "${WORK_DIR}" )
     echo   -e "Using local cache..."
 else
-    PARAM_FILES=$(aws ${UPLOAD_PROFILE} s3 ls s3://${TARGET_S3_BUCKET} --recursive | awk '/training_params*/ {print $4}' )
+    PARAM_FILES=$(aws ${DR_UPLOAD_PROFILE} s3 ls s3://${TARGET_S3_BUCKET} --recursive | awk '/training_params*/ {print $4}' )
     echo   -e "\nLooking for DeepRacer models in s3://${TARGET_S3_BUCKET}...\n"
 fi
 
@@ -57,7 +57,7 @@ then
 
     for PARAM_FILE in $PARAM_FILES; do
         if [[ -z "${OPT_CACHE}" ]]; then
-            aws ${UPLOAD_PROFILE} s3 cp s3://${TARGET_S3_BUCKET}/${PARAM_FILE} ${WORK_DIR}/ --quiet 
+            aws ${DR_UPLOAD_PROFILE} s3 cp s3://${TARGET_S3_BUCKET}/${PARAM_FILE} ${WORK_DIR}/ --quiet 
             PARAM_FILE_L=$(echo "$PARAM_FILE" | awk '{split($0,a,"/"); print a[2]}')
         else
             PARAM_FILE_L=$PARAM_FILE
@@ -75,7 +75,7 @@ else
 
     for PARAM_FILE in $PARAM_FILES; do
         if [[ -z "${OPT_CACHE}" ]]; then
-            aws ${UPLOAD_PROFILE} s3 cp s3://${TARGET_S3_BUCKET}/${PARAM_FILE} ${WORK_DIR}/ --quiet 
+            aws ${DR_UPLOAD_PROFILE} s3 cp s3://${TARGET_S3_BUCKET}/${PARAM_FILE} ${WORK_DIR}/ --quiet 
             PARAM_FILE_L=$(echo "$PARAM_FILE" | awk '{split($0,a,"/"); print a[2]}')
             MODEL_NAME=$(awk '/MODEL_METADATA_FILE_S3_KEY/ {print $2}' ${WORK_DIR}/${PARAM_FILE_L} | awk '{split($0,a,"/"); print a[2] }')
             if [ "${MODEL_NAME}" = "${OPT_SET}" ]; then
@@ -104,7 +104,7 @@ else
             echo "Aborting."
             exit 1
         else
-            sed -i.bak -re "s/(UPLOAD_S3_PREFIX=).*$/\1$MATCHED_PREFIX/g; s/(UPLOAD_MODEL_NAME=).*$/\1$MODEL_NAME/g" "$CONFIG_FILE" && echo "Done."
+            sed -i.bak -re "s/(DR_UPLOAD_S3_PREFIX=).*$/\1$MATCHED_PREFIX/g; s/(DR_UPLOAD_MODEL_NAME=).*$/\1$MODEL_NAME/g" "$CONFIG_FILE" && echo "Done."
         fi
     fi
 fi

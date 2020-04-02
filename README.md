@@ -1,9 +1,7 @@
 # DeepRacer-For-Cloud
 Provides a quick and easy way to get up and running with a DeepRacer training environment in Azure or AWS, using either the Azure [N-Series Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-gpu) or [AWS EC2 Accelerated Computing instances](https://aws.amazon.com/ec2/instance-types/?nc1=h_ls#Accelerated_Computing).
 
-This repo is an extension of the work done by Alex (https://github.com/alexschultz/deepracer-for-dummies), which is again a wrapper around the amazing work done by Chris (https://github.com/crr0004/deepracer)
-
-Please refer to Chris' repo to understand more about what's going on under the covers.
+This repo started as an extension of the work done by Alex (https://github.com/alexschultz/deepracer-for-dummies), which is again a wrapper around the amazing work done by Chris (https://github.com/crr0004/deepracer). With the introduction of the second generation Deepracer Console the repository has been split up. This repository contains the scripts needed to *run* the training, but depends on Docker Hub to provide pre-built docker images. All the under-the-hood building capabilities have been moved to my [Deepracer Build](https://gitbub.com/larsll/deepracer-build) repository.
 
 Main differences to the work done by Alex is:
 * Runtime S3 storage is setup to fit the connected cloud platform:
@@ -14,10 +12,9 @@ Main differences to the work done by Alex is:
 	* `custom_files/hyperparameters.json` stores the runtime hyperparameters, which logically belongs together with the model_metadata.json and rewards.py files.
 	* `current-run.env` contains user session configuration (pretraining, track etc.) as well as information about where to upload your model (S3 bucket and prefix).
 	* `docker/.env` remains the home for more static configuration. This is not expected to change between sessions.
-* Runtime storage: Uses `/mnt` to store robomaker files (checkpoints, logs); depending on setup these will normally be deleted between runs, but Azure and AWS provides 200+ GB free storage which is very suitable for this purpuse. Archiving of logs and additional checkpoint files required if desired.
+* Runtime storage: Uses `/mnt` to store robomaker files (checkpoints, logs); depending on setup these will normally be deleted between runs, but Azure and AWS provides 200+ GB free storage which is very suitable for this purpuse. Archiving of logs and additional checkpoint files required if desired. (Update: as of V2 this is less important as the robomaker is now cleaning up on itsown)
 	* Azure: Uses the normal temporary drive which is mounted on /mnt by default.
 	* AWS: Preparation scripts mounts the ephemeral drive on /mnt
-* Robomaker, RL Coach and Log Analysis Docker images are now available as downloads in [Docker Hub](https://hub.docker.com/search?q=larsll%2Fdeepracer&type=image), which reduces the time to build a new VM. Log analysis is not downloaded by default to reduce required disk space.
 
 ## Requirements
 
@@ -52,7 +49,7 @@ The package comes with preparation and setup scripts that would allow a turn-key
 	
 This will prepare the VM by partitioning additional drives as well as installing all prerequisites. After a reboot it will continuee to run `./bin/init.sh` setting up the full repository and downloading the core Docker images. Depending on your environment this may take up to 30 minutes. The scripts will create a file `DONE` once completed.
 
-The installation script will adapt `.profile` to ensure that all settings are applied on login.
+The installation script will adapt `.profile` to ensure that all settings are applied on login. Otherwise run the activation with `source bin/activate.sh`.
 
 For local install it is recommended *not* to run the `bin/prepare.sh` script; it might do more changes than what you want. Rather ensure that all prerequisites are set up and run `bin/init.sh` directly.
 
@@ -73,15 +70,17 @@ In AWS it is possible to set up authentication to S3 in two ways: Integrated sig
 
 To use IAM Roles:
 * An empty S3 bucket in the same region as the EC2 instance.
-* An IAM Role that has permissions to access both the *new* S3 bucket as well as the DeepRacer bucket.
+* An IAM Role that has permissions to:
+  * Access both the *new* S3 bucket as well as the DeepRacer bucket.
+  * AmazonVPCReadOnlyAccess
+  * AmazonKinesisVideoStreamsFullAccess if you want to stream to Kinesis
 * An EC2 instance with the IAM Role assigned.
 * Configure `current-run.env` as follows:
-  * `LOCAL_S3_PROFILE=default`
-  * `LOCAL_S3_BUCKET=<bucketname>`
-  * `UPLOAD_S3_PROFILE=default`
-  * `UPLOAD_S3_BUCKET=<your-aws-deepracer-bucket>`
-* Run `dr-update` for configuration to take effect.
-
+  * `DR_LOCAL_S3_PROFILE=default`
+  * `DR_LOCAL_S3_BUCKET=<bucketname>`
+  * `DR_UPLOAD_S3_PROFILE=default`
+  * `DR_UPLOAD_S3_BUCKET=<your-aws-deepracer-bucket>`
+* Run `dr-update-env` for configuration to take effect.
 
 #### Manual setup
 For access with IAM user:
@@ -90,10 +89,10 @@ For access with IAM user:
   * User should have permissions to access the *new* bucket as well as the dedicated DeepRacer S3 bucket.
   * Use `aws configure` to configure this into the default profile. 
 * Configure `current-run.env` as follows:
-  * `LOCAL_S3_PROFILE=default`
-  * `LOCAL_S3_BUCKET=<bucketname>`
-  * `UPLOAD_S3_PROFILE=default`
-  * `UPLOAD_S3_BUCKET=<your-aws-deepracer-bucket>`
+  * `DR_LOCAL_S3_PROFILE=default`
+  * `DR_LOCAL_S3_BUCKET=<bucketname>`
+  * `DR_UPLOAD_S3_PROFILE=default`
+  * `DR_UPLOAD_S3_BUCKET=<your-aws-deepracer-bucket>`
 * Run `dr-update` for configuration to take effect.
 
 ### Azure
@@ -106,15 +105,15 @@ In Azure mode the script-set requires the following:
   	* The blob container is equivalent to the S3 bucket.
 * A real AWS IAM user configured with `aws configure` to enable upload of models into AWS DeepRacer.
 * Configure `current-run.env` as follows:
-  * `LOCAL_S3_PROFILE=<myprofile>`
-  * `LOCAL_S3_BUCKET=<blobcontainer-name>`
-  * `UPLOAD_S3_PROFILE=default`
-  * `UPLOAD_S3_BUCKET=<your-aws-deepracer-bucket>`
+  * `DR_LOCAL_S3_PROFILE=<myprofile>`
+  * `DR_LOCAL_S3_BUCKET=<blobcontainer-name>`
+  * `DR_UPLOAD_S3_PROFILE=default`
+  * `DR_UPLOAD_S3_BUCKET=<your-aws-deepracer-bucket>`
 * Run `dr-update` for configuration to take effect.
 
 As Azure does not natively support S3 a [minio](https://min.io/product/overview) proxy is set up on port 9000 to allow the containers to communicate and store models.
 
-If you want to use awscli (`aws`) to manually move files then use `aws $LOCAL_PROFILE_ENDPOINT_URL s3 ...`, as this will set both `--profile` and `--endpoint-url` parameters to match your configuration.
+If you want to use awscli (`aws`) to manually move files then use `aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 ...`, as this will set both `--profile` and `--endpoint-url` parameters to match your configuration.
 
 ### Local
 
@@ -125,24 +124,29 @@ The scripts assume that a file `current-run.env` is populated with the required 
 
 | Variable | Description |
 |----------|-------------|
-| `CLOUD` | Can be `Azure` or `AWS`; determines how the storage will be configured.|
-| `WORLD_NAME` | Defines the track to be used.| 
-| `NUMBER_OF_TRIALS` | Defines the number of trials in an evaluation session.| 
-| `CHANGE_START_POSITION` | Determines if the racer shall round-robin the starting position during training sessions. (Recommended to be `True` for initial training.)| 
-| `LOCAL_S3_PROFILE` | Name of AWS profile with credentials to be used. Stored in `~/.aws/credentials` unless AWS IAM Roles are used.|
-| `LOCAL_S3_BUCKET` | Name of S3 bucket which will be used during the session.|
-| `LOCAL_S3_MODEL_PREFIX` | Prefix of model within S3 bucket.|
-| `LOCAL_S3_CUSTOM_FILES_PREFIX` | Prefix of configuration files within S3 bucket.|
-| `LOCAL_S3_LOGS_PREFIX` | Prefix of log files within S3 bucket. |
-| `LOCAL_S3_PRETRAINED` | Determines if training or evaluation shall be based on the model created in a previous session, held in `s3://{LOCAL_S3_BUCKET}/{LOCAL_S3_PRETRAINED_PREFIX}`, accessible by credentials held in profile `{LOCAL_S3_PROFILE}`.| 
-| `LOCAL_S3_PRETRAINED_PREFIX` | Prefix of pretrained model within S3 bucket.|
-| `LOGS_ACCESS_KEY` | Username for local S3 log proxy (minio container).|
-| `LOGS_ACCESS_SECRET` | Password for local S3 log proxy (minio container).|
-| `UPLOAD_S3_PROFILE` | AWS Cli profile to be used that holds the 'real' S3 credentials needed to upload a model into AWS DeepRacer.|
-| `UPLOAD_S3_BUCKET` | Name of the AWS DeepRacer bucket where models will be uploaded. (Typically starts with `aws-deepracer-`.)|
-| `UPLOAD_S3_PREFIX` | Prefix of the target location. (Typically starts with `DeepRacer-SageMaker-RoboMaker-comm-`|
-| `UPLOAD_MODEL_NAME` | Display name of model, not currently used; `dr-set-upload-model` sets it for readability purposes.|
-
+| `DR_CLOUD` | Can be `Azure` or `AWS`; determines how the storage will be configured.|
+| `DR_WORLD_NAME` | Defines the track to be used.| 
+| `DR_NUMBER_OF_TRIALS` | Defines the number of trials in an evaluation session.| 
+| `DR_CHANGE_START_POSITION` | Determines if the racer shall round-robin the starting position during training sessions. (Recommended to be `True` for initial training.)| 
+| `DR_LOCAL_S3_PROFILE` | Name of AWS profile with credentials to be used. Stored in `~/.aws/credentials` unless AWS IAM Roles are used.|
+| `DR_LOCAL_S3_BUCKET` | Name of S3 bucket which will be used during the session.|
+| `DR_LOCAL_S3_MODEL_PREFIX` | Prefix of model within S3 bucket.|
+| `DR_LOCAL_S3_CUSTOM_FILES_PREFIX` | Prefix of configuration files within S3 bucket.|
+| `DR_LOCAL_S3_PRETRAINED` | Determines if training or evaluation shall be based on the model created in a previous session, held in `s3://{DR_LOCAL_S3_BUCKET}/{LOCAL_S3_PRETRAINED_PREFIX}`, accessible by credentials held in profile `{DR_LOCAL_S3_PROFILE}`.| 
+| `DR_LOCAL_S3_PRETRAINED_PREFIX` | Prefix of pretrained model within S3 bucket.|
+| `DR_LOCAL_S3_PARAMS_FILE` | YAML file path used to configure Robomaker relative to `s3://{DR_LOCAL_S3_BUCKET}/{LOCAL_S3_PRETRAINED_PREFIX}`.| 
+| `DR_UPLOAD_S3_PROFILE` | AWS Cli profile to be used that holds the 'real' S3 credentials needed to upload a model into AWS DeepRacer.|
+| `DR_UPLOAD_S3_BUCKET` | Name of the AWS DeepRacer bucket where models will be uploaded. (Typically starts with `aws-deepracer-`.)|
+| `DR_UPLOAD_S3_PREFIX` | Prefix of the target location. (Typically starts with `DeepRacer-SageMaker-RoboMaker-comm-`|
+| `DR_UPLOAD_MODEL_NAME` | Display name of model, not currently used; `dr-set-upload-model` sets it for readability purposes.|
+| `DR_CAR_COLOR` | Color of car | 
+| `DR_CAR_NAME` | Display name of car; shows in Deepracer Console when uploading. |
+| `DR_AWS_APP_REGION` | (AWS only) Region for other AWS resources (e.g. Kinesis) |
+| `DR_KINESIS_STREAM_NAME` | Kinesis stream name | 
+| `DR_KINESIS_STREAM_ENABLE` | Enable or disable Kinesis Stream | 
+| `DR_GUI_ENABLE` | Enable or disable the Gazebo GUI in Robomaker | 
+| `DR_GPU_AVAILABLE` | Is GPU enabled? | 
+| `DR_DOCKER_IMAGE_TYPE` | `cpu` or `gpu`; docker images will be used based on this | 
 
 ## Usage
 
@@ -156,9 +160,8 @@ Ensure that the configuration files are uploaded into the bucket `dr-upload-cust
 |---------|-------------|
 | `dr-update` | Loads in all scripts and environment variables again.| 
 | `dr-update-env` | Loads in all environment variables from `current-run.env`.|
-| `dr-upload-custom-files` | Uploads changed configuration files from `custom_files/` into `s3://{LOCAL_S3_BUCKET}/custom_files`.|
-| `dr-download-custom-files` | Downloads changed configuration files from `s3://{LOCAL_S3_BUCKET}/custom_files` into `custom_files/`.|
-| `dr-upload-logs` | Uploads changed Robomaker log files from `/mnt/deepracer/robo/checkpoint/log` into `s3://{LOCAL_S3_BUCKET}/${LOCAL_S3_LOGS_PREFIX}`.|
+| `dr-upload-custom-files` | Uploads changed configuration files from `custom_files/` into `s3://{DR_LOCAL_S3_BUCKET}/custom_files`.|
+| `dr-download-custom-files` | Downloads changed configuration files from `s3://{DR_LOCAL_S3_BUCKET}/custom_files` into `custom_files/`.|
 | `dr-start-training` | Starts a training session in the local VM based on current configuration.|
 | `dr-increment-training` | Updates configuration, setting the current model prefix to pretrained, and incrementing a serial.|
 | `dr-stop-training` | Stops the current local training session. Uploads log files.|
@@ -168,8 +171,6 @@ Ensure that the configuration files are uploaded into the bucket `dr-upload-cust
 | `dr-start-loganalysis` | Stops the Jupyter log-analysis container.|
 | `dr-logs-sagemaker` | Displays the logs from the running Sagemaker container.|
 | `dr-logs-robomaker` | Displays the logs from the running Robomaker container.|
-| `dr-logs-start-proxy` | Starts a local Minio S3 instance on port 9001 to expose files in `/mnt/deepracer/robo/checkpoint/log`. Useful if doing log analysis outside of VM.
-| `dr-logs-stop-proxy` | Stops the local Minio S3 instance on port 9001. |
 | `dr-list-aws-models` | Lists the models that are currently stored in your AWS DeepRacer S3 bucket. |
 | `dr-set-upload-model` | Updates the `current-run.env` with the prefix and name of your selected model. |
-| `dr-upload-model` | Uploads the model defined in `LOCAL_S3_MODEL_PREFIX` to the AWS DeepRacer S3 prefix defined in `UPLOAD_S3_PREFIX` |
+| `dr-upload-model` | Uploads the model defined in `DR_LOCAL_S3_MODEL_PREFIX` to the AWS DeepRacer S3 prefix defined in `DR_UPLOAD_S3_PREFIX` |

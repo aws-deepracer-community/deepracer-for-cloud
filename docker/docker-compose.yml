@@ -7,49 +7,38 @@ networks:
 
 services:
   rl_coach:
-    image: larsll/deepracer-rlcoach
+    image: larsll/deepracer-rlcoach:v2
     environment:
-      - WORLD_NAME
-      - NUMBER_OF_TRIALS=${NUMBER_OF_TRIALS}
-      - PRETRAINED=${LOCAL_S3_PRETRAINED}
-      - PRETRAINED_S3_PREFIX=${LOCAL_S3_PRETRAINED_PREFIX}
-      - PRETRAINED_S3_BUCKET=${LOCAL_S3_BUCKET}
-      - MODEL_S3_PREFIX=${LOCAL_S3_MODEL_PREFIX}
-      - MODEL_S3_BUCKET=${LOCAL_S3_BUCKET}
-      - MODEL_METADATA_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/model_metadata.json
-      - REWARD_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/reward.py
-      - METRICS_S3_BUCKET=${LOCAL_S3_BUCKET}
-      - HYPERPARAMETER_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/hyperparameters.json
-    env_file: .env
-    container_name: rl_coach
+      - GPU_AVAILABLE=${DR_GPU_AVAILABLE}
+      - PRETRAINED=${DR_LOCAL_S3_PRETRAINED}
+      - PRETRAINED_S3_PREFIX=${DR_LOCAL_S3_PRETRAINED_PREFIX}
+      - PRETRAINED_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
+      - MODEL_S3_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
+      - MODEL_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
+    container_name: coach
     volumes:
     - '//var/run/docker.sock:/var/run/docker.sock'
-    - '../deepracer/sagemaker-python-sdk:/deepracer/sagemaker-python-sdk'
-    - '../deepracer/rl_coach:/deepracer/rl_coach'
     - '/robo/container:/robo/container'
   robomaker:
-    image: larsll/deepracer-robomaker:latest
+    image: awsdeepracercommunity/deepracer-robomaker:${DR_ROBOMAKER_IMAGE_TYPE}
     command: ["${ROBOMAKER_COMMAND}"]
     volumes:
-      - ../deepracer/simulation/aws-robomaker-sample-application-deepracer/simulation_ws/src:/app/robomaker-deepracer/simulation_ws/src
-      - /mnt/deepracer/robo/checkpoint:/root/.ros/
       - /mnt/deepracer/recording:/mnt/recording
     ports:
-      - "8080:5900"
+      - "8080:8080"
     container_name: robomaker
     restart: unless-stopped
     environment:
-      - CHANGE_START_POSITION
-      - WORLD_NAME
-      - NUMBER_OF_TRIALS=${NUMBER_OF_TRIALS}
-      - MODEL_S3_PREFIX=${LOCAL_S3_MODEL_PREFIX}
-      - MODEL_S3_BUCKET=${LOCAL_S3_BUCKET}
-      - MODEL_METADATA_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/model_metadata.json
-      - REWARD_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/reward.py
-      - METRICS_S3_BUCKET=${LOCAL_S3_BUCKET}
-      - HYPERPARAMETER_FILE_S3_KEY=${LOCAL_S3_CUSTOM_FILES_PREFIX}/hyperparameters.json
-      - SAGEMAKER_SHARED_S3_PREFIX=${LOCAL_S3_MODEL_PREFIX}
-      - SAGEMAKER_SHARED_S3_BUCKET=${LOCAL_S3_BUCKET}
-    env_file: .env
+      - XAUTHORITY=/root/.Xauthority
+      - DISPLAY_N=:0
+      - WORLD_NAME=${DR_WORLD_NAME}
+      - NUMBER_OF_TRIALS=${DR_NUMBER_OF_EPISODES}
+      - SAGEMAKER_SHARED_S3_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
+      - SAGEMAKER_SHARED_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
+      - APP_REGION=${DR_AWS_APP_REGION}
+      - S3_YAML_NAME=${DR_LOCAL_S3_PARAMS_FILE}
+      - KINESIS_VIDEO_STREAM_NAME=${DR_KINESIS_STREAM_NAME}
+      - ENABLE_KINESIS=${DR_KINESIS_STREAM_ENABLE}
+      - ENABLE_GUI=${DR_GUI_ENABLE}
     depends_on:
     - rl_coach

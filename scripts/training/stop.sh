@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+export COMPOSE_FILE=$DR_COMPOSE_FILE
 docker-compose down
 
 SAGEMAKER=$(docker ps | awk ' /sagemaker/ { print $1 }')

@@ -3,11 +3,9 @@ version: '3.7'
 services:
   rl_coach:
     environment:
-      - AWS_ACCESS_KEY_ID=${LOCAL_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${LOCAL_SECRET_ACCESS_KEY}
-    depends_on:
-      - minio
+      - AWS_ACCESS_KEY_ID=${DR_LOCAL_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${DR_LOCAL_SECRET_ACCESS_KEY}
   robomaker:
     environment:
-      - AWS_ACCESS_KEY_ID=${LOCAL_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${LOCAL_SECRET_ACCESS_KEY}
+      - AWS_ACCESS_KEY_ID=${DR_LOCAL_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${DR_LOCAL_SECRET_ACCESS_KEY}

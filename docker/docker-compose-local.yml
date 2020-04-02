@@ -9,8 +9,8 @@ services:
     command: server /data
     restart: unless-stopped
     environment:
-      - MINIO_ACCESS_KEY=${LOCAL_ACCESS_KEY_ID}
-      - MINIO_SECRET_KEY=${LOCAL_SECRET_ACCESS_KEY}
+      - MINIO_ACCESS_KEY=${DR_LOCAL_ACCESS_KEY_ID}
+      - MINIO_SECRET_KEY=${DR_LOCAL_SECRET_ACCESS_KEY}
     volumes:
       - /mnt/deepracer/minio:/data
   rl_coach:
