@@ -59,7 +59,7 @@ then
     echo 'Error: skip showing sagemaker logs because gnome-terminal is not installed.  This is normal if you are on a different OS to Ubuntu.'
   else	
     echo 'attempting to pull up sagemaker logs...'
-    gnome-terminal -x sh -c "!!; docker logs -f $(docker ps | awk ' /sagemaker/ { print $1 }')"
+    gnome-terminal -x sh -c "!!; docker logs -f $(docker ps -a | awk ' /sagemaker/ { print $1 }')"
   fi
 
   if ! [ -x "$(command -v gnome-terminal)" ]; 
