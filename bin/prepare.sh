@@ -21,8 +21,10 @@ echo "Detected cloud type ${CLOUD_NAME}"
 GPUS=$(lspci | awk '/NVIDIA/ && /3D controller/' | wc -l)
 if [ $? -ne 0 ] || [ $GPUS -eq 0 ];
 then
-        echo "No NVIDIA GPU detected. Exiting".
-        exit 1
+	ARCH="cpu"
+        echo "No NVIDIA GPU detected. Will not install drivers."
+else
+	ARCH="gpu"
 fi
 
 ## Do I have an additional disk for Docker images - looking for /dev/sdc (Azure)
@@ -88,10 +90,13 @@ then
 fi
 
 ## Adding Nvidia Drivers
-sudo apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
-sudo bash -c 'echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64 /" > /etc/apt/sources.list.d/cuda.list'
-sudo bash -c 'echo "deb http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64 /" > /etc/apt/sources.list.d/cuda_learn.list'
-sudo bash -c 'apt update && apt install -y nvidia-driver-440 cuda-minimal-build-10-2 -o Dpkg::Options::="--force-overwrite"'
+if [[ "${ARCH}" == "gpu" ]];
+then
+	sudo apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
+	sudo bash -c 'echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64 /" > /etc/apt/sources.list.d/cuda.list'
+	sudo bash -c 'echo "deb http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64 /" > /etc/apt/sources.list.d/cuda_learn.list'
+	sudo bash -c 'apt update && apt install -y nvidia-driver-440 cuda-minimal-build-10-2 -o Dpkg::Options::="--force-overwrite"'
+fi
 
 ## Adding AWSCli
 sudo apt-get install -y awscli python3-boto3
@@ -101,12 +106,15 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository    "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 sudo apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
 
-distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
-curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
-curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+if [[ "${ARCH}" == "gpu" ]];
+then
+	distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+	curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
+	curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
 
-sudo apt-get update && sudo apt-get install -y nvidia-docker2 nvidia-container-toolkit nvidia-container-runtime
-jq 'del(."default-runtime") + {"default-runtime": "nvidia"}' /etc/docker/daemon.json | sudo tee /etc/docker/daemon.json
+	sudo apt-get update && sudo apt-get install -y nvidia-docker2 nvidia-container-toolkit nvidia-container-runtime
+	jq 'del(."default-runtime") + {"default-runtime": "nvidia"}' /etc/docker/daemon.json | sudo tee /etc/docker/daemon.json
+fi
 sudo systemctl enable docker
 sudo systemctl restart docker
 
@@ -124,7 +132,7 @@ if [[ "$CLOUD_INIT" -ne 0 ]];
 then
     echo "Rebooting in 5 seconds. Will continue with install."
     cd $DIR
-    ./runonce.sh "./init.sh -m /mnt -c ${CLOUD_NAME}"
+    ./runonce.sh "./init.sh -m /mnt -c ${CLOUD_NAME} -a ${ARCH}"
     sleep 5s
     sudo reboot
 else
