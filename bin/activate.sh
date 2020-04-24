@@ -37,15 +37,15 @@ if [[ "${DR_CLOUD,,}" == "azure" ]];
 then
     export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
     DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_ENDPOINT_URL"
-    DR_COMPOSE_FILE="$DIR/docker/docker-compose.yml:$DIR/docker/docker-compose-azure.yml"
+    DR_COMPOSE_FILE="-f $DIR/docker/docker-compose.yml -f $DIR/docker/docker-compose-azure.yml"
 elif [[ "${DR_CLOUD,,}" == "local" ]];
 then
     export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
     DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_ENDPOINT_URL"
-    DR_COMPOSE_FILE="$DIR/docker/docker-compose.yml:$DIR/docker/docker-compose-local.yml"
+    DR_COMPOSE_FILE="-f $DIR/docker/docker-compose.yml -f $DIR/docker/docker-compose-local.yml"
 else
     DR_LOCAL_PROFILE_ENDPOINT_URL=""
-    DR_COMPOSE_FILE="$DIR/docker/docker-compose.yml"
+    DR_COMPOSE_FILE="-f $DIR/docker/docker-compose.yml"
 fi
 
 ## Check if we have an AWS IAM assumed role, or if we need to set specific credentials.
@@ -53,7 +53,7 @@ if [ $(aws sts get-caller-identity | jq '.Arn' | awk /assumed-role/ | wc -l) -eq
 then
     export DR_LOCAL_ACCESS_KEY_ID=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_access_key_id | xargs)
     export DR_LOCAL_SECRET_ACCESS_KEY=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_secret_access_key | xargs)
-    DR_COMPOSE_FILE="$DR_COMPOSE_FILE:$DIR/docker/docker-compose-keys.yml"
+    DR_COMPOSE_FILE="$DR_COMPOSE_FILE -f $DIR/docker/docker-compose-keys.yml"
     export DR_UPLOAD_PROFILE="--profile $DR_UPLOAD_S3_PROFILE"
 fi
 
@@ -63,7 +63,7 @@ export DR_LOCAL_PROFILE_ENDPOINT_URL
 function dr-upload-custom-files {
   if [[ "${DR_CLOUD,,}" == "azure" || "${DR_CLOUD,,}" == "local" ]];
   then
-	  ROBOMAKER_COMMAND="" docker-compose -f $DR_COMPOSE_FILE up -d minio
+	  ROBOMAKER_COMMAND="" docker-compose $DR_COMPOSE_FILE up -d minio
   fi
   eval CUSTOM_TARGET=$(echo s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_CUSTOM_FILES_PREFIX/)
   echo "Uploading files to $CUSTOM_TARGET"
@@ -85,7 +85,7 @@ function dr-set-upload-model {
 function dr-download-custom-files {
   if [[ "${DR_CLOUD,,}" == "azure" || "${DR_CLOUD,,}" == "local" ]];
   then
-	  ROBOMAKER_COMMAND="" docker-compose -f $DR_COMPOSE_FILE up -d minio
+	  ROBOMAKER_COMMAND="" docker-compose $DR_COMPOSE_FILE up -d minio
   fi
   eval CUSTOM_TARGET=$(echo s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_CUSTOM_FILES_PREFIX/)
   echo "Downloading files from $CUSTOM_TARGET"
