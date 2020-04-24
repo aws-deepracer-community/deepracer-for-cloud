@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-docker-compose down
+docker-compose $DR_COMPOSE_FILE down
 
 SAGEMAKER=$(docker ps | awk ' /sagemaker/ { print $1 }')
 if [[ -n $SAGEMAKER ]];

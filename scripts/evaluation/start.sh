@@ -2,7 +2,7 @@
 export ROBOMAKER_COMMAND="./run.sh build evaluation.launch"
 export METRICS_S3_OBJECT_KEY=metrics/eval_metrics.json
 
-docker-compose up -d
+docker-compose $DR_COMPOSE_FILE up -d
 
 
 echo 'waiting for containers to start up...'
