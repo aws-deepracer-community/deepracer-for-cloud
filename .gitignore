@@ -5,6 +5,6 @@ logs/
 docker/volumes/
 recording/
 recording
-current-run.env
-current-run.env.bak
+/*.env
+/*.bak
 DONE
