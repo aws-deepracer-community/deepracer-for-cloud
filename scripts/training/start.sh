@@ -41,9 +41,14 @@ then
 fi
 
 echo "Creating Robomaker configuration in $S3_PATH/training_params.yaml"
+export ROBOMAKER_COMMAND="./run.sh build distributed_training.launch"
+if [[ "${DR_CLOUD,,}" == "azure" || "${DR_CLOUD,,}" == "local" ]];
+then
+    docker-compose $DR_COMPOSE_FILE up -d minio
+fi
 python3 prepare-config.py
 
-export ROBOMAKER_COMMAND="./run.sh build distributed_training.launch"
+
 #export COMPOSE_FILE=$DR_COMPOSE_FILE
 docker-compose $DR_COMPOSE_FILE up -d
 echo 'Waiting for containers to start up...'
