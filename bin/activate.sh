@@ -36,12 +36,12 @@ fi
 if [[ "${DR_CLOUD,,}" == "azure" ]];
 then
     export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
-    DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_ENDPOINT_URL"
+    DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_S3_ENDPOINT_URL"
     DR_COMPOSE_FILE="-f $DIR/docker/docker-compose.yml -f $DIR/docker/docker-compose-azure.yml"
 elif [[ "${DR_CLOUD,,}" == "local" ]];
 then
     export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
-    DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_ENDPOINT_URL"
+    DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_S3_ENDPOINT_URL"
     DR_COMPOSE_FILE="-f $DIR/docker/docker-compose.yml -f $DIR/docker/docker-compose-local.yml"
 else
     DR_LOCAL_PROFILE_ENDPOINT_URL=""
