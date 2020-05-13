@@ -69,7 +69,7 @@ SOURCE_S3_REWARD=${DR_LOCAL_S3_REWARD_KEY}
 SOURCE_S3_METRICS=${DR_LOCAL_S3_METRICS_KEY}
 
 
-WORK_DIR=/mnt/deepracer/tmp/
+WORK_DIR=${DR_DIR}/tmp/upload/
 mkdir -p ${WORK_DIR} && rm -rf ${WORK_DIR} && mkdir -p ${WORK_DIR}model
 
 # Download information on model.

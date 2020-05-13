@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source $DR_DIR/bin/scripts_wrapper.sh
+
 usage(){
 	echo "Usage: $0 [-w]"
   echo "       -w        Wipes the target AWS DeepRacer model structure before upload."
@@ -40,21 +42,18 @@ then
   fi
 fi
 
-echo "Creating Robomaker configuration in $S3_PATH/training_params.yaml"
-export ROBOMAKER_COMMAND="./run.sh build distributed_training.launch"
-if [[ "${DR_CLOUD,,}" == "azure" || "${DR_CLOUD,,}" == "local" ]];
-then
-    docker-compose $DR_COMPOSE_FILE up -d minio
-fi
+echo "Creating Robomaker configuration in $S3_PATH/$DR_LOCAL_S3_TRAINING_PARAMS_FILE"
 python3 prepare-config.py
 
-
-#export COMPOSE_FILE=$DR_COMPOSE_FILE
-docker-compose $DR_COMPOSE_FILE up -d
+export ROBOMAKER_COMMAND="./run.sh build distributed_training.launch"
+export DR_CURRENT_PARAMS_FILE=${DR_LOCAL_S3_TRAINING_PARAMS_FILE}
+COMPOSE_FILES=$DR_COMPOSE_FILE
+STACK_NAME="deepracer-$DR_RUN_ID"
+docker stack deploy $COMPOSE_FILES $STACK_NAME
 echo 'Waiting for containers to start up...'
 
 #sleep for 20 seconds to allow the containers to start
-sleep 5
+sleep 15
 
 if xhost >& /dev/null;
 then
@@ -82,5 +81,5 @@ then
   fi
 else
   echo "No display. Falling back to CLI mode."
-  docker logs -f $(docker ps | awk ' /sagemaker/ { print $1 }')
+  dr-logs-sagemaker
 fi

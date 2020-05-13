@@ -30,7 +30,7 @@ esac
 done
 
 TARGET_S3_BUCKET=${DR_UPLOAD_S3_BUCKET}
-WORK_DIR=/mnt/deepracer/tmp-list
+WORK_DIR=${DR_DIR}/tmp/aws-models
 mkdir -p ${WORK_DIR} 
 
 if [[ -n "${OPT_CACHE}" ]]; 
@@ -94,7 +94,7 @@ else
         fi
     done
 
-    CONFIG_FILE=$(echo $DR_DIR/current-run.env)
+    CONFIG_FILE=$DR_CONFIG
     echo "Configuration file $CONFIG_FILE will be updated."
     if [[ -n "${MODEL_NAME}" ]];
     then

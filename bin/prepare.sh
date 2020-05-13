@@ -34,7 +34,7 @@ then
     ADDL_DISK=$(lsblk | awk  '/^sdc/ {print $1}')
     ADDL_PART=$(lsblk -l | awk -v DISK="$ADDL_DISK" '($0 ~ DISK) && ($0 ~ /part/) {print $1}')
 
-    if [ -n $ADDL_DISK ] && [ -z $ADDL_PART];
+    if [ -n "$ADDL_DISK" ] && [ -z "$ADDL_PART" ];
     then
         echo "Found $ADDL_DISK, preparing it for use"
         echo -e "g\nn\np\n1\n\n\nw\n" | sudo fdisk /dev/$ADDL_DISK
@@ -49,43 +49,12 @@ then
             echo "Error during preparing of additional disk. Exiting."
             exit 1
         fi
-    elif  [ -n $ADDL_DISK ] && [ -n $ADDL_PART];
+    elif  [ -n "$ADDL_DISK" ] && [ -n "$ADDL_PART" ];
     then
         echo "Found $ADDL_DISK - $ADDL_PART already mounted. Installing into present drive/directory structure."
 
     else
         echo "Did not find $ADDL_DISK. Installing into present drive/directory structure."
-    fi
-fi
-
-## Do I have an ephemeral disk / temporary storage for runtime output - looking for /dev/nvme0n1 (AWS)?
-if [[ "${CLOUD_NAME}" == "aws" ]];
-then
-
-    ADDL_DISK=$(lsblk | awk  '/^nvme0n1/ {print $1}')
-    ADDL_PART=$(lsblk -l | awk -v DISK="$ADDL_DISK" '($0 ~ DISK) && ($0 ~ /part/) {print $1}')
-
-    if [ -n $ADDL_DISK ] && [ -z $ADDL_PART];
-    then
-        echo "Found $ADDL_DISK, preparing it for use"
-        echo -e "g\nn\np\n1\n\n\nw\n" | sudo fdisk /dev/$ADDL_DISK
-        sleep 1s
-        ADDL_DEVICE=$(echo "/dev/"$ADDL_DISK"p1")
-        sudo mkfs.ext4 $ADDL_DEVICE
-        sudo mkdir -p /mnt
-        echo "$ADDL_DEVICE   /mnt   ext4    rw,user,noauto    0    0" | sudo tee -a /etc/fstab
-        mount /mnt
-        if [ $? -ne 0 ]
-        then
-            echo "Error during preparing of temporary disk. Exiting."
-            exit 1
-        fi
-    elif [ -n $ADDL_DISK ] && [ -n $ADDL_PART];
-    then
-        echo "Found $ADDL_DISK - $ADDL_PART already mounted, taking no action."
-
-    else
-        echo "Did not find $ADDL_DISK, taking no action."
     fi
 fi
 
@@ -132,9 +101,9 @@ if [[ "$CLOUD_INIT" -ne 0 ]];
 then
     echo "Rebooting in 5 seconds. Will continue with install."
     cd $DIR
-    ./runonce.sh "./init.sh -m /mnt -c ${CLOUD_NAME} -a ${ARCH}"
+    ./runonce.sh "./init.sh -c ${CLOUD_NAME} -a ${ARCH}"
     sleep 5s
     sudo reboot
 else
-    echo "First stage done. Please reboot and run init.sh"
+    echo "First stage done. Please reboot and run init.sh -c ${CLOUD_NAME} -a ${ARCH}"
 fi

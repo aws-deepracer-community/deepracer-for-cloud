@@ -2,32 +2,32 @@ version: '3.7'
 
 networks:
   default:
-    external:
-      name: sagemaker-local
+    external: true
+    name: sagemaker-local
 
 services:
   rl_coach:
-    image: larsll/deepracer-rlcoach:v2
+    image: larsll/deepracer-rlcoach:${DR_COACH_IMAGE}
     environment:
-      - GPU_AVAILABLE=${DR_GPU_AVAILABLE}
+      - SAGEMAKER_IMAGE=${DR_SAGEMAKER_IMAGE}
       - PRETRAINED=${DR_LOCAL_S3_PRETRAINED}
       - PRETRAINED_S3_PREFIX=${DR_LOCAL_S3_PRETRAINED_PREFIX}
       - PRETRAINED_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
       - MODEL_S3_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
       - MODEL_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
-    container_name: coach
+      - HYPERPARAMETER_FILE_S3_KEY=${DR_LOCAL_S3_HYPERPARAMETERS_KEY}
+      - MODELMETADATA_FILE_S3_KEY=${DR_LOCAL_S3_MODEL_METADATA_KEY}
     volumes:
     - '//var/run/docker.sock:/var/run/docker.sock'
-    - '/robo/container:/robo/container'
+    - '/tmp/sagemaker:/tmp/sagemaker'
   robomaker:
-    image: awsdeepracercommunity/deepracer-robomaker:${DR_ROBOMAKER_IMAGE_TYPE}
+    image: awsdeepracercommunity/deepracer-robomaker:${DR_ROBOMAKER_IMAGE}
     command: ["${ROBOMAKER_COMMAND}"]
     volumes:
-      - /mnt/deepracer/recording:/mnt/recording
+      - "${DR_DIR}/data/recording:/mnt/recording"
     ports:
-      - "8080:8080"
-    container_name: robomaker
-    restart: unless-stopped
+      - "${DR_ROBOMAKER_PORT}:8080"
+      - "${DR_ROBOMAKER_GUI_PORT}:5900"
     environment:
       - XAUTHORITY=/root/.Xauthority
       - DISPLAY_N=:0
@@ -35,10 +35,11 @@ services:
       - NUMBER_OF_TRIALS=${DR_NUMBER_OF_EPISODES}
       - SAGEMAKER_SHARED_S3_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
       - SAGEMAKER_SHARED_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
+      - MODEL_S3_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
+      - MODEL_S3_BUCKET=${DR_LOCAL_S3_BUCKET}      
       - APP_REGION=${DR_AWS_APP_REGION}
-      - S3_YAML_NAME=${DR_LOCAL_S3_PARAMS_FILE}
+      - S3_YAML_NAME=${DR_CURRENT_PARAMS_FILE}
       - KINESIS_VIDEO_STREAM_NAME=${DR_KINESIS_STREAM_NAME}
       - ENABLE_KINESIS=${DR_KINESIS_STREAM_ENABLE}
       - ENABLE_GUI=${DR_GUI_ENABLE}
-    depends_on:
-    - rl_coach
+      - ROLLOUT_IDX=0
