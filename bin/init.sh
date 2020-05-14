@@ -59,8 +59,7 @@ INSTALL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd 
 cd $INSTALL_DIR
 
 # create directory structure for docker volumes
-mkdir -p $INSTALL_DIR/data $INSTALL_DIR/data/recording
-mkdir -p $INSTALL_DIR/data/minio $INSTALL_DIR/data/minio/bucket 
+mkdir -p $INSTALL_DIR/data $INSTALL_DIR/data/minio $INSTALL_DIR/data/minio/bucket 
 mkdir -p $INSTALL_DIR/data/logs $INSTALL_DIR/data/analysis
 sudo mkdir -p /tmp/sagemaker
 

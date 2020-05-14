@@ -8,23 +8,11 @@ networks:
 services:
   rl_coach:
     image: larsll/deepracer-rlcoach:${DR_COACH_IMAGE}
-    environment:
-      - SAGEMAKER_IMAGE=${DR_SAGEMAKER_IMAGE}
-      - PRETRAINED=${DR_LOCAL_S3_PRETRAINED}
-      - PRETRAINED_S3_PREFIX=${DR_LOCAL_S3_PRETRAINED_PREFIX}
-      - PRETRAINED_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
-      - MODEL_S3_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
-      - MODEL_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
-      - HYPERPARAMETER_FILE_S3_KEY=${DR_LOCAL_S3_HYPERPARAMETERS_KEY}
-      - MODELMETADATA_FILE_S3_KEY=${DR_LOCAL_S3_MODEL_METADATA_KEY}
-    volumes:
-    - '//var/run/docker.sock:/var/run/docker.sock'
-    - '/tmp/sagemaker:/tmp/sagemaker'
+    deploy:
+      replicas: 0
   robomaker:
     image: awsdeepracercommunity/deepracer-robomaker:${DR_ROBOMAKER_IMAGE}
     command: ["${ROBOMAKER_COMMAND}"]
-    volumes:
-      - "${DR_DIR}/data/recording:/mnt/recording"
     ports:
       - "${DR_ROBOMAKER_PORT}:8080"
       - "${DR_ROBOMAKER_GUI_PORT}:5900"
@@ -33,8 +21,6 @@ services:
       - DISPLAY_N=:0
       - WORLD_NAME=${DR_WORLD_NAME}
       - NUMBER_OF_TRIALS=${DR_NUMBER_OF_EPISODES}
-      - SAGEMAKER_SHARED_S3_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
-      - SAGEMAKER_SHARED_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
       - MODEL_S3_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
       - MODEL_S3_BUCKET=${DR_LOCAL_S3_BUCKET}      
       - APP_REGION=${DR_AWS_APP_REGION}

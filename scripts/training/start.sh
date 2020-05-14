@@ -42,13 +42,24 @@ then
   fi
 fi
 
+# set evaluation specific environment variables
+STACK_NAME="deepracer-$DR_RUN_ID"
+
+export ROBOMAKER_COMMAND="./run.sh run distributed_training.launch"
+export DR_CURRENT_PARAMS_FILE=${DR_LOCAL_S3_TRAINING_PARAMS_FILE}
+
+if [ ${DR_ROBOMAKER_MOUNT_LOGS,,} = "true" ];
+then
+  COMPOSE_FILES="$DR_TRAIN_COMPOSE_FILE -c $DR_DIR/docker/docker-compose-mount.yml"
+  export DR_MOUNT_DIR="$DR_DIR/data/logs/robomaker/$DR_LOCAL_S3_MODEL_PREFIX"
+  mkdir -p $DR_MOUNT_DIR
+else
+  COMPOSE_FILES="$DR_TRAIN_COMPOSE_FILE"
+fi
+
 echo "Creating Robomaker configuration in $S3_PATH/$DR_LOCAL_S3_TRAINING_PARAMS_FILE"
 python3 prepare-config.py
 
-export ROBOMAKER_COMMAND="./run.sh build distributed_training.launch"
-export DR_CURRENT_PARAMS_FILE=${DR_LOCAL_S3_TRAINING_PARAMS_FILE}
-COMPOSE_FILES=$DR_COMPOSE_FILE
-STACK_NAME="deepracer-$DR_RUN_ID"
 docker stack deploy $COMPOSE_FILES $STACK_NAME
 echo 'Waiting for containers to start up...'
 

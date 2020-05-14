@@ -8,6 +8,9 @@ import json
 import io
 import yaml
 
+def str2bool(v):
+  return v.lower() in ("yes", "true", "t", "1")
+
 config = {}
 config['AWS_REGION'] = os.environ.get('DR_AWS_APP_REGION', 'us-east-1')
 config['CAR_COLOR'] = os.environ.get('DR_CAR_COLOR', 'Red')
@@ -17,7 +20,13 @@ config['KINESIS_VIDEO_STREAM_NAME'] = os.environ.get('DR_KINESIS_STREAM_NAME', '
 config['METRIC_NAME'] = 'TrainingRewardScore'
 config['METRIC_NAMESPACE'] = 'AWSDeepRacer'
 config['METRICS_S3_BUCKET'] = os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket')
-config['METRICS_S3_OBJECT_KEY'] = os.environ.get('DR_LOCAL_S3_METRICS_KEY', 'DeepRacer-Metrics/EvalMetrics-{}.json'.format(str(round(time.time()))))
+
+metrics_prefix = os.environ.get('DR_LOCAL_S3_METRICS_PREFIX', None)
+if metrics_prefix is not None:
+    config['METRICS_S3_OBJECT_KEY'] = '{}/EvaluationMetrics-{}.json'.format(metrics_prefix, str(round(time.time())))
+else:
+    config['METRICS_S3_OBJECT_KEY'] = 'DeepRacer-Metrics/EvaluationMetrics-{}.json'.format(str(round(time.time())))
+    
 config['MODEL_S3_PREFIX'] = os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker')
 config['MODEL_S3_BUCKET'] = os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket')
 config['NUMBER_OF_TRIALS'] = os.environ.get('DR_EVAL_NUMBER_OF_TRIALS', '5')
@@ -29,6 +38,12 @@ config['ROBOMAKER_SIMULATION_JOB_ACCOUNT_ID'] = os.environ.get('', 'Dummy')
 config['SIMTRACE_S3_BUCKET'] = os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket')
 config['SIMTRACE_S3_PREFIX'] = os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker')
 config['WORLD_NAME'] = os.environ.get('DR_WORLD_NAME', 'LGSWide')
+
+save_mp4 = str2bool(os.environ.get("DR_EVAL_SAVE_MP4", "False"))
+
+if save_mp4:
+    config['MP4_S3_BUCKET'] = config['MODEL_S3_BUCKET']
+    config['MP4_S3_OBJECT_PREFIX'] = '{}/{}'.format(config['MODEL_S3_PREFIX'],'mp4')
 
 s3_endpoint_url = os.environ.get('DR_LOCAL_S3_ENDPOINT_URL', None)
 s3_region = config['AWS_REGION']
@@ -46,7 +61,7 @@ session = boto3.session.Session(profile_name=s3_profile)
 s3_client = session.client('s3', region_name=s3_region, endpoint_url=s3_endpoint_url)
 
 yaml_key = os.path.normpath(os.path.join(s3_prefix, s3_yaml_name))
-local_yaml_path = os.path.abspath(os.path.join('/tmp', 'training-params-' + str(round(time.time())) + '.yaml'))
+local_yaml_path = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'tmp', 'eval-params-' + str(round(time.time())) + '.yaml'))
 
 with open(local_yaml_path, 'w') as yaml_file:
     yaml.dump(config, yaml_file, default_flow_style=False, default_style='\'', explicit_start=True)

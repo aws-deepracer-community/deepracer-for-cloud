@@ -56,17 +56,20 @@ if [[ "${DR_CLOUD,,}" == "azure" ]];
 then
     export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
     DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_S3_ENDPOINT_URL"
-    DR_COMPOSE_FILE="-c $DIR/docker/docker-compose.yml -c $DIR/docker/docker-compose-endpoint.yml"
+    DR_TRAIN_COMPOSE_FILE="-c $DIR/docker/docker-compose-training.yml -c $DIR/docker/docker-compose-endpoint.yml"
+    DR_EVAL_COMPOSE_FILE="-c $DIR/docker/docker-compose-eval.yml -c $DIR/docker/docker-compose-endpoint.yml"
     DR_MINIO_COMPOSE_FILE="-c $DIR/docker/docker-compose-azure.yml"
 elif [[ "${DR_CLOUD,,}" == "local" ]];
 then
     export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
     DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_S3_ENDPOINT_URL"
-    DR_COMPOSE_FILE="-c $DIR/docker/docker-compose.yml -c $DIR/docker/docker-compose-endpoint.yml"
+    DR_TRAIN_COMPOSE_FILE="-c $DIR/docker/docker-compose-training.yml -c $DIR/docker/docker-compose-endpoint.yml"
+    DR_EVAL_COMPOSE_FILE="-c $DIR/docker/docker-compose-eval.yml -c $DIR/docker/docker-compose-endpoint.yml"
     DR_MINIO_COMPOSE_FILE="-c $DIR/docker/docker-compose-local.yml"
 else
     DR_LOCAL_PROFILE_ENDPOINT_URL=""
-    DR_COMPOSE_FILE="-c $DIR/docker/docker-compose.yml"
+    DR_TRAIN_COMPOSE_FILE="-c $DIR/docker/docker-compose-training.yml"
+    DR_EVAL_COMPOSE_FILE="-c $DIR/docker/docker-compose-eval.yml"
 fi
 
 ## Check if we have an AWS IAM assumed role, or if we need to set specific credentials.
@@ -74,14 +77,16 @@ if [ $(aws sts get-caller-identity | jq '.Arn' | awk /assumed-role/ | wc -l) -eq
 then
     export DR_LOCAL_ACCESS_KEY_ID=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_access_key_id | xargs)
     export DR_LOCAL_SECRET_ACCESS_KEY=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_secret_access_key | xargs)
-    DR_COMPOSE_FILE="$DR_COMPOSE_FILE -c $DIR/docker/docker-compose-keys.yml"
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE -c $DIR/docker/docker-compose-keys.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE -c $DIR/docker/docker-compose-keys.yml"
     export DR_UPLOAD_PROFILE="--profile $DR_UPLOAD_S3_PROFILE"
     export DR_LOCAL_S3_AUTH_MODE="profile"
 else 
     export DR_LOCAL_S3_AUTH_MODE="role"
 fi
 
-export DR_COMPOSE_FILE
+export DR_TRAIN_COMPOSE_FILE
+export DR_EVAL_COMPOSE_FILE
 export DR_LOCAL_PROFILE_ENDPOINT_URL
 
 if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then

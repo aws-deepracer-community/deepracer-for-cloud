@@ -19,7 +19,13 @@ config['KINESIS_VIDEO_STREAM_NAME'] = os.environ.get('DR_KINESIS_STREAM_NAME', '
 config['METRIC_NAME'] = 'TrainingRewardScore'
 config['METRIC_NAMESPACE'] = 'AWSDeepRacer'
 config['METRICS_S3_BUCKET'] = os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket')
-config['METRICS_S3_OBJECT_KEY'] = os.environ.get('DR_LOCAL_S3_METRICS_KEY', 'DeepRacer-Metrics/TrainingMetrics-{}.json'.format(str(round(time.time()))))
+
+metrics_prefix = os.environ.get('DR_LOCAL_S3_METRICS_PREFIX', None)
+if metrics_prefix is not None:
+    config['METRICS_S3_OBJECT_KEY'] = '{}/TrainingMetrics.json'.format(metrics_prefix)
+else:
+    config['METRICS_S3_OBJECT_KEY'] = 'DeepRacer-Metrics/TrainingMetrics-{}.json'.format(str(round(time.time())))
+
 config['MODEL_METADATA_FILE_S3_KEY'] = os.environ.get('DR_LOCAL_S3_MODEL_METADATA_KEY', 'custom_files/model_metadata.json') 
 config['NUMBER_OF_EPISODES'] = os.environ.get('DR_NUMBER_OF_EPISODES', '0')
 config['RACE_TYPE'] = os.environ.get('DR_RACE_TYPE', 'TIME_TRIAL')
@@ -50,7 +56,7 @@ session = boto3.session.Session(profile_name=s3_profile)
 s3_client = session.client('s3', region_name=s3_region, endpoint_url=s3_endpoint_url)
 
 yaml_key = os.path.normpath(os.path.join(s3_prefix, s3_yaml_name))
-local_yaml_path = os.path.abspath(os.path.join('/tmp', 'training-params-' + str(round(time.time())) + '.yaml'))
+local_yaml_path = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'tmp', 'training-params-' + str(round(time.time())) + '.yaml'))
 
 with open(local_yaml_path, 'w') as yaml_file:
     yaml.dump(config, yaml_file, default_flow_style=False, default_style='\'', explicit_start=True)
