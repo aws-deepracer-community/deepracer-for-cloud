@@ -119,7 +119,7 @@ If you want to use awscli (`aws`) to manually move files then use `aws $DR_LOCAL
 Local mode runs a minio server that hosts the data in the `docker/volumes` directory. It is otherwise command-compatible with the Azure setup; as the data is accessible via Minio and not via native S3.
 
 After having run init.sh do the following:
-* Configure the Minio credentials with `aws configure --profile minio`. The default configuration will use the `minio` profile to configure MINIO.
+* Configure the Minio credentials with `aws configure --profile minio`. The default configuration will use the `minio` profile to configure MINIO. You can choose any username or password, but username needs to be at least length 3, and password at least length 8.
 * Configure your normal AWS credentials with `aws configure` if this is not already in place on your system. This is required to use the model upload functionality.
 
 ### Environment Variables
