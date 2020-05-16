@@ -11,7 +11,7 @@ function dr-update-env {
     done
   else
     echo "File system.env does not exist."
-    exit 1
+    return 1
   fi
 
   if [[ -f "$DR_CONFIG" ]]
@@ -24,7 +24,7 @@ function dr-update-env {
     done
   else
     echo "File run.env does not exist."
-    exit 1
+    return 1
   fi
 
   if [[ -z "${DR_RUN_ID}" ]]; then
@@ -49,7 +49,7 @@ then
   dr-update-env
 else
   echo "No configuration file."
-  exit 1
+  return 1
 fi
 
 if [[ "${DR_CLOUD,,}" == "azure" ]];
