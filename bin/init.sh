@@ -7,8 +7,11 @@ function ctrl_c() {
         exit 1
 }
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+INSTALL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
+
 OPT_ARCH="gpu"
-OPT_CLOUD="local"
+OPT_CLOUD=""
 
 while getopts ":m:c:a:" opt; do
 case $opt in
@@ -23,6 +26,12 @@ exit 1
 ;;
 esac
 done
+
+if [[ -z "$OPT_CLOUD" ]]; then
+    source $SCRIPT_DIR/detect.sh
+    OPT_CLOUD=$CLOUD_NAME
+    echo "Detected cloud type to be $CLOUD_NAME"
+fi
 
 # Find CPU Level
 CPU_LEVEL="cpu"
@@ -54,8 +63,6 @@ then
     fi
 fi
 
-
-INSTALL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
 cd $INSTALL_DIR
 
 # create directory structure for docker volumes
@@ -80,10 +87,13 @@ cp $INSTALL_DIR/defaults/template-run.env $INSTALL_DIR/run.env
 
 if [[ "${OPT_CLOUD}" == "aws" ]]; then
     AWS_DR_BUCKET=$(aws s3api list-buckets | jq '.Buckets[] | select(.Name | startswith("aws-deepracer")) | .Name' -r)
+    AWS_DR_BUCKET_COUNT=$(echo $AWS_DR_BUCKET | wc -w)
     AWS_EC2_AVAIL_ZONE=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
     AWS_REGION="`echo \"$AWS_EC2_AVAIL_ZONE\" | sed 's/[a-z]$//'`"
-    if [[ !  -z "${AWS_DR_BUCKET}" ]]; then
+    if [ "$AWS_DR_BUCKET_COUNT" -eq 1 ]; then
         sed -i "s/<AWS_DR_BUCKET>/$AWS_DR_BUCKET/g" $INSTALL_DIR/system.env
+    elif [ "$AWS_DR_BUCKET_COUNT" -gt 1 ]; then
+        sed -i "s/<AWS_DR_BUCKET>/found-$AWS_DR_BUCKET_COUNT-buckets/g" $INSTALL_DIR/system.env
     else
         sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
     fi
@@ -135,7 +145,10 @@ then
 fi
 
 # ensure our variables are set on startup
-echo "source $INSTALL_DIR/bin/activate.sh" >> $HOME/.profile
+NUM_IN_PROFILE=$(cat $HOME/.profile | grep "$INSTALL_DIR/bin/activate.sh" | wc -l)
+if [ "$NUM_IN_PROFILE" -eq 0 ]; then
+    echo "source $INSTALL_DIR/bin/activate.sh" >> $HOME/.profile
+fi
 
 # mark as done
 date | tee $INSTALL_DIR/DONE
