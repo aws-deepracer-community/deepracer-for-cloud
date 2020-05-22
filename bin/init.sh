@@ -43,9 +43,10 @@ if [[ "$(dmesg | grep AVX2 | wc -l)" > 0 ]]; then
     CPU_LEVEL="cpu-avx2"
 fi
 
-if [[ "$(dmesg | grep AVX-512 | wc -l)" > 0 ]]; then 
-    CPU_LEVEL="cpu-avx512"
-fi
+# Disabled due to performance issues with AVX-512 image
+# if [[ "$(dmesg | grep AVX-512 | wc -l)" > 0 ]]; then 
+#    CPU_LEVEL="cpu-avx512"
+# fi
 
 # Check if Intel (to ensure MKN)
 if [[ "$(dmesg | grep GenuineIntel | wc -l)" > 0 ]]; then 
