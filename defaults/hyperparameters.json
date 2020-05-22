@@ -2,7 +2,7 @@
     "batch_size": 64,
     "beta_entropy": 0.01,
     "discount_factor": 0.995,
-    "e_greedy_value": 1.0,
+    "e_greedy_value": 0.05,
     "epsilon_steps": 10000,
     "exploration_type": "categorical",
     "loss_type": "huber",

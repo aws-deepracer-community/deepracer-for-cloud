@@ -9,11 +9,7 @@ import io
 import yaml
 
 config = {}
-config['ALTERNATE_DRIVING_DIRECTION'] = os.environ.get('DR_ALTERNATE_DRIVING_DIRECTION', 'false')
 config['AWS_REGION'] = os.environ.get('DR_AWS_APP_REGION', 'us-east-1')
-config['CAR_COLOR'] = os.environ.get('DR_CAR_COLOR', 'Red')
-config['CAR_NAME'] = os.environ.get('DR_CAR_NAME', 'MyCar')
-config['CHANGE_START_POSITION'] = os.environ.get('DR_CHANGE_START_POSITION', 'true')
 config['JOB_TYPE'] = 'TRAINING'
 config['KINESIS_VIDEO_STREAM_NAME'] = os.environ.get('DR_KINESIS_STREAM_NAME', 'my-kinesis-stream')
 config['METRIC_NAME'] = 'TrainingRewardScore'
@@ -28,7 +24,6 @@ else:
 
 config['MODEL_METADATA_FILE_S3_KEY'] = os.environ.get('DR_LOCAL_S3_MODEL_METADATA_KEY', 'custom_files/model_metadata.json') 
 config['NUMBER_OF_EPISODES'] = os.environ.get('DR_NUMBER_OF_EPISODES', '0')
-config['RACE_TYPE'] = os.environ.get('DR_RACE_TYPE', 'TIME_TRIAL')
 config['REWARD_FILE_S3_KEY'] = os.environ.get('DR_LOCAL_S3_REWARD_KEY', 'custom_files/reward_function.py')
 config['ROBOMAKER_SIMULATION_JOB_ACCOUNT_ID'] = os.environ.get('', 'Dummy')
 config['NUM_WORKERS'] = os.environ.get('DR_WORKERS', 1)
@@ -38,7 +33,39 @@ config['SIMTRACE_S3_BUCKET'] = os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket')
 config['SIMTRACE_S3_PREFIX'] = os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker')
 config['TARGET_REWARD_SCORE'] = os.environ.get('DR_TARGET_REWARD_SCORE', 'None')
 config['TRAINING_JOB_ARN'] = 'arn:Dummy'
+
+# Car and training 
+config['CAR_COLOR'] = os.environ.get('DR_CAR_COLOR', 'Red')
+config['CAR_NAME'] = os.environ.get('DR_CAR_NAME', 'MyCar')
+config['RACE_TYPE'] = os.environ.get('DR_RACE_TYPE', 'TIME_TRIAL')
 config['WORLD_NAME'] = os.environ.get('DR_WORLD_NAME', 'LGSWide')
+config['NUMBER_OF_TRIALS'] = os.environ.get('DR_EVAL_NUMBER_OF_TRIALS', '5')
+config['DISPLAY_NAME'] = os.environ.get('DR_DISPLAY_NAME', 'racer1')
+config['RACER_NAME'] = os.environ.get('DR_RACER_NAME', 'racer1')
+
+config['ALTERNATE_DRIVING_DIRECTION'] = os.environ.get('DR_ALTERNATE_DRIVING_DIRECTION', 'false')
+config['CHANGE_START_POSITION'] = os.environ.get('DR_CHANGE_START_POSITION', 'true')
+config['ENABLE_DOMAIN_RANDOMIZATION'] = os.environ.get('DR_ENABLE_DOMAIN_RANDOMIZATION', 'false')
+
+# Object Avoidance
+if config['RACE_TYPE'] == 'OBJECT_AVOIDANCE':
+    config['NUMBER_OF_OBSTACLES'] = os.environ.get('DR_OA_NUMBER_OF_OBSTACLES', '6')
+    config['MIN_DISTANCE_BETWEEN_OBSTACLES'] = os.environ.get('DR_OA_MIN_DISTANCE_BETWEEN_OBSTACLES', '2.0')
+    config['RANDOMIZE_OBSTACLE_LOCATIONS'] = os.environ.get('DR_OA_RANDOMIZE_OBSTACLE_LOCATIONS', 'True')
+    config['PSEUDO_RANDOMIZE_OBSTACLE_LOCATIONS'] = os.environ.get('DR_OA_PSEUDO_RANDOMIZE_OBSTACLE_LOCATIONS', 'False')
+    config['NUMBER_OF_PSEUDO_RANDOM_PLACEMENTS'] = os.environ.get('DR_OA_NUMBER_OF_PSEUDO_RANDOM_PLACEMENTS', '2')
+    config['IS_OBSTACLE_BOT_CAR'] = os.environ.get('DR_OA_IS_OBSTACLE_BOT_CAR', 'false')
+
+# Head to Bot
+if config['RACE_TYPE'] == 'HEAD_TO_BOT':
+    config['IS_LANE_CHANGE'] = os.environ.get('DR_H2B_IS_LANE_CHANGE', 'False')
+    config['LOWER_LANE_CHANGE_TIME'] = os.environ.get('DR_H2B_LOWER_LANE_CHANGE_TIME', '3.0')
+    config['UPPER_LANE_CHANGE_TIME'] = os.environ.get('DR_H2B_UPPER_LANE_CHANGE_TIME', '5.0')
+    config['LANE_CHANGE_DISTANCE'] = os.environ.get('DR_H2B_LANE_CHANGE_DISTANCE', '1.0')
+    config['NUMBER_OF_BOT_CARS'] = os.environ.get('DR_H2B_NUMBER_OF_BOT_CARS', '0')
+    config['MIN_DISTANCE_BETWEEN_BOT_CARS'] = os.environ.get('DR_H2B_MIN_DISTANCE_BETWEEN_BOT_CARS', '2.0')
+    config['RANDOMIZE_BOT_CAR_LOCATIONS'] = os.environ.get('DR_H2B_RANDOMIZE_BOT_CAR_LOCATIONS', 'False')
+    config['BOT_CAR_SPEED'] = os.environ.get('DR_H2B_BOT_CAR_SPEED', '0.2')
 
 s3_endpoint_url = os.environ.get('DR_LOCAL_S3_ENDPOINT_URL', None)
 s3_region = config['AWS_REGION']
