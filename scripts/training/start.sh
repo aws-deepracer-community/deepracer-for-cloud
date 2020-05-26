@@ -27,6 +27,10 @@ usage
 esac
 done
 
+# Ensure Sagemaker's folder is there
+sudo mkdir -p /tmp/sagemaker
+
+#Check if files are available
 S3_PATH="s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX"
 
 S3_FILES=$(aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 ls ${S3_PATH} | wc -l)
@@ -42,12 +46,7 @@ then
   fi
 fi
 
-# set evaluation specific environment variables
-STACK_NAME="deepracer-$DR_RUN_ID"
-
-export ROBOMAKER_COMMAND="./run.sh run distributed_training.launch"
-export DR_CURRENT_PARAMS_FILE=${DR_LOCAL_S3_TRAINING_PARAMS_FILE}
-
+# Base compose file
 if [ ${DR_ROBOMAKER_MOUNT_LOGS,,} = "true" ];
 then
   COMPOSE_FILES="$DR_TRAIN_COMPOSE_FILE -c $DR_DIR/docker/docker-compose-mount.yml"
@@ -56,6 +55,21 @@ then
 else
   COMPOSE_FILES="$DR_TRAIN_COMPOSE_FILE"
 fi
+
+# set evaluation specific environment variables
+STACK_NAME="deepracer-$DR_RUN_ID"
+
+if [ "$DR_WORKERS" -gt 1 ]; then
+  echo "Starting $DR_WORKERS workers"
+  mkdir -p $DR_DIR/tmp/comms.$DR_RUN_ID
+  rm -rf $DR_DIR/tmp/comms.$DR_RUN_ID/*
+  COMPOSE_FILES="$COMPOSE_FILES -c $DR_DIR/docker/docker-compose-robomaker-multi.yml"
+  export ROBOMAKER_COMMAND="./run.sh multi distributed_training.launch"
+else
+  export ROBOMAKER_COMMAND="./run.sh run distributed_training.launch"
+fi
+
+export DR_CURRENT_PARAMS_FILE=${DR_LOCAL_S3_TRAINING_PARAMS_FILE}
 
 echo "Creating Robomaker configuration in $S3_PATH/$DR_LOCAL_S3_TRAINING_PARAMS_FILE"
 python3 prepare-config.py

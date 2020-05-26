@@ -47,7 +47,7 @@ fi
 # if [[ "$(dmesg | grep AVX-512 | wc -l)" > 0 ]]; then 
 #    CPU_LEVEL="cpu-avx512"
 # fi
-
+    
 # Check if Intel (to ensure MKN)
 if [[ "$(dmesg | grep GenuineIntel | wc -l)" > 0 ]]; then 
     CPU_INTEL="true"
