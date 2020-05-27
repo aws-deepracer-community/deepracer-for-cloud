@@ -17,10 +17,12 @@ function ctrl_c() {
         exit 1
 }
 
-while getopts ":fwdhbp:" opt; do
+while getopts ":fwdhbp:c:" opt; do
 case $opt in
 b) OPT_CHECKPOINT="Best"
 ;; 
+c) OPT_CHECKPOINT_NUM="$OPTARG"
+;;
 f) OPT_FORCE="True"
 ;;
 d) OPT_DRYRUN="--dryrun"
@@ -113,8 +115,13 @@ if [ -z "$CHECKPOINT_INDEX" ]; then
   exit 1
 fi
 
-if [ -z "$OPT_CHECKPOINT" ]; then
-  echo "Checking for latest checkpoint"
+if [ -n "$OPT_CHECKPOINT_NUM" ]; then
+  echo "Checking for checkpoint $OPT_CHECKPOINT_NUM"
+  export OPT_CHECKPOINT_NUM
+  CHECKPOINT_FILE=$(aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 ls s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/model/ | perl -ne'print "$1\n" if /.*\s($ENV{OPT_CHECKPOINT_NUM}_Step-[0-9]{1,7}\.ckpt)\.index/')
+  CHECKPOINT=`echo $CHECKPOINT_FILE | cut -f1 -d_`
+elif [ -z "$OPT_CHECKPOINT" ]; then
+  echo "Checking for latest tested checkpoint"
   CHECKPOINT_FILE=`jq -r .last_checkpoint.name < $CHECKPOINT_INDEX`
   CHECKPOINT=`echo $CHECKPOINT_FILE | cut -f1 -d_`
   echo "Latest checkpoint = $CHECKPOINT"
