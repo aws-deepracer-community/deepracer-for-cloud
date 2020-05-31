@@ -72,6 +72,12 @@ else
     DR_EVAL_COMPOSE_FILE="-c $DIR/docker/docker-compose-eval.yml"
 fi
 
+# Enable logs in CloudWatch
+if [[ "${DR_CLOUD_WATCH_ENABLE,,}" == "true" ]]; then
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE -c $DIR/docker/docker-compose-cwlog.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE -c $DIR/docker/docker-compose-cwlog.yml"
+fi
+
 ## Check if we have an AWS IAM assumed role, or if we need to set specific credentials.
 if [ $(aws sts get-caller-identity | jq '.Arn' | awk /assumed-role/ | wc -l) -eq 0 ];
 then
