@@ -24,8 +24,6 @@ config['SIMTRACE_S3_BUCKET'] = os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket')
 config['SIMTRACE_S3_PREFIX'] = os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker')
 
 # Metrics
-config['METRIC_NAME'] = 'TrainingRewardScore'
-config['METRIC_NAMESPACE'] = 'AWSDeepRacer'
 config['METRICS_S3_BUCKET'] = os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket')
 metrics_prefix = os.environ.get('DR_LOCAL_S3_METRICS_PREFIX', None)
 if metrics_prefix is not None:
