@@ -1,3 +1,6 @@
-# Deepracer-for-Cloud Documentation
+# Documentation
 
-See the following 
+### Setup
+
+* [Initial Installation](installation)
+* [Reference](reference)
