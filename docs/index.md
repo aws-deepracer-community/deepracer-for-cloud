@@ -1,3 +1,3 @@
-# Deepracer for Cloud 
+# Deepracer-for-Cloud Documentation
 
 Adding a line
