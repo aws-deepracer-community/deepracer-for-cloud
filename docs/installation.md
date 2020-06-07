@@ -36,6 +36,7 @@ The installation script will adapt `.profile` to ensure that all settings are ap
 For local install it is recommended *not* to run the `bin/prepare.sh` script; it might do more changes than what you want. Rather ensure that all prerequisites are set up and run `bin/init.sh` directly.
 
 The Init Script takes a few parameters:
+
 | Variable | Description |
 |----------|-------------|
 | `-c <cloud>` | Sets the cloud version to be configured, automatically updates the `DR_CLOUD` parameter in `system.env`. Options are `azure`, `aws` or `local`. Default is `local` |
