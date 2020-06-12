@@ -10,3 +10,5 @@ services:
       restart_policy:
         condition: none
       replicas: ${DR_WORKERS}
+    environment:
+        - DOCKER_REPLICA_SLOT={{.Task.Slot}}
