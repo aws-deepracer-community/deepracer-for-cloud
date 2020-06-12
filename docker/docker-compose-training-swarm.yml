@@ -5,6 +5,8 @@ services:
     deploy:
       restart_policy:
         condition: none
+      placement:
+        constraints: [node.labels.Sagemaker == true ]
   robomaker:
     deploy:
       restart_policy:

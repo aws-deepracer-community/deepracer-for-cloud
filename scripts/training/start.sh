@@ -61,9 +61,14 @@ STACK_NAME="deepracer-$DR_RUN_ID"
 
 if [ "$DR_WORKERS" -gt 1 ]; then
   echo "Starting $DR_WORKERS workers"
-  mkdir -p $DR_DIR/tmp/comms.$DR_RUN_ID
-  rm -rf $DR_DIR/tmp/comms.$DR_RUN_ID/*
-  COMPOSE_FILES="$COMPOSE_FILES $DR_DOCKER_FILE_SEP $DR_DIR/docker/docker-compose-robomaker-multi.yml"
+
+  if [[ "${DR_DOCKER_STYLE,,}" != "swarm" ]];
+  then
+    mkdir -p $DR_DIR/tmp/comms.$DR_RUN_ID
+    rm -rf $DR_DIR/tmp/comms.$DR_RUN_ID/*
+    COMPOSE_FILES="$COMPOSE_FILES $DR_DOCKER_FILE_SEP $DR_DIR/docker/docker-compose-robomaker-multi.yml"
+  fi
+
   export ROBOMAKER_COMMAND="./run.sh multi distributed_training.launch"
 else
   export ROBOMAKER_COMMAND="./run.sh run distributed_training.launch"
