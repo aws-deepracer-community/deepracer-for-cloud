@@ -1,0 +1,12 @@
+version: '3.7'
+
+services:
+  rl_coach:
+    deploy:
+      restart_policy:
+        condition: none
+  robomaker:
+    deploy:
+      restart_policy:
+        condition: none
+      replicas: ${DR_WORKERS}

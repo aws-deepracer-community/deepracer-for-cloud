@@ -8,14 +8,12 @@ networks:
 services:
   rl_coach:
     image: larsll/deepracer-rlcoach:${DR_COACH_IMAGE}
-    deploy:
-      replicas: 0
+    command: ["/bin/bash", "-c", "echo No work for coach in Evaluation Mode"]
   robomaker:
     image: awsdeepracercommunity/deepracer-robomaker:${DR_ROBOMAKER_IMAGE}
     command: ["${ROBOMAKER_COMMAND}"]
     ports:
       - "${DR_ROBOMAKER_PORT}:8080"
-      - "${DR_ROBOMAKER_GUI_PORT}:5900"
     environment:
       - XAUTHORITY=/root/.Xauthority
       - DISPLAY_N=:0
