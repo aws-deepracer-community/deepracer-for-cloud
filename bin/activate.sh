@@ -37,7 +37,7 @@ function dr-update-env {
     export DR_ROBOMAKER_GUI_PORT=$(expr 5900 + $DR_RUN_ID)
   else
     export DR_ROBOMAKER_PORT="8080-8100"
-    export DR_ROBOMAKER_GUI_PORT="5900-5920"
+    export DR_ROBOMAKER_GUI_PORT="5901-5920"
   fi
 
 }
@@ -86,6 +86,13 @@ else
     DR_LOCAL_PROFILE_ENDPOINT_URL=""
     DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml"
     DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml"
+fi
+
+# Prevent docker swarms to restart
+if [[ "${DR_HOST_X,,}" == "true" ]];
+then
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
 fi
 
 # Prevent docker swarms to restart
