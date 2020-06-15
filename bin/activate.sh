@@ -108,7 +108,7 @@ if [[ "${DR_CLOUD_WATCH_ENABLE,,}" == "true" ]]; then
 fi
 
 ## Check if we have an AWS IAM assumed role, or if we need to set specific credentials.
-if [ $(aws sts get-caller-identity | jq '.Arn' | awk /assumed-role/ | wc -l) -eq 0 ];
+if [ $(aws sts get-caller-identity 2> /dev/null | jq '.Arn' | awk /assumed-role/ | wc -l ) -eq 0 ];
 then
     export DR_LOCAL_ACCESS_KEY_ID=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_access_key_id | xargs)
     export DR_LOCAL_SECRET_ACCESS_KEY=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_secret_access_key | xargs)
@@ -129,7 +129,13 @@ if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
     export MINIO_USERNAME=$(id -u -n)
     export MINIO_GID=$(id -g)
     export MINIO_GROUPNAME=$(id -g -n)
-    docker stack deploy $DR_MINIO_COMPOSE_FILE s3
+    if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+    then
+        docker stack deploy $DR_MINIO_COMPOSE_FILE s3
+    else
+        docker-compose $DR_MINIO_COMPOSE_FILE -p s3 --log-level ERROR up -d
+    fi
+
 fi
 
 source $SCRIPT_DIR/scripts_wrapper.sh
