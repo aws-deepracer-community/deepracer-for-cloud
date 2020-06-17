@@ -27,7 +27,6 @@ services:
       - "${DR_ROBOMAKER_PORT}:8080"
       - "${DR_ROBOMAKER_GUI_PORT}:5900"
     environment:
-      - XAUTHORITY=/root/.Xauthority
       - DISPLAY_N=:0
       - WORLD_NAME=${DR_WORLD_NAME}
       - SAGEMAKER_SHARED_S3_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
