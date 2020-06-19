@@ -99,6 +99,11 @@ if [[ "${OPT_CLOUD}" == "aws" ]]; then
         sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
     fi
     sed -i "s/<LOCAL_PROFILE>/default/g" $INSTALL_DIR/system.env
+elif [[ "${OPT_CLOUD}" == "azure" ]]; then
+    AWS_REGION="us-east-1"
+    sed -i "s/<LOCAL_PROFILE>/azure/g" $INSTALL_DIR/system.env
+    sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
+    echo "Please run 'aws configure --profile azure' to set the credentials"
 else
     AWS_REGION="us-east-1"
     sed -i "s/<LOCAL_PROFILE>/minio/g" $INSTALL_DIR/system.env
@@ -139,6 +144,8 @@ docker pull larsll/deepracer-loganalysis:v2-cpu
 # create the network sagemaker-local if it doesn't exit
 SAGEMAKER_NW='sagemaker-local'
 docker swarm init
+SWARM_NODE=$(docker node inspect self | jq .[0].ID -r)
+docker node update --label-add Sagemaker=true $SWARM_NODE
 docker network ls | grep -q $SAGEMAKER_NW
 if [ $? -ne 0 ]
 then
@@ -153,3 +160,34 @@ fi
 
 # mark as done
 date | tee $INSTALL_DIR/DONE
+
+## Optional auturun feature
+# if using automation scripts to auto configure and run
+# you must pass s3_training_location.txt to this instance in order for this to work
+if [[ -f "$INSTALL_DIR/autorun.s3url" ]]
+then
+    ## read in first line.  first line always assumed to be training location regardless what else is in file
+    TRAINING_LOC=$(awk 'NR==1 {print; exit}' $INSTALL_DIR/autorun.s3url)
+    
+    #get bucket name
+    TRAINING_BUCKET=${TRAINING_LOC%%/*}
+    #get prefix. minor exception handling in case there is no prefix and a root bucket is passed
+    if [[ "$TRAININGLOC" == *"/"* ]]
+    then
+      TRAINING_PREFIX=${TRAININGLOC#*/}
+    else
+      TRAINING_PREFIX=""
+    fi
+          
+    ##check if custom autorun script exists in s3 training bucket.  If not, use default in this repo
+    aws s3api head-object --bucket $TRAINING_BUCKET --key $TRAINING_PREFIX/autorun.sh || not_exist=true
+    if [ $not_exist ]; then
+        echo "custom file does not exist, using local copy"      
+    else
+        echo "custom script does exist, use it"
+        aws s3 cp s3://$TRAINING_LOC/autorun.sh $INSTALL_DIR/bin/autorun.sh   
+    fi
+    chmod +x $INSTALL_DIR/bin/autorun.sh
+    bash -c "source $INSTALL_DIR/bin/autorun.sh"
+fi
+

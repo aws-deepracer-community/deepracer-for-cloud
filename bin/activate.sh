@@ -30,8 +30,15 @@ function dr-update-env {
   if [[ -z "${DR_RUN_ID}" ]]; then
     export DR_RUN_ID=0
   fi
-  export DR_ROBOMAKER_PORT=$(echo "8080 + $DR_RUN_ID" | bc)
-  export DR_ROBOMAKER_GUI_PORT=$(echo "5900 + $DR_RUN_ID" | bc)
+
+  if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+  then
+    export DR_ROBOMAKER_PORT=$(expr 8080 + $DR_RUN_ID)
+    export DR_ROBOMAKER_GUI_PORT=$(expr 5900 + $DR_RUN_ID)
+  else
+    export DR_ROBOMAKER_PORT="8080-8100"
+    export DR_ROBOMAKER_GUI_PORT="5901-5920"
+  fi
 
 }
 
@@ -52,39 +59,61 @@ else
   return 1
 fi
 
+# Check if we will use Docker Swarm or Docker Compose
+if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+then
+    export DR_DOCKER_FILE_SEP="-c"
+else
+    export DR_DOCKER_FILE_SEP="-f"
+fi
+
+# Prepare the docker compose files depending on parameters
 if [[ "${DR_CLOUD,,}" == "azure" ]];
 then
     export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
     DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_S3_ENDPOINT_URL"
-    DR_TRAIN_COMPOSE_FILE="-c $DIR/docker/docker-compose-training.yml -c $DIR/docker/docker-compose-endpoint.yml"
-    DR_EVAL_COMPOSE_FILE="-c $DIR/docker/docker-compose-eval.yml -c $DIR/docker/docker-compose-endpoint.yml"
-    DR_MINIO_COMPOSE_FILE="-c $DIR/docker/docker-compose-azure.yml"
+    DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
+    DR_MINIO_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-azure.yml"
 elif [[ "${DR_CLOUD,,}" == "local" ]];
 then
     export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
     DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_S3_ENDPOINT_URL"
-    DR_TRAIN_COMPOSE_FILE="-c $DIR/docker/docker-compose-training.yml -c $DIR/docker/docker-compose-endpoint.yml"
-    DR_EVAL_COMPOSE_FILE="-c $DIR/docker/docker-compose-eval.yml -c $DIR/docker/docker-compose-endpoint.yml"
-    DR_MINIO_COMPOSE_FILE="-c $DIR/docker/docker-compose-local.yml"
+    DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
+    DR_MINIO_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local.yml"
 else
     DR_LOCAL_PROFILE_ENDPOINT_URL=""
-    DR_TRAIN_COMPOSE_FILE="-c $DIR/docker/docker-compose-training.yml"
-    DR_EVAL_COMPOSE_FILE="-c $DIR/docker/docker-compose-eval.yml"
+    DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml"
+fi
+
+# Prevent docker swarms to restart
+if [[ "${DR_HOST_X,,}" == "true" ]];
+then
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
+fi
+
+# Prevent docker swarms to restart
+if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+then
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training-swarm.yml"
 fi
 
 # Enable logs in CloudWatch
 if [[ "${DR_CLOUD_WATCH_ENABLE,,}" == "true" ]]; then
-    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE -c $DIR/docker/docker-compose-cwlog.yml"
-    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE -c $DIR/docker/docker-compose-cwlog.yml"
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-cwlog.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-cwlog.yml"
 fi
 
 ## Check if we have an AWS IAM assumed role, or if we need to set specific credentials.
-if [ $(aws sts get-caller-identity | jq '.Arn' | awk /assumed-role/ | wc -l) -eq 0 ];
+if [ $(aws --output json sts get-caller-identity 2> /dev/null | jq '.Arn' | awk /assumed-role/ | wc -l ) -eq 0 ];
 then
     export DR_LOCAL_ACCESS_KEY_ID=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_access_key_id | xargs)
     export DR_LOCAL_SECRET_ACCESS_KEY=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_secret_access_key | xargs)
-    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE -c $DIR/docker/docker-compose-keys.yml"
-    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE -c $DIR/docker/docker-compose-keys.yml"
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-keys.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-keys.yml"
     export DR_UPLOAD_PROFILE="--profile $DR_UPLOAD_S3_PROFILE"
     export DR_LOCAL_S3_AUTH_MODE="profile"
 else 
@@ -100,7 +129,13 @@ if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
     export MINIO_USERNAME=$(id -u -n)
     export MINIO_GID=$(id -g)
     export MINIO_GROUPNAME=$(id -g -n)
-    docker stack deploy $DR_MINIO_COMPOSE_FILE s3
+    if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+    then
+        docker stack deploy $DR_MINIO_COMPOSE_FILE s3
+    else
+        docker-compose $DR_MINIO_COMPOSE_FILE -p s3 --log-level ERROR up -d
+    fi
+
 fi
 
 source $SCRIPT_DIR/scripts_wrapper.sh

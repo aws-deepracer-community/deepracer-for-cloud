@@ -20,9 +20,6 @@ services:
     volumes:
     - '//var/run/docker.sock:/var/run/docker.sock'
     - '/tmp/sagemaker:/tmp/sagemaker'
-    deploy:
-      restart_policy:
-        condition: none
   robomaker:
     image: awsdeepracercommunity/deepracer-robomaker:${DR_ROBOMAKER_IMAGE}
     command: ["${ROBOMAKER_COMMAND}"]
@@ -30,7 +27,6 @@ services:
       - "${DR_ROBOMAKER_PORT}:8080"
       - "${DR_ROBOMAKER_GUI_PORT}:5900"
     environment:
-      - XAUTHORITY=/root/.Xauthority
       - DISPLAY_N=:0
       - WORLD_NAME=${DR_WORLD_NAME}
       - SAGEMAKER_SHARED_S3_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
@@ -40,6 +36,3 @@ services:
       - KINESIS_VIDEO_STREAM_NAME=${DR_KINESIS_STREAM_NAME}
       - ENABLE_KINESIS=${DR_KINESIS_STREAM_ENABLE}
       - ENABLE_GUI=${DR_GUI_ENABLE}
-    deploy:
-      restart_policy:
-        condition: none

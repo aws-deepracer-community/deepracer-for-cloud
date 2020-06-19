@@ -1,15 +1,6 @@
 version: '3.7'
 
-networks:
-  bridge:
-    external: true
-
 services:
   robomaker:
-    networks:
-      - default
-      - bridge
-    deploy:
-      replicas: ${DR_WORKERS}
     volumes:
       - "${DR_DIR}/tmp/comms.${DR_RUN_ID}:/mnt/comms"

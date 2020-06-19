@@ -1,0 +1,12 @@
+version: '3.7'
+
+services:
+  robomaker:
+    ipc: host
+    environment:
+      - DISPLAY
+      - USE_EXTERNAL_X=${DR_HOST_X}
+      - XAUTHORITY=/root/.Xauthority
+    volumes:
+      - '/tmp/.X11-unix/:/tmp/.X11-unix'
+      - '${XAUTHORITY}:/root/.Xauthority'
