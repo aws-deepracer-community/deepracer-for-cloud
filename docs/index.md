@@ -42,9 +42,11 @@ DRfC supports a wide set of features to ensure that you can focus on creating th
 
 # Documentation
 
-* [Initial Installation](installation)
-* [Reference](reference)
-* [GPU Accelerated OpenGL for Robomaker](opengl)
+* [Initial Installation](installation.md)
+* [Reference](reference.md)
+* [Using multiple Robomaker workers](multi_worker.md)
+* [Running multiple parallel experiments](multi_run.md)
+* [GPU Accelerated OpenGL for Robomaker](opengl.md)
 
 # Support
 
