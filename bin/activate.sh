@@ -60,11 +60,18 @@ else
 fi
 
 # Check if we will use Docker Swarm or Docker Compose
+# If not defined then use Swarm
+if [[ -z "${DR_DOCKER_STYLE}" ]]; then
+  export DR_DOCKER_STYLE="swarm"
+fi
+
 if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
 then
-    export DR_DOCKER_FILE_SEP="-c"
+  export DR_DOCKER_FILE_SEP="-c"
+  SWARM_NODE=$(docker node inspect self | jq .[0].ID -r)
+  SWARM_NODE_UPDATE=$(docker node update --label-add Sagemaker=true $SWARM_NODE)
 else
-    export DR_DOCKER_FILE_SEP="-f"
+  export DR_DOCKER_FILE_SEP="-f"
 fi
 
 # Prepare the docker compose files depending on parameters
