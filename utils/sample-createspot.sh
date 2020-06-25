@@ -88,6 +88,7 @@ fi
 
 ## Replace dynamic parameters in run.env (still local to your directory)
 sed -i.bak -re "s:(DR_LOCAL_S3_PRETRAINED_PREFIX=).*$:\1$CURRENT_RUN_MODEL:g; s:(DR_LOCAL_S3_PRETRAINED=).*$:\1$PRETRAINED:g; ; s:(DR_LOCAL_S3_MODEL_PREFIX=).*$:\1$NEW_RUN_MODEL:g" "$CONFIG_FILE" && echo "Done."
+sed -i.bak -re "s/(DR_LOCAL_S3_BUCKET=).*$/\1$BUCKET/g" "$CONFIG_FILE"
 
 ## Replace static parameters in run.env (still local to your directory)
 sed -i.bak -re "s/(DR_UPLOAD_S3_PREFIX=).*$/\1$DR_UPLOAD_S3_PREFIX/g" "$CONFIG_FILE"
