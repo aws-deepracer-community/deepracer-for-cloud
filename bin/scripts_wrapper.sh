@@ -44,7 +44,7 @@ function dr-download-custom-files {
 
 function dr-start-training {
   dr-update-env
-  bash -c "cd $DIR/scripts/training && ./start.sh $@"
+  $DIR/scripts/training/start.sh "$@"
 }
 
 function dr-increment-training {
@@ -57,7 +57,7 @@ function dr-stop-training {
 
 function dr-start-evaluation {
   dr-update-env
-  bash -c "cd $DIR/scripts/evaluation && ./start.sh $@"
+  $DIR/scripts/evaluation/start.sh "$@"
 }
 
 function dr-stop-evaluation {
@@ -80,6 +80,62 @@ function dr-stop-loganalysis {
 
 function dr-logs-sagemaker {
 
+  local OPTIND
+
+  while getopts ":w:" opt; do
+  case $opt in
+  w) OPT_WAIT=$OPTARG
+  ;;
+  \?) echo "Invalid option -$OPTARG" >&2
+  ;;
+  esac
+  done
+
+  SAGEMAKER_CONTAINER=$(dr-find-sagemaker)
+
+  if [[ -z "$SAGEMAKER_CONTAINER" ]];
+  then
+    if [[ -n "$OPT_WAIT" ]]; then
+      WAIT_TIME=$OPT_WAIT
+      echo "Waiting up to $WAIT_TIME seconds for Sagemaker to start up..."
+      until [ -n "$SAGEMAKER_CONTAINER" ]
+      do
+        sleep 1
+        ((WAIT_TIME--))
+        if [ "$WAIT_TIME" -lt 1 ]; then
+          echo "Sagemaker is not running."
+          exit 1
+        fi
+        SAGEMAKER_CONTAINER=$(dr-find-sagemaker)
+      done
+    else
+      echo "Sagemaker is not running."
+      exit 1
+    fi
+  fi
+
+  if [[ "${DR_HOST_X,,}" == "true" && -n "$DISPLAY" ]];
+  then
+    if [ -x "$(command -v gnome-terminal)" ]; 
+    then
+      gnome-terminal --tab --title "DR-${DR_RUN_ID}: Sagemaker - ${SAGEMAKER_CONTAINER}" -- /usr/bin/bash -c "!!; docker logs -f ${SAGEMAKER_CONTAINER}" 2> /dev/null
+      echo "Sagemaker container $SAGEMAKER_CONTAINER logs opened in separate gnome-terminal. "
+    elif [ -x "$(command -v x-terminal-emulator)" ]; 
+    then
+      x-terminal-emulator -e /bin/sh -c "!!; docker logs -f ${SAGEMAKER_CONTAINER}" 2> /dev/null
+      echo "Sagemaker container $SAGEMAKER_CONTAINER logs opened in separate terminal. "      
+    else
+      echo 'Could not find a defined x-terminal-emulator. Displaying inline.'
+      docker logs -f $SAGEMAKER_CONTAINER
+    fi
+  else
+      docker logs -f $SAGEMAKER_CONTAINER
+  fi
+
+}
+
+function dr-find-sagemaker {
+
     STACK_NAME="deepracer-$DR_RUN_ID"
     RUN_NAME=${DR_LOCAL_S3_MODEL_PREFIX}
 
@@ -93,31 +149,121 @@ function dr-logs-sagemaker {
             COMPOSE_SERVICE_NAME=$(echo $CONTAINER_NAME | perl -n -e'/(.*)_(algo(.*))_./; print $2')
             COMPOSE_FILE=$(sudo find /tmp/sagemaker -name docker-compose.yaml -exec grep -l "$RUN_NAME" {} + | grep $CONTAINER_PREFIX)
             if [[ -n $COMPOSE_FILE ]]; then
-                docker logs -f $CONTAINER
+                echo $CONTAINER
+                return
             fi
         done
-    else
-        echo "Sagemaker is not running."
     fi
 
 }
 
 function dr-logs-robomaker {
-    eval ROBOMAKER_ID=$(docker ps | grep "deepracer-${DR_RUN_ID}_robomaker" | cut -f1 -d\  | head -1)
-    if [ -n "$ROBOMAKER_ID" ]; then
-        docker logs -f $ROBOMAKER_ID
+
+  OPT_REPLICA=1
+  local OPTIND
+
+  while getopts ":w:n:e" opt; do
+  case $opt in
+  w) OPT_WAIT=$OPTARG
+  ;;
+  n) OPT_REPLICA=$OPTARG
+  ;;
+  e) OPT_EVAL="-e"
+  ;;  
+  \?) echo "Invalid option -$OPTARG" >&2
+  ;;
+  esac
+  done
+
+  ROBOMAKER_CONTAINER=$(dr-find-robomaker -n ${OPT_REPLICA} ${OPT_EVAL})
+
+  if [[ -z "$ROBOMAKER_CONTAINER" ]];
+  then
+    if [[ -n "$OPT_WAIT" ]]; then
+      WAIT_TIME=$OPT_WAIT
+      echo "Waiting up to $WAIT_TIME seconds for Robomaker #${OPT_REPLICA} to start up..."
+      until [ -n "$ROBOMAKER_CONTAINER" ]
+      do
+        sleep 1
+        ((WAIT_TIME--))
+        if [ "$WAIT_TIME" -lt 1 ]; then
+          echo "Robomaker #${OPT_REPLICA} is not running."
+          exit 1
+        fi
+        ROBOMAKER_CONTAINER=$(dr-find-robomaker -n ${OPT_REPLICA})
+      done
     else
-        echo "Robomaker is not running."
+      echo "Robomaker #${OPT_REPLICA} is not running."
+      exit 1
     fi
+  fi
+
+  if [[ "${DR_HOST_X,,}" == "true" && -n "$DISPLAY" ]];
+  then
+    if [ -x "$(command -v gnome-terminal)" ]; 
+    then
+      gnome-terminal --tab --title "DR-${DR_RUN_ID}: Robomaker #${OPT_REPLICA} - ${ROBOMAKER_CONTAINER}" -- /usr/bin/bash -c "!!; docker logs -f ${ROBOMAKER_CONTAINER}" 2> /dev/null
+      echo "Robomaker #${OPT_REPLICA} ($ROBOMAKER_CONTAINER) logs opened in separate gnome-terminal. "
+    elif [ -x "$(command -v x-terminal-emulator)" ]; 
+    then
+      x-terminal-emulator -e /bin/sh -c "!!; docker logs -f ${ROBOMAKER_CONTAINER}" 2> /dev/null
+      echo "Robomaker #${OPT_REPLICA} ($ROBOMAKER_CONTAINER) logs opened in separate terminal. "
+    else
+      echo 'Could not find a defined x-terminal-emulator. Displaying inline.'
+      docker logs -f $ROBOMAKER_CONTAINER
+    fi
+  else
+      docker logs -f $ROBOMAKER_CONTAINER
+  fi
+
 }
 
-function dr-logs-robomaker-debug {
-    eval ROBOMAKER_ID=$(docker ps | grep "deepracer-${DR_RUN_ID}_robomaker" | cut -f1 -d\  | head -1)
-    if [ -n "$ROBOMAKER_ID" ]; then
-        docker logs -f $ROBOMAKER_ID 2>&1 | grep DEBUG
-    else
-        echo "Robomaker is not running."
-    fi
+function dr-find-robomaker {
+
+  local OPTIND
+
+  OPT_PREFIX="deepracer"
+
+  while getopts ":n:e" opt; do
+  case $opt in
+  n) OPT_REPLICA=$OPTARG
+  ;;
+  e) OPT_PREFIX="-eval"
+  ;;  
+  \?) echo "Invalid option -$OPTARG" >&2
+  ;;
+  esac
+  done
+
+  eval ROBOMAKER_ID=$(docker ps | grep "${OPT_PREFIX}-${DR_RUN_ID}_robomaker.${OPT_REPLICA}" | cut -f1 -d\  | head -1)
+  if [ -n "$ROBOMAKER_ID" ]; then
+    echo $ROBOMAKER_ID
+  else
+    echo "Robomaker is not running."
+  fi
+}
+
+function dr-get-robomaker-stats {
+
+  local OPTIND
+  OPT_REPLICA=1
+
+  while getopts ":n:" opt; do
+  case $opt in
+  n) OPT_REPLICA=$OPTARG
+  ;;
+  \?) echo "Invalid option -$OPTARG" >&2
+  ;;
+  esac
+  done
+
+  eval ROBOMAKER_ID=$(dr-find-robomaker -n $OPT_REPLICA )
+  if [ -n "$ROBOMAKER_ID" ]; then
+    echo "Showing statistics for Robomaker #$OPT_REPLICA - container $ROBOMAKER_ID"
+    docker exec -ti $ROBOMAKER_ID bash -c "gz stats"
+  else
+    echo "Robomaker #$OPT_REPLICA is not running."
+  fi
 }
 
 function dr-logs-loganalysis {
@@ -133,9 +279,7 @@ function dr-logs-loganalysis {
 function dr-url-loganalysis {
   eval LOG_ANALYSIS_ID=$(docker ps | awk ' /loganalysis/ { print $1 }')
   if [ -n "$LOG_ANALYSIS_ID" ]; then
-    eval URL=$(docker logs $LOG_ANALYSIS_ID | perl -n -e'/(http:\/\/127\.0\.0\.1\:8888\/\?.*)/; print $1')
-    echo "Log-analysis URL:"
-    echo $URL
+    docker exec "$LOG_ANALYSIS_ID" bash -c "source .venv/bin/activate && jupyter notebook list"
   else
     echo "Log-analysis is not running."
   fi

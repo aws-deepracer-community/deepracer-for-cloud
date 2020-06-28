@@ -3,8 +3,12 @@
 source $DR_DIR/bin/scripts_wrapper.sh
 
 usage(){
-	echo "Usage: $0 [-w]"
+	echo "Usage: $0 [-w] [-q | -s | -r [n] | -a ]"
   echo "       -w        Wipes the target AWS DeepRacer model structure before upload."
+  echo "       -q        Do not output / follow a log when starting."
+  echo "       -a        Follow all Sagemaker and Robomaker logs."
+  echo "       -s        Follow Sagemaker logs (default)."
+  echo "       -r [n]    Follow Robomaker logs for worker n (default worker 0 / replica 1)."
 	exit 1
 }
 
@@ -15,10 +19,27 @@ function ctrl_c() {
         exit 1
 }
 
-while getopts ":wh" opt; do
+OPT_DISPLAY="SAGEMAKER"
+
+while getopts ":whqsar:" opt; do
 case $opt in
 w) OPT_WIPE="WIPE"
 ;;
+q) OPT_QUIET="QUIET"
+;;
+s) OPT_DISPLAY="SAGEMAKER"
+;;
+a) OPT_DISPLAY="ALL"
+;;
+r)  # Check if value is in numeric format.
+    OPT_DISPLAY="ROBOMAKER"
+    if [[ $OPTARG =~ ^[0-9]+$ ]]; then
+        OPT_ROBOMAKER=$OPTARG
+    else
+        OPT_ROBOMAKER=0
+        ((OPTIND--))
+    fi
+;;  
 h) usage
 ;;
 \?) echo "Invalid option -$OPTARG" >&2
@@ -28,7 +49,9 @@ esac
 done
 
 # Ensure Sagemaker's folder is there
-sudo mkdir -p /tmp/sagemaker
+if [ ! -d /tmp/sagemaker ]; then
+  sudo mkdir -p /tmp/sagemaker
+fi
 
 #Check if files are available
 S3_PATH="s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX"
@@ -77,7 +100,7 @@ fi
 export DR_CURRENT_PARAMS_FILE=${DR_LOCAL_S3_TRAINING_PARAMS_FILE}
 
 echo "Creating Robomaker configuration in $S3_PATH/$DR_LOCAL_S3_TRAINING_PARAMS_FILE"
-python3 prepare-config.py
+python3 $DR_DIR/scripts/training/prepare-config.py
 
 # Check if we will use Docker Swarm or Docker Compose
 if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
@@ -87,36 +110,25 @@ else
   docker-compose $COMPOSE_FILES -p $STACK_NAME --log-level ERROR up -d --scale robomaker=$DR_WORKERS
 fi
 
-echo 'Waiting for containers to start up...'
-
-#sleep for 20 seconds to allow the containers to start
-sleep 15
-
-if xhost >& /dev/null;
-then
-  echo "Display exists, using gnome-terminal for logs and starting vncviewer."
-  if ! [ -x "$(command -v gnome-terminal)" ]; 
-  then
-    echo 'Error: skip showing sagemaker logs because gnome-terminal is not installed.  This is normal if you are on a different OS to Ubuntu.'
-  else	
-    echo 'attempting to pull up sagemaker logs...'
-    gnome-terminal -x sh -c "!!; docker logs -f $(docker ps -a | awk ' /sagemaker/ { print $1 }')"
-  fi
-
-  if ! [ -x "$(command -v gnome-terminal)" ]; 
-  then
-    if ! [ -x "$(command -v vncviewer)" ]; 
-    then
-      echo 'Error: vncviewer is not present on the PATH.  Make sure you install it and add it to the PATH.'
-    else	
-      echo 'attempting to open vnc viewer...'
-      vncviewer localhost:8080
-    fi
-  else	
-    echo 'attempting to open vnc viewer...'
-    gnome-terminal -x sh -c "!!; vncviewer localhost:8080"
-  fi
-else
-  echo "No display. Falling back to CLI mode."
-  dr-logs-sagemaker
+# Request to be quiet. Quitting here.
+if [ -n "$OPT_QUIET" ]; then
+  exit 0
 fi
+
+# Trigger requested log-file
+if [[ "${OPT_DISPLAY,,}" == "all" && -n "${DISPLAY}" && "${DR_HOST_X,,}" == "true" ]]; then
+  dr-logs-sagemaker -w 15
+  if [ "${DR_WORKERS}" -gt 1 ]; then
+    for i in $(seq 1 ${DR_WORKERS})
+    do
+      dr-logs-robomaker -w 15 -n $i
+    done    
+  else
+    dr-logs-robomaker -w 15
+  fi
+elif [[ "${OPT_DISPLAY,,}" == "robomaker" ]]; then
+  dr-logs-robomaker -w 15 -n $OPT_ROBOMAKER
+elif [[ "${OPT_DISPLAY,,}" == "sagemaker" ]]; then
+  dr-logs-sagemaker -w 15
+fi
+

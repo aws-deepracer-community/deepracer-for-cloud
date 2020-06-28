@@ -3,8 +3,8 @@
 source $DR_DIR/bin/scripts_wrapper.sh
 
 usage(){
-	echo "Usage: $0 [-w]"
-  echo "       -w        Wipes the target AWS DeepRacer model structure before upload."
+	echo "Usage: $0 [-q]"
+  echo "       -q        Quiet - does not start log tracing."
 	exit 1
 }
 
@@ -14,6 +14,19 @@ function ctrl_c() {
         echo "Requested to stop."
         exit 1
 }
+
+while getopts ":q" opt; do
+case $opt in
+q) OPT_QUIET="QUIET"
+;;
+h) usage
+;;
+\?) echo "Invalid option -$OPTARG" >&2
+usage
+;;
+esac
+done
+
 
 # set evaluation specific environment variables
 S3_PATH="s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX"
@@ -32,7 +45,7 @@ else
 fi
 
 echo "Creating Robomaker configuration in $S3_PATH/$DR_CURRENT_PARAMS_FILE"
-python3 prepare-config.py
+python3 $DR_DIR/scripts/evaluation/prepare-config.py
 
 # Check if we will use Docker Swarm or Docker Compose
 if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
@@ -42,21 +55,11 @@ else
   docker-compose $COMPOSE_FILES --log-level ERROR -p $STACK_NAME up -d
 fi
 
-echo 'waiting for containers to start up...'
-
-#sleep for 20 seconds to allow the containers to start
-sleep 15
-
-if xhost >& /dev/null;
-then
-  echo "Display exists, using gnome-terminal for logs and starting vncviewer."
-
-  echo 'attempting to pull up sagemaker logs...'
-  gnome-terminal -x sh -c "!!; docker logs -f $(docker ps | awk ' /robomaker/ { print $1 }')"
-
-  echo 'attempting to open vnc viewer...'
-  gnome-terminal -x sh -c "!!; vncviewer localhost:8080"
-else
-  echo "No display. Falling back to CLI mode."
-  docker logs -f $(docker ps | awk ' /robomaker/ { print $1 }')
+# Request to be quiet. Quitting here.
+if [ -n "$OPT_QUIET" ]; then
+  exit 0
 fi
+
+# Trigger requested log-file
+dr-logs-robomaker -w 15 -e
+
