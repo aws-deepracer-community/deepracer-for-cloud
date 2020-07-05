@@ -43,7 +43,8 @@ In this case the CUDA device #0 is the GTX 1650 and the CUDA device #1 is the Te
 ### Selecting Device
 
 #### Robomaker
-To control the Robomaker then add the following to `docker-compose-training.yml` in the `docker/` directory:
+To control the Robomaker then add the following to `system.env`:
+
 ```
 CUDA_VISIBLE_DEVICES=1
 ``` 
