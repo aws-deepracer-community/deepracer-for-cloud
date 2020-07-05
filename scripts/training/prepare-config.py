@@ -41,6 +41,7 @@ config['RACER_NAME'] = os.environ.get('DR_RACER_NAME', 'racer1')
 config['ALTERNATE_DRIVING_DIRECTION'] = os.environ.get('DR_TRAIN_ALTERNATE_DRIVING_DIRECTION', os.environ.get('DR_ALTERNATE_DRIVING_DIRECTION', 'false'))
 config['CHANGE_START_POSITION'] = os.environ.get('DR_TRAIN_CHANGE_START_POSITION', os.environ.get('DR_CHANGE_START_POSITION', 'true'))
 config['ROUND_ROBIN_ADVANCE_DIST'] = os.environ.get('DR_TRAIN_ROUND_ROBIN_ADVANCE_DIST', '0.05')
+config['START_POSITION_OFFSET'] = os.environ.get('DR_TRAIN_START_POSITION_OFFSET', '0.00')
 config['ENABLE_DOMAIN_RANDOMIZATION'] = os.environ.get('DR_ENABLE_DOMAIN_RANDOMIZATION', 'false')
 config['MIN_EVAL_TRIALS'] = os.environ.get('DR_TRAIN_MIN_EVAL_TRIALS', '5')
 
