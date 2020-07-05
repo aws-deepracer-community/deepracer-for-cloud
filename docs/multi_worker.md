@@ -15,3 +15,7 @@ To avoid issues with the position from which evaluations are run ensure that `( 
 Example: With 3 workers set `num_episodes_between_training: 30` and `DR_TRAIN_ROUND_ROBIN_ADVANCE_DIST=0.1`.
 
 Note; Sagemaker will stop collecting experiences once you have reached 10.000 steps (3-layer CNN) in an iteration. For longer tracks with 600-1000 steps per completed episodes this will define the upper bound for the number of workers and episodes per iteration.
+
+## Watching the streams
+
+If you want to watch the streams -- and are in `compose` mode you can use the script `utils/start-local-browser.sh` to dynamically create a HTML that streams the KVS stream from ALL workers at a time.
