@@ -284,3 +284,8 @@ function dr-url-loganalysis {
     echo "Log-analysis is not running."
   fi
 }
+
+function dr-view-stream {
+  ${DIR}/utils/start-local-browser.sh "$@"
+}
+

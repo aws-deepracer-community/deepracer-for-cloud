@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
 usage(){
-	echo "Usage: $0 [-t topic] [-w width] [-h height] [-q quality]"
+	echo "Usage: $0 [-t topic] [-w width] [-h height] [-q quality] -b [browser-command]"
   echo "       -w        Width of individual stream."
   echo "       -h        Heigth of individual stream."
   echo "       -q        Quality of the stream image."
   echo "       -t        Topic to follow - default /racecar/deepracer/kvs_stream"
+  echo "       -b        Browser command (default: firefox --new-tab)"
 	exit 1
 }
 
@@ -21,8 +22,9 @@ TOPIC="/racecar/deepracer/kvs_stream"
 WIDTH=480
 HEIGHT=360
 QUALITY=75
+BROWSER="firefox --new-tab"
 
-while getopts ":whqs:" opt; do
+while getopts ":w:h:q:t:b:" opt; do
 case $opt in
 w) WIDTH="$OPTARG"
 ;;
@@ -31,6 +33,8 @@ h) HEIGHT="$OPTARG"
 q) QUALITY="$OPTARG"
 ;;
 t) TOPIC="$OPTARG"
+;;
+b) BROWSER="$OPTARG"
 ;;
 \?) echo "Invalid option -$OPTARG" >&2
 usage
@@ -63,5 +67,5 @@ for c in $ROBOMAKER_CONTAINERS; do
 done
 
 echo "</body></html>" >> $FILE
-
-firefox --new-tab `readlink -f $FILE ` &
+echo "Starting browser '$BROWSER'."
+$BROWSER `readlink -f $FILE ` &
