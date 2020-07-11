@@ -18,7 +18,7 @@ source $DIR/detect.sh
 echo "Detected cloud type ${CLOUD_NAME}"
 
 ## Do I have a GPU
-GPUS=$(lspci | awk '/NVIDIA/ && /3D controller/' | wc -l)
+GPUS=$(lspci | awk '/NVIDIA/ && /VGA/' | wc -l)
 if [ $? -ne 0 ] || [ $GPUS -eq 0 ];
 then
 	ARCH="cpu"
@@ -82,7 +82,7 @@ then
 	curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
 
 	sudo apt-get update && sudo apt-get install -y nvidia-docker2 nvidia-container-toolkit nvidia-container-runtime
-	jq 'del(."default-runtime") + {"default-runtime": "nvidia"}' /etc/docker/daemon.json | sudo tee /etc/docker/daemon.json
+	cat /etc/docker/daemon.json | jq 'del(."default-runtime") + {"default-runtime": "nvidia"}' | sudo tee /etc/docker/daemon.json
 fi
 sudo systemctl enable docker
 sudo systemctl restart docker
