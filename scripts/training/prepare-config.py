@@ -85,4 +85,93 @@ local_yaml_path = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'tmp', '
 with open(local_yaml_path, 'w') as yaml_file:
     yaml.dump(config, yaml_file, default_flow_style=False, default_style='\'', explicit_start=True)
 
-s3_client.upload_file(Bucket=s3_bucket, Key=yaml_key, Filename=local_yaml_path)
+
+
+# Training with different configurations on each worker (aka Multi Config training)
+config['MULTI_CONFIG'] = os.environ.get('DR_TRAIN_MULTI_CONFIG', 'False')
+
+if config['MULTI_CONFIG'] == "True":
+    num_workers = int(os.environ.get('DR_WORKERS',1))
+    multi_config = {}
+    multi_config['multi_config'] = [None] * num_workers
+
+    for i in range(1,num_workers+1,1):
+        if i == 1:
+            # copy training_params to training_params_1
+            s3_yaml_name_list = s3_yaml_name.split('.')
+            s3_yaml_name_temp = s3_yaml_name_list[0] + "_%d.yaml" % i
+
+            #upload additional training params files
+            yaml_key = os.path.normpath(os.path.join(s3_prefix, s3_yaml_name_temp))
+            s3_client.upload_file(Bucket=s3_bucket, Key=yaml_key, Filename=local_yaml_path)            
+
+            # Store in multi_config array
+            multi_config['multi_config'][i - 1] = {'config_file': s3_yaml_name_temp,
+                                                             'world_name': config['WORLD_NAME']}
+
+        else:  # i >= 2 
+            #read in additional configuration file.  format of file must be worker#-run.env
+            location = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'worker-{}.env'.format(i)))
+            with open(location, 'r') as fh:
+                vars_dict = dict(
+                    tuple(line.split('='))
+                    for line in fh.read().splitlines() if not line.startswith('#')
+                    )
+
+            # Reset parameters for the configuration of this worker number
+            os.environ.update(vars_dict)
+
+            # Update car and training parameters
+            config.update({'WORLD_NAME': os.environ.get('DR_WORLD_NAME')})
+            config.update({'RACE_TYPE': os.environ.get('DR_RACE_TYPE')})
+            config.update({'ALTERNATE_DRIVING_DIRECTION': os.environ.get('DR_TRAIN_ALTERNATE_DRIVING_DIRECTION')})
+            config.update({'CHANGE_START_POSITION': os.environ.get('DR_TRAIN_CHANGE_START_POSITION')})
+            config.update({'ROUND_ROBIN_ADVANCE_DIST': os.environ.get('DR_TRAIN_ROUND_ROBIN_ADVANCE_DIST')})
+            config.update({'ENABLE_DOMAIN_RANDOMIZATION': os.environ.get('DR_ENABLE_DOMAIN_RANDOMIZATION')})
+
+            # Update Object Avoidance parameters
+            if config['RACE_TYPE'] == 'OBJECT_AVOIDANCE':
+                config.update({'NUMBER_OF_OBSTACLES': os.environ.get('DR_OA_NUMBER_OF_OBSTACLES')})
+                config.update({'MIN_DISTANCE_BETWEEN_OBSTACLES': os.environ.get('DR_OA_MIN_DISTANCE_BETWEEN_OBSTACLES')})
+                config.update({'RANDOMIZE_OBSTACLE_LOCATIONS': os.environ.get('DR_OA_RANDOMIZE_OBSTACLE_LOCATIONS')})
+                config.update({'PSEUDO_RANDOMIZE_OBSTACLE_LOCATIONS': os.environ.get('DR_OA_PSEUDO_RANDOMIZE_OBSTACLE_LOCATIONS')})
+                config.update({'NUMBER_OF_PSEUDO_RANDOM_PLACEMENTS': os.environ.get('DR_OA_NUMBER_OF_PSEUDO_RANDOM_PLACEMENTS')})
+                config.update({'IS_OBSTACLE_BOT_CAR': os.environ.get('DR_OA_IS_OBSTACLE_BOT_CAR')})
+                config.update({'NUMBER_OF_BOT_CARS': '0'})
+
+            # Update Head to Bot parameters
+            if config['RACE_TYPE'] == 'HEAD_TO_BOT':
+                config.update({'IS_LANE_CHANGE': os.environ.get('DR_H2B_IS_LANE_CHANGE')})
+                config.update({'LOWER_LANE_CHANGE_TIME': os.environ.get('DR_H2B_LOWER_LANE_CHANGE_TIME')})
+                config.update({'UPPER_LANE_CHANGE_TIME': os.environ.get('DR_H2B_UPPER_LANE_CHANGE_TIME')})
+                config.update({'LANE_CHANGE_DISTANCE': os.environ.get('DR_H2B_LANE_CHANGE_DISTANCE')})
+                config.update({'NUMBER_OF_BOT_CARS': os.environ.get('DR_H2B_NUMBER_OF_BOT_CARS')})
+                config.update({'MIN_DISTANCE_BETWEEN_BOT_CARS': os.environ.get('DR_H2B_MIN_DISTANCE_BETWEEN_BOT_CARS')})
+                config.update({'RANDOMIZE_BOT_CAR_LOCATIONS': os.environ.get('DR_H2B_RANDOMIZE_BOT_CAR_LOCATIONS')})
+                config.update({'BOT_CAR_SPEED': os.environ.get('DR_H2B_BOT_CAR_SPEED')})
+                config.update({'NUMBER_OF_OBSTACLES': '0'})
+
+            # Clear bot cars and obstacles in case present from earlier worker
+            if config['RACE_TYPE'] == 'TIME_TRIAL':
+                config.update({'NUMBER_OF_BOT_CARS': '0'})
+                config.update({'NUMBER_OF_OBSTACLES': '0'})
+
+            #split string s3_yaml_name, insert the worker number, and add back on the .yaml extension
+            s3_yaml_name_list = s3_yaml_name.split('.')
+            s3_yaml_name_temp = s3_yaml_name_list[0] + "_%d.yaml" % i
+
+            #upload additional training params files
+            yaml_key = os.path.normpath(os.path.join(s3_prefix, s3_yaml_name_temp))
+            local_yaml_path = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'tmp', 'training-params-' + str(round(time.time())) + '.yaml'))
+            with open(local_yaml_path, 'w') as yaml_file:
+                yaml.dump(config, yaml_file, default_flow_style=False, default_style='\'', explicit_start=True)
+            s3_client.upload_file(Bucket=s3_bucket, Key=yaml_key, Filename=local_yaml_path)
+
+            # Store in multi_config array
+            multi_config['multi_config'][i - 1] = {'config_file': s3_yaml_name_temp,
+                                                             'world_name': config['WORLD_NAME']}
+
+    print(json.dumps(multi_config))
+
+else:
+    s3_client.upload_file(Bucket=s3_bucket, Key=yaml_key, Filename=local_yaml_path)

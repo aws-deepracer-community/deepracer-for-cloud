@@ -82,6 +82,10 @@ fi
 # set evaluation specific environment variables
 STACK_NAME="deepracer-$DR_RUN_ID"
 
+export DR_CURRENT_PARAMS_FILE=${DR_LOCAL_S3_TRAINING_PARAMS_FILE}
+
+WORKER_CONFIG=$(python3 $DR_DIR/scripts/training/prepare-config.py)
+
 if [ "$DR_WORKERS" -gt 1 ]; then
   echo "Starting $DR_WORKERS workers"
 
@@ -92,15 +96,18 @@ if [ "$DR_WORKERS" -gt 1 ]; then
     COMPOSE_FILES="$COMPOSE_FILES $DR_DOCKER_FILE_SEP $DR_DIR/docker/docker-compose-robomaker-multi.yml"
   fi
 
+  if [ "$DR_TRAIN_MULTI_CONFIG" == "True" ]; then
+    export MULTI_CONFIG=$WORKER_CONFIG
+    echo "Multi-config training, creating multiple Robomaker configurations in $S3_PATH"  
+  else
+    echo "Creating Robomaker configuration in $S3_PATH/$DR_LOCAL_S3_TRAINING_PARAMS_FILE" 
+  fi
   export ROBOMAKER_COMMAND="./run.sh multi distributed_training.launch"
+
 else
   export ROBOMAKER_COMMAND="./run.sh run distributed_training.launch"
+  echo "Creating Robomaker configuration in $S3_PATH/$DR_LOCAL_S3_TRAINING_PARAMS_FILE"
 fi
-
-export DR_CURRENT_PARAMS_FILE=${DR_LOCAL_S3_TRAINING_PARAMS_FILE}
-
-echo "Creating Robomaker configuration in $S3_PATH/$DR_LOCAL_S3_TRAINING_PARAMS_FILE"
-python3 $DR_DIR/scripts/training/prepare-config.py
 
 # Check if we will use Docker Swarm or Docker Compose
 if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
