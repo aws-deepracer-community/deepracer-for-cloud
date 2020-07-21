@@ -60,9 +60,15 @@ if config['RACE_TYPE'] == 'OBJECT_AVOIDANCE':
     config['NUMBER_OF_OBSTACLES'] = os.environ.get('DR_OA_NUMBER_OF_OBSTACLES', '6')
     config['MIN_DISTANCE_BETWEEN_OBSTACLES'] = os.environ.get('DR_OA_MIN_DISTANCE_BETWEEN_OBSTACLES', '2.0')
     config['RANDOMIZE_OBSTACLE_LOCATIONS'] = os.environ.get('DR_OA_RANDOMIZE_OBSTACLE_LOCATIONS', 'True')
-    config['PSEUDO_RANDOMIZE_OBSTACLE_LOCATIONS'] = os.environ.get('DR_OA_PSEUDO_RANDOMIZE_OBSTACLE_LOCATIONS', 'False')
-    config['NUMBER_OF_PSEUDO_RANDOM_PLACEMENTS'] = os.environ.get('DR_OA_NUMBER_OF_PSEUDO_RANDOM_PLACEMENTS', '2')
     config['IS_OBSTACLE_BOT_CAR'] = os.environ.get('DR_OA_IS_OBSTACLE_BOT_CAR', 'false')
+
+    object_position_str = os.environ.get('DR_OA_OBJECT_POSITIONS', "")
+    if object_position_str != "":
+        object_positions = []
+        for o in object_position_str.split(";"):
+            object_positions.append(o)
+        config['OBJECT_POSITIONS'] = object_positions
+        config['NUMBER_OF_OBSTACLES'] = str(len(object_positions))
 
 # Head to Bot
 if config['RACE_TYPE'] == 'HEAD_TO_BOT':

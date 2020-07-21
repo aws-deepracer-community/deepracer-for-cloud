@@ -35,7 +35,6 @@ config['CAR_COLOR'] = os.environ.get('DR_CAR_COLOR', 'Red')
 config['CAR_NAME'] = os.environ.get('DR_CAR_NAME', 'MyCar')
 config['RACE_TYPE'] = os.environ.get('DR_RACE_TYPE', 'TIME_TRIAL')
 config['WORLD_NAME'] = os.environ.get('DR_WORLD_NAME', 'LGSWide')
-config['NUMBER_OF_TRIALS'] = os.environ.get('DR_EVAL_NUMBER_OF_TRIALS', '5')
 config['DISPLAY_NAME'] = os.environ.get('DR_DISPLAY_NAME', 'racer1')
 config['RACER_NAME'] = os.environ.get('DR_RACER_NAME', 'racer1')
 
@@ -43,15 +42,22 @@ config['ALTERNATE_DRIVING_DIRECTION'] = os.environ.get('DR_TRAIN_ALTERNATE_DRIVI
 config['CHANGE_START_POSITION'] = os.environ.get('DR_TRAIN_CHANGE_START_POSITION', os.environ.get('DR_CHANGE_START_POSITION', 'true'))
 config['ROUND_ROBIN_ADVANCE_DIST'] = os.environ.get('DR_TRAIN_ROUND_ROBIN_ADVANCE_DIST', '0.05')
 config['ENABLE_DOMAIN_RANDOMIZATION'] = os.environ.get('DR_ENABLE_DOMAIN_RANDOMIZATION', 'false')
+config['MIN_EVAL_TRIALS'] = os.environ.get('DR_TRAIN_MIN_EVAL_TRIALS', '5')
 
 # Object Avoidance
 if config['RACE_TYPE'] == 'OBJECT_AVOIDANCE':
     config['NUMBER_OF_OBSTACLES'] = os.environ.get('DR_OA_NUMBER_OF_OBSTACLES', '6')
     config['MIN_DISTANCE_BETWEEN_OBSTACLES'] = os.environ.get('DR_OA_MIN_DISTANCE_BETWEEN_OBSTACLES', '2.0')
     config['RANDOMIZE_OBSTACLE_LOCATIONS'] = os.environ.get('DR_OA_RANDOMIZE_OBSTACLE_LOCATIONS', 'True')
-    config['PSEUDO_RANDOMIZE_OBSTACLE_LOCATIONS'] = os.environ.get('DR_OA_PSEUDO_RANDOMIZE_OBSTACLE_LOCATIONS', 'False')
-    config['NUMBER_OF_PSEUDO_RANDOM_PLACEMENTS'] = os.environ.get('DR_OA_NUMBER_OF_PSEUDO_RANDOM_PLACEMENTS', '2')
     config['IS_OBSTACLE_BOT_CAR'] = os.environ.get('DR_OA_IS_OBSTACLE_BOT_CAR', 'false')
+
+    object_position_str = os.environ.get('DR_OA_OBJECT_POSITIONS', "")
+    if object_position_str != "":
+        object_positions = []
+        for o in object_position_str.split(";"):
+            object_positions.append(o)
+        config['OBJECT_POSITIONS'] = object_positions
+        config['NUMBER_OF_OBSTACLES'] = str(len(object_positions))
 
 # Head to Bot
 if config['RACE_TYPE'] == 'HEAD_TO_BOT':
@@ -124,6 +130,7 @@ if config['MULTI_CONFIG'] == "True":
             # Update car and training parameters
             config.update({'WORLD_NAME': os.environ.get('DR_WORLD_NAME')})
             config.update({'RACE_TYPE': os.environ.get('DR_RACE_TYPE')})
+            config.update({'CAR_COLOR': os.environ.get('DR_CAR_COLOR')})
             config.update({'ALTERNATE_DRIVING_DIRECTION': os.environ.get('DR_TRAIN_ALTERNATE_DRIVING_DIRECTION')})
             config.update({'CHANGE_START_POSITION': os.environ.get('DR_TRAIN_CHANGE_START_POSITION')})
             config.update({'ROUND_ROBIN_ADVANCE_DIST': os.environ.get('DR_TRAIN_ROUND_ROBIN_ADVANCE_DIST')})
@@ -134,10 +141,16 @@ if config['MULTI_CONFIG'] == "True":
                 config.update({'NUMBER_OF_OBSTACLES': os.environ.get('DR_OA_NUMBER_OF_OBSTACLES')})
                 config.update({'MIN_DISTANCE_BETWEEN_OBSTACLES': os.environ.get('DR_OA_MIN_DISTANCE_BETWEEN_OBSTACLES')})
                 config.update({'RANDOMIZE_OBSTACLE_LOCATIONS': os.environ.get('DR_OA_RANDOMIZE_OBSTACLE_LOCATIONS')})
-                config.update({'PSEUDO_RANDOMIZE_OBSTACLE_LOCATIONS': os.environ.get('DR_OA_PSEUDO_RANDOMIZE_OBSTACLE_LOCATIONS')})
-                config.update({'NUMBER_OF_PSEUDO_RANDOM_PLACEMENTS': os.environ.get('DR_OA_NUMBER_OF_PSEUDO_RANDOM_PLACEMENTS')})
                 config.update({'IS_OBSTACLE_BOT_CAR': os.environ.get('DR_OA_IS_OBSTACLE_BOT_CAR')})
-                config.update({'NUMBER_OF_BOT_CARS': '0'})
+                object_position_str = os.environ.get('DR_OA_OBJECT_POSITIONS', "")
+                if object_position_str != "":
+                    object_positions = []
+                    for o in object_position_str.replace('"','').split(";"):
+                        object_positions.append(o)
+                    config.update({'OBJECT_POSITIONS': object_positions})
+                    config.update({'NUMBER_OF_OBSTACLES': str(len(object_positions))})
+                else:
+                    config.pop('OBJECT_POSITIONS')
 
             # Update Head to Bot parameters
             if config['RACE_TYPE'] == 'HEAD_TO_BOT':
@@ -149,7 +162,6 @@ if config['MULTI_CONFIG'] == "True":
                 config.update({'MIN_DISTANCE_BETWEEN_BOT_CARS': os.environ.get('DR_H2B_MIN_DISTANCE_BETWEEN_BOT_CARS')})
                 config.update({'RANDOMIZE_BOT_CAR_LOCATIONS': os.environ.get('DR_H2B_RANDOMIZE_BOT_CAR_LOCATIONS')})
                 config.update({'BOT_CAR_SPEED': os.environ.get('DR_H2B_BOT_CAR_SPEED')})
-                config.update({'NUMBER_OF_OBSTACLES': '0'})
 
             # Clear bot cars and obstacles in case present from earlier worker
             if config['RACE_TYPE'] == 'TIME_TRIAL':
