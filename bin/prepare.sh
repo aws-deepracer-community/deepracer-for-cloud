@@ -18,7 +18,7 @@ source $DIR/detect.sh
 echo "Detected cloud type ${CLOUD_NAME}"
 
 ## Do I have a GPU
-GPUS=$(lspci | awk '/NVIDIA/ && /VGA/' | wc -l)
+GPUS=$(lspci | awk '/NVIDIA/ && ( /VGA/ || /3D controller/ ) ' | wc -l )
 if [ $? -ne 0 ] || [ $GPUS -eq 0 ];
 then
 	ARCH="cpu"
