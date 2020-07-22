@@ -151,7 +151,7 @@ if config['MULTI_CONFIG'] == "True":
                     config.update({'OBJECT_POSITIONS': object_positions})
                     config.update({'NUMBER_OF_OBSTACLES': str(len(object_positions))})
                 else:
-                    config.pop('OBJECT_POSITIONS')
+                    config.pop('OBJECT_POSITIONS',[])
 
             # Update Head to Bot parameters
             if config['RACE_TYPE'] == 'HEAD_TO_BOT':
