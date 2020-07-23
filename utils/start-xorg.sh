@@ -1,5 +1,8 @@
 #!/bin/bash
 export DISPLAY=:0
+touch ~/.Xauthority
+export XAUTHORITY=~/.Xauthority
+
 xinit /usr/bin/jwm &
 sleep 1
 xrandr -s 1400x900
