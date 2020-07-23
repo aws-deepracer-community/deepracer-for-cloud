@@ -96,9 +96,10 @@ with open(local_yaml_path, 'w') as yaml_file:
 
 # Training with different configurations on each worker (aka Multi Config training)
 config['MULTI_CONFIG'] = os.environ.get('DR_TRAIN_MULTI_CONFIG', 'False')
+num_workers = int(config['NUM_WORKERS'])
 
-if config['MULTI_CONFIG'] == "True":
-    num_workers = int(os.environ.get('DR_WORKERS',1))
+if config['MULTI_CONFIG'] == "True" and num_workers > 0:
+    
     multi_config = {}
     multi_config['multi_config'] = [None] * num_workers
 
@@ -153,6 +154,12 @@ if config['MULTI_CONFIG'] == "True":
                     config.update({'NUMBER_OF_OBSTACLES': str(len(object_positions))})
                 else:
                     config.pop('OBJECT_POSITIONS',[])
+            else:
+                config.pop('NUMBER_OF_OBSTACLES', None)
+                config.pop('MIN_DISTANCE_BETWEEN_OBSTACLES', None)
+                config.pop('RANDOMIZE_OBSTACLE_LOCATIONS', None)
+                config.pop('IS_OBSTACLE_BOT_CAR', None)
+                config.pop('OBJECT_POSITIONS',[])
 
             # Update Head to Bot parameters
             if config['RACE_TYPE'] == 'HEAD_TO_BOT':
@@ -164,11 +171,15 @@ if config['MULTI_CONFIG'] == "True":
                 config.update({'MIN_DISTANCE_BETWEEN_BOT_CARS': os.environ.get('DR_H2B_MIN_DISTANCE_BETWEEN_BOT_CARS')})
                 config.update({'RANDOMIZE_BOT_CAR_LOCATIONS': os.environ.get('DR_H2B_RANDOMIZE_BOT_CAR_LOCATIONS')})
                 config.update({'BOT_CAR_SPEED': os.environ.get('DR_H2B_BOT_CAR_SPEED')})
-
-            # Clear bot cars and obstacles in case present from earlier worker
-            if config['RACE_TYPE'] == 'TIME_TRIAL':
-                config.update({'NUMBER_OF_BOT_CARS': '0'})
-                config.update({'NUMBER_OF_OBSTACLES': '0'})
+            else:
+                config.pop('IS_LANE_CHANGE', None)
+                config.pop('LOWER_LANE_CHANGE_TIME', None)
+                config.pop('UPPER_LANE_CHANGE_TIME', None)
+                config.pop('LANE_CHANGE_DISTANCE', None)
+                config.pop('NUMBER_OF_BOT_CARS', None)
+                config.pop('MIN_DISTANCE_BETWEEN_BOT_CARS', None)
+                config.pop('RANDOMIZE_BOT_CAR_LOCATIONS', None)
+                config.pop('BOT_CAR_SPEED', None)
 
             #split string s3_yaml_name, insert the worker number, and add back on the .yaml extension
             s3_yaml_name_list = s3_yaml_name.split('.')
