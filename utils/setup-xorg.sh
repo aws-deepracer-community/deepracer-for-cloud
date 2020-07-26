@@ -3,7 +3,7 @@
 # Script to install basic X-Windows on a headless instance (e.g. in EC2)
 
 # Install additional packages
-sudo apt-get install xinit xserver-xorg-legacy x11-xserver-utils \
+sudo apt-get install xinit xserver-xorg-legacy x11-xserver-utils x11-utils \
                     menu mesa-utils xterm jwm x11vnc -y --no-install-recommends
 
 # Configure

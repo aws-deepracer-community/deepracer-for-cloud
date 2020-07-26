@@ -1,10 +1,11 @@
 #!/bin/bash
 export DISPLAY=:0
-touch ~/.Xauthority
-export XAUTHORITY=~/.Xauthority
 
 nohup xinit /usr/bin/jwm &
 sleep 1
 xrandr -s 1400x900
-x11vnc -bg -forever -nopw -rfbport 5900 -display WAIT$DISPLAY & 
+x11vnc -bg -forever -no6 -nopw -rfbport 5901 -rfbportv6 -1 -loop -display WAIT$DISPLAY & 
 sleep 1
+
+xauth generate $DISPLAY
+export XAUTHORITY=~/.Xauthority
