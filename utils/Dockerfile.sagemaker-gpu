@@ -1,2 +1,2 @@
-FROM awsdeepracercommunity/deepracer-sagemaker:gpu
+FROM awsdeepracercommunity/deepracer-sagemaker:3.0.1-dev-gpu
 ENV CUDA_VISIBLE_DEVICES=1
