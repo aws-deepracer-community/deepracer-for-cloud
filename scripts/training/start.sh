@@ -112,6 +112,22 @@ fi
 # Check if we will use Docker Swarm or Docker Compose
 if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
 then
+  ROBOMAKER_NODES=$(docker node ls --format '{{.ID}}' | xargs docker inspect | jq '.[] | select (.Spec.Labels.Robomaker == "true") | .ID' | wc -l)
+  if [[ "$ROBOMAKER_NODES" -eq 0 ]]; 
+  then
+    echo "ERROR: No Swarm Nodes labelled for placement of Robomaker. Please add Robomaker node."
+    echo "       Example: docker node update --label-add Robomaker=true $(docker node inspect self | jq .[0].ID -r)"
+    exit 0
+  fi
+
+  SAGEMAKER_NODES=$(docker node ls --format '{{.ID}}' | xargs docker inspect | jq '.[] | select (.Spec.Labels.Sagemaker == "true") | .ID' | wc -l)
+  if [[ "$SAGEMAKER_NODES" -eq 0 ]]; 
+  then
+    echo "ERROR: No Swarm Nodes labelled for placement of Sagemaker. Please add Sagemaker node."
+    echo "       Example: docker node update --label-add Sagemaker=true $(docker node inspect self | jq .[0].ID -r)"
+    exit 0
+  fi
+
   docker stack deploy $COMPOSE_FILES $STACK_NAME
 else
   docker-compose $COMPOSE_FILES -p $STACK_NAME --log-level ERROR up -d --scale robomaker=$DR_WORKERS

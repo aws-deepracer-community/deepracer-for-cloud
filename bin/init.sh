@@ -153,6 +153,7 @@ SAGEMAKER_NW='sagemaker-local'
 docker swarm init
 SWARM_NODE=$(docker node inspect self | jq .[0].ID -r)
 docker node update --label-add Sagemaker=true $SWARM_NODE
+docker node update --label-add Robomaker=true $SWARM_NODE
 docker network ls | grep -q $SAGEMAKER_NW
 if [ $? -ne 0 ]
 then

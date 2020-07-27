@@ -12,5 +12,7 @@ services:
       restart_policy:
         condition: none
       replicas: ${DR_WORKERS}
+      placement:
+        constraints: [node.labels.Robomaker == true ]
     environment:
         - DOCKER_REPLICA_SLOT={{.Task.Slot}}
