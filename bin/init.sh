@@ -85,19 +85,10 @@ cp $INSTALL_DIR/defaults/reward_function.py $INSTALL_DIR/custom_files/
 
 cp $INSTALL_DIR/defaults/template-system.env $INSTALL_DIR/system.env
 cp $INSTALL_DIR/defaults/template-run.env $INSTALL_DIR/run.env
-
 if [[ "${OPT_CLOUD}" == "aws" ]]; then
-    AWS_DR_BUCKET=$(aws s3api list-buckets | jq '.Buckets[] | select(.Name | startswith("aws-deepracer")) | .Name' -r)
-    AWS_DR_BUCKET_COUNT=$(echo $AWS_DR_BUCKET | wc -w)
     AWS_EC2_AVAIL_ZONE=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
     AWS_REGION="`echo \"$AWS_EC2_AVAIL_ZONE\" | sed 's/[a-z]$//'`"
-    if [ "$AWS_DR_BUCKET_COUNT" -eq 1 ]; then
-        sed -i "s/<AWS_DR_BUCKET>/$AWS_DR_BUCKET/g" $INSTALL_DIR/system.env
-    elif [ "$AWS_DR_BUCKET_COUNT" -gt 1 ]; then
-        sed -i "s/<AWS_DR_BUCKET>/found-$AWS_DR_BUCKET_COUNT-buckets/g" $INSTALL_DIR/system.env
-    else
-        sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
-    fi
+    sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
     sed -i "s/<LOCAL_PROFILE>/default/g" $INSTALL_DIR/system.env
 elif [[ "${OPT_CLOUD}" == "azure" ]]; then
     AWS_REGION="us-east-1"

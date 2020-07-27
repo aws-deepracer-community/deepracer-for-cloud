@@ -20,11 +20,15 @@ function dr-upload-model {
 }
 
 function dr-list-aws-models {
-  dr-update-env && ${DIR}/scripts/upload/list-set-models.sh "$@"
+  echo "Due to changes in AWS DeepRacer Console this command is no longer available."
 }
 
 function dr-set-upload-model {
-  dr-update-env && ${DIR}/scripts/upload/list-set-models.sh "$@"
+  echo "Due to changes in AWS DeepRacer Console this command is no longer available."
+}
+
+function dr-increment-upload-model {
+  dr-update-env && ${DIR}/scripts/upload/increment.sh "$@" && dr-update-env
 }
 
 function dr-download-custom-files {
