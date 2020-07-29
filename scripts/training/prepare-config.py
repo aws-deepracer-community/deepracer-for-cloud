@@ -136,6 +136,7 @@ if config['MULTI_CONFIG'] == "True":
             config.update({'CHANGE_START_POSITION': os.environ.get('DR_TRAIN_CHANGE_START_POSITION')})
             config.update({'ROUND_ROBIN_ADVANCE_DIST': os.environ.get('DR_TRAIN_ROUND_ROBIN_ADVANCE_DIST')})
             config.update({'ENABLE_DOMAIN_RANDOMIZATION': os.environ.get('DR_ENABLE_DOMAIN_RANDOMIZATION')})
+            config.update({'START_POSITION_OFFSET': os.environ.get('DR_TRAIN_START_POSITION_OFFSET', '0.00')})
 
             # Update Object Avoidance parameters
             if config['RACE_TYPE'] == 'OBJECT_AVOIDANCE':
