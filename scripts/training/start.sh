@@ -109,6 +109,14 @@ else
   echo "Creating Robomaker configuration in $S3_PATH/$DR_LOCAL_S3_TRAINING_PARAMS_FILE"
 fi
 
+# Check if we are using Host X -- ensure variables are populated
+if [[ "${DR_HOST_X,,}" == "true" ]];
+then
+  if [[ -z "$XAUTHORITY" ]]; then
+    export XAUTHORITY=~/.Xauthority
+  fi
+fi
+
 # Check if we will use Docker Swarm or Docker Compose
 if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
 then
