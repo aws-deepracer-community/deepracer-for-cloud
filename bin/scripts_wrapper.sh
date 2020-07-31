@@ -108,13 +108,13 @@ function dr-logs-sagemaker {
         ((WAIT_TIME--))
         if [ "$WAIT_TIME" -lt 1 ]; then
           echo "Sagemaker is not running."
-          exit 1
+          return 1
         fi
         SAGEMAKER_CONTAINER=$(dr-find-sagemaker)
       done
     else
       echo "Sagemaker is not running."
-      exit 1
+      return 1
     fi
   fi
 
@@ -192,13 +192,13 @@ function dr-logs-robomaker {
         ((WAIT_TIME--))
         if [ "$WAIT_TIME" -lt 1 ]; then
           echo "Robomaker #${OPT_REPLICA} is not running."
-          exit 1
+          return 1
         fi
         ROBOMAKER_CONTAINER=$(dr-find-robomaker -n ${OPT_REPLICA})
       done
     else
       echo "Robomaker #${OPT_REPLICA} is not running."
-      exit 1
+      return 1
     fi
   fi
 
