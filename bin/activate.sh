@@ -1,4 +1,11 @@
 #!/bin/bash
+
+DEPENDENCY_VERSION="3.0"
+
+verlte() {
+    [  "$1" = "`echo -e "$1\n$2" | sort -V | head -n1`" ]
+}
+
 function dr-update-env {
 
   if [[ -f "$DIR/system.env" ]]
@@ -143,6 +150,22 @@ if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
         docker-compose $DR_MINIO_COMPOSE_FILE -p s3 --log-level ERROR up -d
     fi
 
+fi
+
+## Version check
+SAGEMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-sagemaker:$DR_SAGEMAKER_IMAGE | jq -r .[].Config.Labels.version)
+if ! verlte $DEPENDENCY_VERSION $SAGEMAKER_VER; then
+  echo "WARNING: Incompatible version of Deepracer Sagemaker. Expected >$DEPENDENCY_VERSION. Got $SAGEMAKER_VER"
+fi
+
+ROBOMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-robomaker:$DR_ROBOMAKER_IMAGE | jq -r .[].Config.Labels.version)
+if ! verlte $DEPENDENCY_VERSION $ROBOMAKER_VER; then
+  echo "WARNING: Incompatible version of Deepracer Robomaker. Expected >$DEPENDENCY_VERSION. Got $ROBOMAKER_VER"
+fi
+
+COACH_VER=$(docker inspect larsll/deepracer-rlcoach:$DR_COACH_IMAGE | jq -r .[].Config.Labels.version)
+if ! verlte $DEPENDENCY_VERSION $COACH_VER; then
+  echo "WARNING: Incompatible version of Deepracer-for-Cloud Coach. Expected >$DEPENDENCY_VERSION. Got $COACH_VER"
 fi
 
 source $SCRIPT_DIR/scripts_wrapper.sh
