@@ -1,7 +1,5 @@
 #!/bin/bash
 
-DEPENDENCY_VERSION="3.0"
-
 verlte() {
     [  "$1" = "`echo -e "$1\n$2" | sort -V | head -n1`" ]
 }
@@ -153,6 +151,8 @@ if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
 fi
 
 ## Version check
+DEPENDENCY_VERSION=$(jq -r '.master_version  | select (.!=null)' $DIR/defaults/dependencies.json)
+
 SAGEMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-sagemaker:$DR_SAGEMAKER_IMAGE | jq -r .[].Config.Labels.version)
 if ! verlte $DEPENDENCY_VERSION $SAGEMAKER_VER; then
   echo "WARNING: Incompatible version of Deepracer Sagemaker. Expected >$DEPENDENCY_VERSION. Got $SAGEMAKER_VER"

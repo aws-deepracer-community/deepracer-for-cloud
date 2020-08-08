@@ -125,10 +125,10 @@ do
 done
 
 # Download docker images. Change to build statements if locally built images are desired.
-COACH_VERSION=$(jq -r '.rl_coach | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
+COACH_VERSION=$(jq -r '.containers.rl_coach | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
 sed -i "s/<COACH_TAG>/$COACH_VERSION/g" $INSTALL_DIR/system.env
 
-ROBOMAKER_VERSION=$(jq -r '.robomaker  | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
+ROBOMAKER_VERSION=$(jq -r '.containers.robomaker  | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
 if [ -n $ROBOMAKER_VERSION ]; then
     ROBOMAKER_VERSION=$ROBOMAKER_VERSION-$CPU_LEVEL
 else   
@@ -136,7 +136,7 @@ else
 fi
 sed -i "s/<ROBO_TAG>/$ROBOMAKER_VERSION/g" $INSTALL_DIR/system.env
 
-SAGEMAKER_VERSION=$(jq -r '.sagemaker  | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
+SAGEMAKER_VERSION=$(jq -r '.containers.sagemaker  | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
 if [ -n $SAGEMAKER_VERSION ]; then
     SAGEMAKER_VERSION=$SAGEMAKER_VERSION-$SAGEMAKER_TAG
 else   
