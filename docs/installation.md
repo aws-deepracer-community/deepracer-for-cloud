@@ -74,6 +74,7 @@ To use IAM Roles:
 * Configure `run.env` as follows:
   * `DR_LOCAL_S3_PROFILE=default`
   * `DR_LOCAL_S3_BUCKET=<bucketname>`
+* Configure `system.env` as follows:
   * `DR_UPLOAD_S3_PROFILE=default`
   * `DR_UPLOAD_S3_BUCKET=<your-aws-deepracer-bucket>`
 * Run `dr-update` for configuration to take effect.
@@ -87,6 +88,7 @@ For access with IAM user:
 * Configure `run.env` as follows:
   * `DR_LOCAL_S3_PROFILE=default`
   * `DR_LOCAL_S3_BUCKET=<bucketname>`
+* Configure `system.env` as follows:
   * `DR_UPLOAD_S3_PROFILE=default`
   * `DR_UPLOAD_S3_BUCKET=<your-aws-deepracer-bucket>`
 * Run `dr-update` for configuration to take effect.
@@ -104,6 +106,7 @@ In Azure mode the script-set requires the following:
 * Configure `run.env` as follows:
   * `DR_LOCAL_S3_PROFILE=<myprofile>`
   * `DR_LOCAL_S3_BUCKET=<blobcontainer-name>`
+* Configure `system.env` as follows:
   * `DR_UPLOAD_S3_PROFILE=default`
   * `DR_UPLOAD_S3_BUCKET=<your-aws-deepracer-bucket>`
 * Run `dr-update` for configuration to take effect.
@@ -122,6 +125,7 @@ In Local mode the script-set requires the following:
 * Configure `run.env` as follows:
   * `DR_LOCAL_S3_PROFILE=minio`
   * `DR_LOCAL_S3_BUCKET=bucket`
+* Configure `system.env` as follows:
   * `DR_UPLOAD_S3_PROFILE=default`
   * `DR_UPLOAD_S3_BUCKET=<your-aws-deepracer-bucket>`
 * Run `dr-update` for configuration to take effect.
