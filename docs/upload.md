@@ -33,3 +33,8 @@ There are several useful switches to the upload command:
 
 ### Managing your models
 You should decide how you're going to manage your models. Upload to AWS does not preserve all the files created locally so if you delete your local files you will find it hard to go back to a previous model and resume training.
+
+
+### Create file formatted for physical car, and upload to S3
+You can also create the file in the format necessary to run on the physical car directly from DRfC, without going through the AWS console.
+This is executed by running 'dr-upload-car-zip';  it will copy files out of the running sagemaker container, format them into the proper .tar.gz file, and upload that file to `s3://DR_LOCAL_S3_BUCKET/DR_LOCAL_S3_PREFIX`.    One of the limitations of this approach is that it only uses the latest checkpoint, and does not have the option to use the "best" checkpoint, or an earlier checkpoint.   Another limitation is that the sagemaker container must be running at the time this command is executed.
