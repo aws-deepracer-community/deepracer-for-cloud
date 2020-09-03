@@ -105,15 +105,20 @@ if [ -n "$OPT_CHECKPOINT_NUM" ]; then
   export OPT_CHECKPOINT_NUM
   CHECKPOINT_FILE=$(aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 ls s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/model/ | perl -ne'print "$1\n" if /.*\s($ENV{OPT_CHECKPOINT_NUM}_Step-[0-9]{1,7}\.ckpt)\.index/')
   CHECKPOINT=`echo $CHECKPOINT_FILE | cut -f1 -d_`
+  TIMESTAMP=`date +%s`
+  CHECKPOINT_JSON_PART=$(jq -n '{ checkpoint: { name: $name, time_stamp: $timestamp | tonumber, avg_comp_pct: 50.0 } }' --arg name $CHECKPOINT_FILE --arg timestamp $TIMESTAMP)
+  CHECKPOINT_JSON=$(echo $CHECKPOINT_JSON_PART | jq '. | {last_checkpoint: .checkpoint, best_checkpoint: .checkpoint}')
 elif [ -z "$OPT_CHECKPOINT" ]; then
   echo "Checking for latest tested checkpoint"
   CHECKPOINT_FILE=`jq -r .last_checkpoint.name < $CHECKPOINT_INDEX`
   CHECKPOINT=`echo $CHECKPOINT_FILE | cut -f1 -d_`
+  CHECKPOINT_JSON=$(jq '. | {last_checkpoint: .last_checkpoint, best_checkpoint: .last_checkpoint}' < $CHECKPOINT_INDEX )
   echo "Latest checkpoint = $CHECKPOINT"
 else
   echo "Checking for best checkpoint"
   CHECKPOINT_FILE=`jq -r .best_checkpoint.name < $CHECKPOINT_INDEX`
   CHECKPOINT=`echo $CHECKPOINT_FILE | cut -f1 -d_`
+  CHECKPOINT_JSON=$(jq '. | {last_checkpoint: .best_checkpoint, best_checkpoint: .best_checkpoint}' < $CHECKPOINT_INDEX )
   echo "Best checkpoint: $CHECKPOINT"
 fi
 
@@ -141,8 +146,8 @@ then
 fi
 
 # echo "" > ${WORK_DIR}model/.ready 
-rm ${WORK_DIR}model/deepracer_checkpoints.json
 cd ${WORK_DIR}
+echo ${CHECKPOINT_JSON} > ${WORK_DIR}model/deepracer_checkpoints.json
 aws ${DR_UPLOAD_PROFILE} s3 sync ${WORK_DIR}model/ s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/model/ ${OPT_DRYRUN} ${OPT_WIPE}
 aws ${DR_UPLOAD_PROFILE} s3 cp ${REWARD_FILE} ${TARGET_REWARD_FILE_S3_KEY} ${OPT_DRYRUN}
 # aws ${DR_UPLOAD_PROFILE} s3 cp ${METRICS_FILE} ${TARGET_METRICS_FILE_S3_KEY} ${OPT_DRYRUN}
