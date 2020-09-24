@@ -124,7 +124,12 @@ fi
 
 # Find checkpoint & model files - download
 if [ -n "$CHECKPOINT" ]; then
-    CHECKPOINT_MODEL_FILES=$(aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 sync s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/model/ ${WORK_DIR}model/ --exclude "*" --include "${CHECKPOINT}*" --include "model_${CHECKPOINT}.pb" --include "deepracer_checkpoints.json" --no-progress | awk '{print $4}' | xargs readlink -f)
+    CHECKPOINT_MODEL_FILES=$(aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 sync s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/model/ ${WORK_DIR}model/ --exclude "*" --include "${CHECKPOINT}*" --include "model_${CHECKPOINT}.pb" --include "deepracer_checkpoints.json" --no-progress | awk '{print $4}' | xargs readlink -f 2> /dev/null)
+    CHECKPOINT_MODEL_FILE_COUNT=$(echo $CHECKPOINT_MODEL_FILES | wc -l)
+    if [ "$CHECKPOINT_MODEL_FILE_COUNT" -eq 0 ]; then
+      echo "No model files found. Files possibly deleted. Try again."
+      exit 1 
+    fi
     cp ${METADATA_FILE} ${WORK_DIR}model/
 #    echo "model_checkpoint_path: \"${CHECKPOINT_FILE}\"" | tee ${WORK_DIR}model/checkpoint
     echo ${CHECKPOINT_FILE} | tee ${WORK_DIR}model/.coach_checkpoint > /dev/null
