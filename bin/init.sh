@@ -158,6 +158,9 @@ docker network ls | grep -q $SAGEMAKER_NW
 if [ $? -ne 0 ]
 then
     docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm
+else
+    docker network rm $SAGEMAKER_NW
+    docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm
 fi
 
 # ensure our variables are set on startup
