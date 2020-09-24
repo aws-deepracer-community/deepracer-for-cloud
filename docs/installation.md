@@ -24,10 +24,11 @@ Depending on your needs as well as specific needs of the cloud platform you can 
 
 **Local**:
 * A modern, comparatively powerful, Intel based system.
-	* Ubuntu 18.04 or 20.04 - Windows not supported, other Linux-dristros likely to work.
+	* Ubuntu 18.04 or 20.04, other Linux-dristros likely to work.
 	* 4 core-CPU, equivalent to 8 vCPUs; the more the better.
 	* NVIDIA Graphics adapter with minimum 8 GB RAM for Sagemaker to run GPU. Robomaker enabled GPU instances need ~1 GB each.
 	* System RAM + GPU RAM should be at least 32 GB.
+* Running DRfC Ubuntu 20.04 on Windows using Windows Subsystem for Linux 2 is possible. See [Installing on Windows](windows.md)
 
 ## Installation
 

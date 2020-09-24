@@ -49,6 +49,7 @@ DRfC supports a wide set of features to ensure that you can focus on creating th
 * [Running multiple parallel experiments](multi_run.md)
 * [GPU Accelerated OpenGL for Robomaker](opengl.md)
 * [Having multiple GPUs in one Computer](multi_gpu.md)
+* [Installing on Windows](windows.md)
 
 # Support
 
