@@ -57,7 +57,7 @@ then
     if [ $? -ne 0 ] || [ $GPUS -eq 0 ]
     then
         echo "No GPU detected in docker. Using CPU".
-        OPT_ARCH="cpu-avx
+        OPT_ARCH="cpu-avx"
     fi
 fi
 
