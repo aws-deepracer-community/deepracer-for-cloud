@@ -34,10 +34,7 @@ if [[ -z "$OPT_CLOUD" ]]; then
 fi
 
 # Find CPU Level
-CPU_LEVEL="cpu"
-if [[ "$(dmesg | grep AVX | wc -l)" > 0 ]]; then 
-    CPU_LEVEL="cpu-avx"
-fi
+CPU_LEVEL="cpu-avx"
 
 if [[ "$(dmesg | grep AVX2 | wc -l)" > 0 ]]; then 
     CPU_LEVEL="cpu-avx2"
@@ -60,7 +57,7 @@ then
     if [ $? -ne 0 ] || [ $GPUS -eq 0 ]
     then
         echo "No GPU detected in docker. Using CPU".
-        OPT_ARCH="cpu"
+        OPT_ARCH="cpu-avx
     fi
 fi
 
