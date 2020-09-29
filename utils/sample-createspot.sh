@@ -86,8 +86,15 @@ else
     echo Last training was $CURRENT_RUN_MODEL so next training is $NEW_RUN_MODEL
 fi
 
+if [[ $PREFIX == "" ]]
+then
+    CUSTOM_FILES_PREFIX="custom_files"
+else
+    CUSTOM_FILES_PREFIX="$PREFIX/custom_files"
+fi
+
 ## Replace dynamic parameters in run.env (still local to your directory)
-sed -i.bak -re "s:(DR_LOCAL_S3_PRETRAINED_PREFIX=).*$:\1$CURRENT_RUN_MODEL:g; s:(DR_LOCAL_S3_PRETRAINED=).*$:\1$PRETRAINED:g; ; s:(DR_LOCAL_S3_MODEL_PREFIX=).*$:\1$NEW_RUN_MODEL:g" "$CONFIG_FILE" && echo "Done."
+sed -i.bak -re "s:(DR_LOCAL_S3_PRETRAINED_PREFIX=).*$:\1$CURRENT_RUN_MODEL:g; s:(DR_LOCAL_S3_PRETRAINED=).*$:\1$PRETRAINED:g; s:(DR_LOCAL_S3_MODEL_PREFIX=).*$:\1$NEW_RUN_MODEL:g; s:(DR_LOCAL_S3_CUSTOM_FILES_PREFIX=).*$:\1$CUSTOM_FILES_PREFIX:g" "$CONFIG_FILE"
 sed -i.bak -re "s/(DR_LOCAL_S3_BUCKET=).*$/\1$BUCKET/g" "$CONFIG_FILE"
 
 ## Replace static parameters in run.env (still local to your directory)
