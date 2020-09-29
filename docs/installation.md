@@ -35,13 +35,16 @@ Depending on your needs as well as specific needs of the cloud platform you can 
 The package comes with preparation and setup scripts that would allow a turn-key setup for a fresh virtual machine.
 
 	git clone https://github.com/larsll/deepracer-for-cloud.git
+	
+**For cloud setup** execute:
+	
 	cd deepracer-for-cloud && ./bin/prepare.sh
 	
 This will prepare the VM by partitioning additional drives as well as installing all prerequisites. After a reboot it will continuee to run `./bin/init.sh` setting up the full repository and downloading the core Docker images. Depending on your environment this may take up to 30 minutes. The scripts will create a file `DONE` once completed.
 
 The installation script will adapt `.profile` to ensure that all settings are applied on login. Otherwise run the activation with `source bin/activate.sh`.
 
-For local install it is recommended *not* to run the `bin/prepare.sh` script; it might do more changes than what you want. Rather ensure that all prerequisites are set up and run `bin/init.sh` directly.
+**For local install** it is recommended *not* to run the `bin/prepare.sh` script; it might do more changes than what you want. Rather ensure that all prerequisites are set up and run `bin/init.sh` directly.
 
 The Init Script takes a few parameters:
 
