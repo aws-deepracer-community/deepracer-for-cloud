@@ -180,9 +180,9 @@ then
     #get bucket name
     TRAINING_BUCKET=${TRAINING_LOC%%/*}
     #get prefix. minor exception handling in case there is no prefix and a root bucket is passed
-    if [[ "$TRAININGLOC" == *"/"* ]]
+    if [[ "$TRAINING_LOC" == *"/"* ]]
     then
-      TRAINING_PREFIX=${TRAININGLOC#*/}
+      TRAINING_PREFIX=${TRAINING_LOC#*/}
     else
       TRAINING_PREFIX=""
     fi
