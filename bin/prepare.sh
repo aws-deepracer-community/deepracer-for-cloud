@@ -12,8 +12,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ## Patch system
 sudo apt-get update && sudo apt-mark hold grub-pc && sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o \
                         DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" -qq --force-yes upgrade && \
-                        sudo apt-get -y install jq
-
+                        sudo apt-get install --no-install-recommends -y jq 
 source $DIR/detect.sh
 echo "Detected cloud type ${CLOUD_NAME}"
 
@@ -64,7 +63,7 @@ then
 	sudo apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
 	sudo bash -c 'echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64 /" > /etc/apt/sources.list.d/cuda.list'
 	sudo bash -c 'echo "deb http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64 /" > /etc/apt/sources.list.d/cuda_learn.list'
-	sudo bash -c 'apt update && apt install -y nvidia-driver-440 cuda-minimal-build-10-2 -o Dpkg::Options::="--force-overwrite"'
+	sudo bash -c 'apt update && apt install -y nvidia-driver-440-server cuda-minimal-build-10-2 --no-install-recommends -o Dpkg::Options::="--force-overwrite"'
 fi
 
 ## Adding AWSCli
@@ -73,7 +72,7 @@ sudo apt-get install -y awscli python3-boto3
 ## Installing Docker
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository    "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+sudo apt-get update && sudo apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io
 
 if [[ "${ARCH}" == "gpu" ]];
 then
@@ -81,7 +80,7 @@ then
 	curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
 	curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
 
-	sudo apt-get update && sudo apt-get install -y nvidia-docker2 nvidia-container-toolkit nvidia-container-runtime
+	sudo apt-get update && sudo apt-get install -y --no-install-recommends nvidia-docker2 nvidia-container-toolkit nvidia-container-runtime
 	cat /etc/docker/daemon.json | jq 'del(."default-runtime") + {"default-runtime": "nvidia"}' | sudo tee /etc/docker/daemon.json
 fi
 sudo systemctl enable docker
