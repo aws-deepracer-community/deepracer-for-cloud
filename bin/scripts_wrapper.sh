@@ -303,3 +303,12 @@ function dr-view-stream {
   ${DIR}/utils/start-local-browser.sh "$@"
 }
 
+function dr-start-viewer {
+  dr-update-env
+  $DIR/scripts/viewer/start.sh "$@"
+}
+
+function dr-stop-viewer {
+  dr-update-env
+  $DIR/scripts/viewer/stop.sh "$@"
+}
