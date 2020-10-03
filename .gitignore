@@ -6,6 +6,7 @@ recording/
 recording
 /*.env
 /*.bak
+/*.json
 DONE
 data/
 tmp/
