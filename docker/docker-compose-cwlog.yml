@@ -1,0 +1,19 @@
+version: '3.7'
+
+services:
+  rl_coach:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: '/deepracer-for-cloud'
+        awslogs-create-group: 'true'
+        awslogs-region: ${DR_AWS_APP_REGION}
+        tag: "{{.Name}}"
+  robomaker:
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: '/deepracer-for-cloud'
+        awslogs-create-group: 'true' 
+        awslogs-region: ${DR_AWS_APP_REGION}
+        tag: "{{.Name}}"

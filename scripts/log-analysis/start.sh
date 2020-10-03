@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
-nvidia-docker run --rm -it -p "8888:8888" \
--v `pwd`/../../docker/volumes/log-analysis:/workspace/venv/data \
+docker run --rm -d -p "8888:8888" \
+-v `pwd`/../../data/logs:/workspace/logs \
 -v `pwd`/../../docker/volumes/.aws:/root/.aws \
--v `pwd`/../../docker/volumes/robo/checkpoint/log:/workspace/venv/logs \
- aschu/log-analysis
+-v `pwd`/../../data/analysis:/workspace/analysis \
+--name loganalysis \
+--network sagemaker-local \
+ larsll/deepracer-loganalysis:v2-cpu
+
+docker logs -f loganalysis
