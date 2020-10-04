@@ -78,12 +78,12 @@ TARGET_REWARD_FILE_S3_KEY="s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/reward_f
 TARGET_HYPERPARAM_FILE_S3_KEY="s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/ip/hyperparameters.json"
 
 # Check if metadata-files are available
-REWARD_IN_ROOT=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 ls s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/reward_function.py)
-
-if [ -z "$REWARD_IN_ROOT" ];
+REWARD_IN_ROOT=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 ls s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/reward_function.py 2> /dev/null | wc -l)
+if [ "$REWARD_IN_ROOT" -ne 0 ];
 then
     REWARD_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/reward_function.py ${WORK_DIR} --no-progress | awk '/reward/ {print $4}'| xargs readlink -f 2> /dev/null)
 else
+    echo "Looking for Reward Function in s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_REWARD}"
     REWARD_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_REWARD} ${WORK_DIR} --no-progress | awk '/reward/ {print $4}'| xargs readlink -f 2> /dev/null)
 fi
 
