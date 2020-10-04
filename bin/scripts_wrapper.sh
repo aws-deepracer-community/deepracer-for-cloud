@@ -72,6 +72,17 @@ function dr-stop-evaluation {
   ROBOMAKER_COMMAND="" bash -c "cd $DIR/scripts/evaluation && ./stop.sh"
 }
 
+
+function dr-start-tournament {
+  dr-update-env
+  $DIR/scripts/tournament/start.sh "$@"
+}
+
+function dr-stop-tournament {
+  ROBOMAKER_COMMAND="" bash -c "cd $DIR/scripts/tournament && ./stop.sh"
+}
+
+
 function dr-start-loganalysis {
   ROBOMAKER_COMMAND="" bash -c "cd $DIR/scripts/log-analysis && ./start.sh"
 }
