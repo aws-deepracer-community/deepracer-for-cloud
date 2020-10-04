@@ -6,6 +6,6 @@ docker run --rm -d -p "8888:8888" \
 -v `pwd`/../../data/analysis:/workspace/analysis \
 --name loganalysis \
 --network sagemaker-local \
- larsll/deepracer-loganalysis:v2-cpu
+ larsll/deepracer-loganalysis:latest
 
 docker logs -f loganalysis
