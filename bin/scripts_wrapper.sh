@@ -323,3 +323,10 @@ function dr-stop-viewer {
   dr-update-env
   $DIR/scripts/viewer/stop.sh "$@"
 }
+
+function dr-update-viewer {
+  dr-update-env
+  $DIR/scripts/viewer/stop.sh "$@"
+  $DIR/scripts/viewer/start.sh "$@"
+
+}
