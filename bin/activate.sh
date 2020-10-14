@@ -64,6 +64,9 @@ else
   return 1
 fi
 
+# Check if Docker runs -- if not, then start it.
+service docker status > /dev/null || sudo service docker start
+
 # Check if we will use Docker Swarm or Docker Compose
 # If not defined then use Swarm
 if [[ -z "${DR_DOCKER_STYLE}" ]]; then
