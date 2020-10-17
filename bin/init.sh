@@ -48,7 +48,8 @@ fi
 # Check GPU
 if [[ "${OPT_ARCH}" == "gpu" ]]
 then
-    GPUS=$(docker run --rm --gpus all nvidia/cuda:10.2-base nvidia-smi "-L" 2> /dev/null | awk  '/GPU .:/' | wc -l )
+    docker build -t local/gputest - < $INSTALL_DIR/utils/Dockerfile.gpu-detect 
+    GPUS=$(docker run --rm --gpus all local/gputest 2> /dev/null | awk  '/Device: ./' | wc -l )
     if [ $? -ne 0 ] || [ $GPUS -eq 0 ]
     then
         echo "No GPU detected in docker. Using CPU".
