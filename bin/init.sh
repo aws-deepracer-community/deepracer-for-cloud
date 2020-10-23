@@ -36,12 +36,16 @@ fi
 # Find CPU Level
 CPU_LEVEL="cpu-avx"
 
-if [[ "$(cat /proc/cpuinfo | grep avx2 | wc -l)" > 0 ]]; then 
+if [[ -f /proc/cpuinfo ]] && [[ "$(cat /proc/cpuinfo | grep avx2 | wc -l)" > 0 ]]; then
+    CPU_LEVEL="cpu-avx2"
+elif [[ "$(type sysctl 2> /dev/null)" ]] && [[ "$(sysctl -n hw.optional.avx2_0)" == 1 ]]; then
     CPU_LEVEL="cpu-avx2"
 fi
-    
+
 # Check if Intel (to ensure MKN)
-if [[ "$(cat /proc/cpuinfo | grep GenuineIntel | wc -l)" > 0 ]]; then 
+if [[ -f /proc/cpuinfo ]] && [[ "$(cat /proc/cpuinfo | grep GenuineIntel | wc -l)" > 0 ]]; then
+    CPU_INTEL="true"
+elif [[ "$(type sysctl 2> /dev/null)" ]] && [[ "$(sysctl -n machdep.cpu.vendor)" == "GenuineIntel" ]]; then
     CPU_INTEL="true"
 fi
 
