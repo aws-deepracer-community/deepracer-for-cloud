@@ -65,7 +65,9 @@ else
 fi
 
 # Check if Docker runs -- if not, then start it.
-service docker status > /dev/null || sudo service docker start
+if [[ "$(type service 2> /dev/null)" ]]; then
+  service docker status > /dev/null || sudo service docker start
+fi
 
 # Check if we will use Docker Swarm or Docker Compose
 # If not defined then use Swarm
