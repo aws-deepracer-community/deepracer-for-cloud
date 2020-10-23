@@ -102,7 +102,7 @@ function dr-logs-sagemaker {
   local OPTIND
   OPT_TIME="--since 5m"
 
-  while getopts ":w:" opt; do
+  while getopts ":w:a" opt; do
   case $opt in
   w) OPT_WAIT=$OPTARG
   ;;
