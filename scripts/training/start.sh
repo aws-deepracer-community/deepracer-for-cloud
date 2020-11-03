@@ -57,8 +57,8 @@ fi
 S3_PATH="s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX"
 
 S3_FILES=$(aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 ls ${S3_PATH} | wc -l)
-if [[ $S3_FILES > 0 ]];
-then  
+if [[ "$S3_FILES" -gt 0 ]];
+then
   if [[ -z $OPT_WIPE ]];
   then
     echo "Selected path $S3_PATH exists. Delete it, or use -w option. Exiting."
