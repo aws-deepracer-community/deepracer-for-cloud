@@ -67,6 +67,7 @@ cd $INSTALL_DIR
 mkdir -p $INSTALL_DIR/data $INSTALL_DIR/data/minio $INSTALL_DIR/data/minio/bucket 
 mkdir -p $INSTALL_DIR/data/logs $INSTALL_DIR/data/analysis $INSTALL_DIR/tmp
 sudo mkdir -p /tmp/sagemaker
+sudo chmod -R g+w /tmp/sagemaker
 
 # create symlink to current user's home .aws directory 
 # NOTE: AWS cli must be installed for this to work

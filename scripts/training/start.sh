@@ -51,6 +51,7 @@ done
 # Ensure Sagemaker's folder is there
 if [ ! -d /tmp/sagemaker ]; then
   sudo mkdir -p /tmp/sagemaker
+  sudo chmod -R g+w /tmp/sagemaker
 fi
 
 #Check if files are available
