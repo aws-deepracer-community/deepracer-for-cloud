@@ -84,6 +84,10 @@ fi
 # Starting browser if using local X and having display defined.
 if [[ -n "${DISPLAY}" && "${DR_HOST_X,,}" == "true" ]]; then
   echo "Starting browser '$BROWSER'."
+  if [ "${DR_DOCKER_STYLE,,}" == "swarm" ];
+  then
+    sleep 5
+  fi
   $BROWSER "http://127.0.01:8100" &
 fi
 
