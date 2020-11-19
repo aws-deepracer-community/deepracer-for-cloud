@@ -36,12 +36,16 @@ fi
 # Find CPU Level
 CPU_LEVEL="cpu-avx"
 
-if [[ "$(cat /proc/cpuinfo | grep avx2 | wc -l)" > 0 ]]; then 
+if [[ -f /proc/cpuinfo ]] && [[ "$(cat /proc/cpuinfo | grep avx2 | wc -l)" > 0 ]]; then
+    CPU_LEVEL="cpu-avx2"
+elif [[ "$(type sysctl 2> /dev/null)" ]] && [[ "$(sysctl -n hw.optional.avx2_0)" == 1 ]]; then
     CPU_LEVEL="cpu-avx2"
 fi
-    
+
 # Check if Intel (to ensure MKN)
-if [[ "$(cat /proc/cpuinfo | grep GenuineIntel | wc -l)" > 0 ]]; then 
+if [[ -f /proc/cpuinfo ]] && [[ "$(cat /proc/cpuinfo | grep GenuineIntel | wc -l)" > 0 ]]; then
+    CPU_INTEL="true"
+elif [[ "$(type sysctl 2> /dev/null)" ]] && [[ "$(sysctl -n machdep.cpu.vendor)" == "GenuineIntel" ]]; then
     CPU_INTEL="true"
 fi
 
@@ -63,6 +67,7 @@ cd $INSTALL_DIR
 mkdir -p $INSTALL_DIR/data $INSTALL_DIR/data/minio $INSTALL_DIR/data/minio/bucket 
 mkdir -p $INSTALL_DIR/data/logs $INSTALL_DIR/data/analysis $INSTALL_DIR/tmp
 sudo mkdir -p /tmp/sagemaker
+sudo chmod -R g+w /tmp/sagemaker
 
 # create symlink to current user's home .aws directory 
 # NOTE: AWS cli must be installed for this to work
