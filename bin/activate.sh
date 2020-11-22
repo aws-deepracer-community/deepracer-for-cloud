@@ -116,6 +116,7 @@ fi
 if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
 then
     DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training-swarm.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval-swarm.yml"
 fi
 
 # Enable logs in CloudWatch
