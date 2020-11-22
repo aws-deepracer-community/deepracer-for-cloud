@@ -87,6 +87,7 @@ COMPOSE_FILES=$DR_DIR/docker/docker-compose-webviewer.yml
 
 if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
 then
+  COMPOSE_FILES="$COMPOSE_FILES -c $DR_DIR/docker/docker-compose-webviewer-swarm.yml"
   docker stack deploy -c $COMPOSE_FILES $STACK_NAME
 else
   docker-compose -f $COMPOSE_FILES -p $STACK_NAME --log-level ERROR up -d 
