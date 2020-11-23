@@ -1,7 +1,7 @@
 #!/bin/bash
 
 usage(){
-	echo "Usage: $0 [-f] [-w] [-d] [-c <checkpoint>] [-p <model-prefix>]"
+	echo "Usage: $0 [-f] [-w] [-d] [-b] [-c <checkpoint>] [-p <model-prefix>]"
   echo "       -f        Force upload. No confirmation question."
   echo "       -w        Wipes the target AWS DeepRacer model structure before upload."
   echo "       -d        Dry-Run mode. Does not perform any write or delete operatios on target."

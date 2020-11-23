@@ -19,6 +19,10 @@ function dr-upload-model {
   dr-update-env && ${DIR}/scripts/upload/upload-model.sh "$@"
 }
 
+function dr-download-model {
+  dr-update-env && ${DIR}/scripts/upload/download-model.sh "$@"
+}
+
 function dr-upload-car-zip {
   dr-update-env && ${DIR}/scripts/upload/upload-car.sh "$@"
 }
