@@ -161,10 +161,12 @@ else
     docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm
 fi
 
-# ensure our variables are set on startup
-NUM_IN_PROFILE=$(cat $HOME/.profile | grep "$INSTALL_DIR/bin/activate.sh" | wc -l)
-if [ "$NUM_IN_PROFILE" -eq 0 ]; then
-    echo "source $INSTALL_DIR/bin/activate.sh" >> $HOME/.profile
+# ensure our variables are set on startup - not for local setup.
+if [[ "${OPT_CLOUD}" != "local" ]]; then
+    NUM_IN_PROFILE=$(cat $HOME/.profile | grep "$INSTALL_DIR/bin/activate.sh" | wc -l)
+    if [ "$NUM_IN_PROFILE" -eq 0 ]; then
+        echo "source $INSTALL_DIR/bin/activate.sh" >> $HOME/.profile
+    fi
 fi
 
 # mark as done
