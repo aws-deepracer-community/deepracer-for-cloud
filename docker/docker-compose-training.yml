@@ -25,7 +25,7 @@ services:
     image: awsdeepracercommunity/deepracer-robomaker:${DR_ROBOMAKER_IMAGE}
     command: ["${ROBOMAKER_COMMAND}"]
     ports:
-      - "${DR_ROBOMAKER_PORT}:8080"
+      - "${DR_ROBOMAKER_TRAIN_PORT}:8080"
       - "${DR_ROBOMAKER_GUI_PORT}:5900"
     environment:
       - DISPLAY_N=:0
