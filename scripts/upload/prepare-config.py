@@ -19,7 +19,9 @@ config['SAGEMAKER_SHARED_S3_BUCKET'] = os.environ.get('TARGET_S3_BUCKET', 'bucke
 config['SAGEMAKER_SHARED_S3_PREFIX'] = os.environ.get('TARGET_S3_PREFIX', 'rl-deepracer-sagemaker')
 
 # Car and training 
-config['CAR_COLOR'] = os.environ.get('DR_CAR_COLOR', 'Red')
+config['BODY_SHELL_TYPE'] = os.environ.get('DR_CAR_BODY_SHELL_TYPE', 'deepracer')
+if config['BODY_SHELL_TYPE'] == 'deepracer':
+    config['CAR_COLOR'] = os.environ.get('DR_CAR_COLOR', 'Red')
 config['CAR_NAME'] = os.environ.get('DR_CAR_NAME', 'MyCar')
 config['RACE_TYPE'] = os.environ.get('DR_RACE_TYPE', 'TIME_TRIAL')
 config['WORLD_NAME'] = os.environ.get('DR_WORLD_NAME', 'LGSWide')
