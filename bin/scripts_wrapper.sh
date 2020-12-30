@@ -186,6 +186,7 @@ function dr-find-sagemaker {
 function dr-logs-robomaker {
 
   OPT_REPLICA=1
+  OPT_EVAL=""
   local OPTIND
   OPT_TIME="--since 5m"
 
