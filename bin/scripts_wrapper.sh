@@ -219,7 +219,7 @@ function dr-logs-robomaker {
           echo "Robomaker #${OPT_REPLICA} is not running."
           return 1
         fi
-        ROBOMAKER_CONTAINER=$(dr-find-robomaker -n ${OPT_REPLICA})
+        ROBOMAKER_CONTAINER=$(dr-find-robomaker -n ${OPT_REPLICA} ${OPT_EVAL})
       done
     else
       echo "Robomaker #${OPT_REPLICA} is not running."
