@@ -186,6 +186,7 @@ function dr-find-sagemaker {
 function dr-logs-robomaker {
 
   OPT_REPLICA=1
+  OPT_EVAL=""
   local OPTIND
   OPT_TIME="--since 5m"
 
@@ -219,7 +220,7 @@ function dr-logs-robomaker {
           echo "Robomaker #${OPT_REPLICA} is not running."
           return 1
         fi
-        ROBOMAKER_CONTAINER=$(dr-find-robomaker -n ${OPT_REPLICA})
+        ROBOMAKER_CONTAINER=$(dr-find-robomaker -n ${OPT_REPLICA} ${OPT_EVAL})
       done
     else
       echo "Robomaker #${OPT_REPLICA} is not running."
@@ -267,8 +268,6 @@ function dr-find-robomaker {
   eval ROBOMAKER_ID=$(docker ps | grep "${OPT_PREFIX}-${DR_RUN_ID}_robomaker.${OPT_REPLICA}" | cut -f1 -d\  | head -1)
   if [ -n "$ROBOMAKER_ID" ]; then
     echo $ROBOMAKER_ID
-  else
-    echo "Robomaker is not running."
   fi
 }
 
