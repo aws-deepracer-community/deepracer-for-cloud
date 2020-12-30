@@ -267,8 +267,6 @@ function dr-find-robomaker {
   eval ROBOMAKER_ID=$(docker ps | grep "${OPT_PREFIX}-${DR_RUN_ID}_robomaker.${OPT_REPLICA}" | cut -f1 -d\  | head -1)
   if [ -n "$ROBOMAKER_ID" ]; then
     echo $ROBOMAKER_ID
-  else
-    echo "Robomaker is not running."
   fi
 }
 
