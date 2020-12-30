@@ -1,15 +1,6 @@
 #!/bin/bash
 
 function dr-upload-custom-files {
-  if [[ "${DR_CLOUD,,}" == "azure" || "${DR_CLOUD,,}" == "local" ]];
-  then
-    if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
-    then
-        docker stack deploy $DR_MINIO_COMPOSE_FILE s3
-    else
-        docker-compose $DR_MINIO_COMPOSE_FILE -p s3 --log-level ERROR up -d
-    fi
-  fi
   eval CUSTOM_TARGET=$(echo s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_CUSTOM_FILES_PREFIX/)
   echo "Uploading files to $CUSTOM_TARGET"
   aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync $DIR/custom_files/ $CUSTOM_TARGET
@@ -40,15 +31,6 @@ function dr-increment-upload-model {
 }
 
 function dr-download-custom-files {
-  if [[ "${DR_CLOUD,,}" == "azure" || "${DR_CLOUD,,}" == "local" ]];
-  then
-    if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
-    then
-        docker stack deploy $DR_MINIO_COMPOSE_FILE s3
-    else
-        docker-compose $DR_MINIO_COMPOSE_FILE -p s3 --log-level ERROR up -d
-    fi
-  fi
   eval CUSTOM_TARGET=$(echo s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_CUSTOM_FILES_PREFIX/)
   echo "Downloading files from $CUSTOM_TARGET"
   aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync $CUSTOM_TARGET $DIR/custom_files/
