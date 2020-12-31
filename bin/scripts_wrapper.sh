@@ -60,18 +60,14 @@ function dr-stop-evaluation {
 
 
 function dr-start-tournament {
-  dr-update-env
-  $DIR/scripts/tournament/start.sh "$@"
-}
-
-function dr-stop-tournament {
-  ROBOMAKER_COMMAND="" bash -c "cd $DIR/scripts/tournament && ./stop.sh"
+  echo "Tournaments are no longer supported. Use Head-to-Model evaluation instead."
 }
 
 
 function dr-start-loganalysis {
   ROBOMAKER_COMMAND="" bash -c "cd $DIR/scripts/log-analysis && ./start.sh"
 }
+
 
 function dr-stop-loganalysis {
   eval LOG_ANALYSIS_ID=$(docker ps | awk ' /loganalysis/ { print $1 }')
