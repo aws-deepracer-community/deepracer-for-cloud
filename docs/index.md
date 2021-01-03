@@ -50,7 +50,7 @@ DRfC supports a wide set of features to ensure that you can focus on creating th
 * [GPU Accelerated OpenGL for Robomaker](opengl.md)
 * [Having multiple GPUs in one Computer](multi_gpu.md)
 * [Installing on Windows](windows.md)
-* [Run a Head-to-Head Tournament](tournament.md)
+* [Run a Head-to-Head Race](head-to-head.md)
 
 # Support
 

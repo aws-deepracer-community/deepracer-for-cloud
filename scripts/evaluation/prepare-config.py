@@ -12,39 +12,56 @@ def str2bool(v):
   return v.lower() in ("yes", "true", "t", "1")
 
 config = {}
+config['CAR_COLOR'] = []
+config['BODY_SHELL_TYPE'] = []
+config['RACER_NAME'] = []
+config['DISPLAY_NAME'] = []
+config['MODEL_S3_PREFIX'] = []
+config['MODEL_S3_BUCKET'] = []
+config['SIMTRACE_S3_PREFIX'] = []
+config['SIMTRACE_S3_BUCKET'] = []
+config['KINESIS_VIDEO_STREAM_NAME'] = []
+config['METRICS_S3_BUCKET'] = []
+config['METRICS_S3_OBJECT_KEY'] = []
+config['MP4_S3_BUCKET'] = []
+config['MP4_S3_OBJECT_PREFIX'] = []
 
 # Basic configuration; including all buckets etc.
 config['AWS_REGION'] = os.environ.get('DR_AWS_APP_REGION', 'us-east-1')
 config['JOB_TYPE'] = 'EVALUATION'
 config['KINESIS_VIDEO_STREAM_NAME'] = os.environ.get('DR_KINESIS_STREAM_NAME', 'my-kinesis-stream')
 config['ROBOMAKER_SIMULATION_JOB_ACCOUNT_ID'] = os.environ.get('', 'Dummy')
-config['MODEL_S3_PREFIX'] = os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker')
-config['MODEL_S3_BUCKET'] = os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket')
-config['SIMTRACE_S3_BUCKET'] = os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket')
-config['SIMTRACE_S3_PREFIX'] = os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker')
+
+config['MODEL_S3_PREFIX'].append(os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'))
+config['MODEL_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
+config['SIMTRACE_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
+config['SIMTRACE_S3_PREFIX'].append(os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'))
 
 # Metrics
-config['METRICS_S3_BUCKET'] = os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket')
+config['METRICS_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
 metrics_prefix = os.environ.get('DR_LOCAL_S3_METRICS_PREFIX', None)
 if metrics_prefix is not None:
-    config['METRICS_S3_OBJECT_KEY'] = '{}/EvaluationMetrics-{}.json'.format(metrics_prefix, str(round(time.time())))
+    config['METRICS_S3_OBJECT_KEY'].append('{}/EvaluationMetrics-{}.json'.format(metrics_prefix, str(round(time.time()))))
 else:
-    config['METRICS_S3_OBJECT_KEY'] = 'DeepRacer-Metrics/EvaluationMetrics-{}.json'.format(str(round(time.time())))
+    config['METRICS_S3_OBJECT_KEY'].append('DeepRacer-Metrics/EvaluationMetrics-{}.json'.format(str(round(time.time()))))
     
 # MP4 configuration / sav
 save_mp4 = str2bool(os.environ.get("DR_EVAL_SAVE_MP4", "False"))
 if save_mp4:
-    config['MP4_S3_BUCKET'] = config['MODEL_S3_BUCKET']
-    config['MP4_S3_OBJECT_PREFIX'] = '{}/{}'.format(config['MODEL_S3_PREFIX'],'mp4')
+    config['MP4_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
+    config['MP4_S3_OBJECT_PREFIX'].append('{}/{}'.format(os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'bucket'),'mp4'))
 
 # Car and training 
-config['CAR_COLOR'] = os.environ.get('DR_CAR_COLOR', 'Red')
-config['CAR_NAME'] = os.environ.get('DR_CAR_NAME', 'MyCar')
+body_shell_type = os.environ.get('DR_CAR_BODY_SHELL_TYPE', 'deepracer')
+config['BODY_SHELL_TYPE'].append(body_shell_type)
+if body_shell_type == 'deepracer':
+    config['CAR_COLOR'].append(os.environ.get('DR_CAR_COLOR', 'Red'))
+config['DISPLAY_NAME'].append(os.environ.get('DR_DISPLAY_NAME', 'racer1'))
+config['RACER_NAME'].append(os.environ.get('DR_RACER_NAME', 'racer1'))
+
 config['RACE_TYPE'] = os.environ.get('DR_RACE_TYPE', 'TIME_TRIAL')
 config['WORLD_NAME'] = os.environ.get('DR_WORLD_NAME', 'LGSWide')
 config['NUMBER_OF_TRIALS'] = os.environ.get('DR_EVAL_NUMBER_OF_TRIALS', '5')
-config['DISPLAY_NAME'] = os.environ.get('DR_DISPLAY_NAME', 'racer1')
-config['RACER_NAME'] = os.environ.get('DR_RACER_NAME', 'racer1')
 config['ENABLE_DOMAIN_RANDOMIZATION'] = os.environ.get('DR_ENABLE_DOMAIN_RANDOMIZATION', 'false')
 
 is_continous = str2bool(os.environ.get('DR_EVAL_IS_CONTINUOUS', 'False'))
@@ -81,17 +98,48 @@ if config['RACE_TYPE'] == 'HEAD_TO_BOT':
     config['RANDOMIZE_BOT_CAR_LOCATIONS'] = os.environ.get('DR_H2B_RANDOMIZE_BOT_CAR_LOCATIONS', 'False')
     config['BOT_CAR_SPEED'] = os.environ.get('DR_H2B_BOT_CAR_SPEED', '0.2')
 
+# Head to Model
+if config['RACE_TYPE'] == 'HEAD_TO_MODEL':
+    config['MODEL_S3_PREFIX'].append(os.environ.get('DR_EVAL_OPP_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'))
+    config['MODEL_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
+    config['SIMTRACE_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
+    config['SIMTRACE_S3_PREFIX'].append(os.environ.get('DR_EVAL_OPP_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'))
+
+    # Metrics
+    config['METRICS_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
+    metrics_prefix = os.environ.get('DR_EVAL_OPP_S3_METRICS_PREFIX', '{}/{}'.format(os.environ.get('DR_EVAL_OPP_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'),'metrics'))
+    if metrics_prefix is not None:
+        config['METRICS_S3_OBJECT_KEY'].append('{}/EvaluationMetrics-{}.json'.format(metrics_prefix, str(round(time.time()))))
+    else:
+        config['METRICS_S3_OBJECT_KEY'].append('DeepRacer-Metrics/EvaluationMetrics-{}.json'.format(str(round(time.time()))))
+
+    # MP4 configuration / sav
+    save_mp4 = str2bool(os.environ.get("DR_EVAL_SAVE_MP4", "False"))
+    if save_mp4:
+        config['MP4_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
+        config['MP4_S3_OBJECT_PREFIX'].append('{}/{}'.format(os.environ.get('DR_EVAL_OPP_MODEL_PREFIX', 'bucket'),'mp4'))
+
+    # Car and training 
+    config['DISPLAY_NAME'].append(os.environ.get('DR_EVAL_OPP_DISPLAY_NAME', 'racer1'))
+    config['RACER_NAME'].append(os.environ.get('DR_EVAL_OPP_RACER_NAME', 'racer1'))
+
+    body_shell_type = os.environ.get('DR_EVAL_OPP_CAR_BODY_SHELL_TYPE', 'deepracer')
+    config['BODY_SHELL_TYPE'].append(body_shell_type)
+    config['VIDEO_JOB_TYPE'] = 'EVALUATION'
+    config['CAR_COLOR'] = ['Purple', 'Orange']    
+    config['MODEL_NAME'] = config['DISPLAY_NAME']
+
 # S3 Setup / write and upload file
 s3_endpoint_url = os.environ.get('DR_LOCAL_S3_ENDPOINT_URL', None)
 s3_region = config['AWS_REGION']
-s3_bucket = config['MODEL_S3_BUCKET']
-s3_prefix = config['MODEL_S3_PREFIX']
+s3_bucket = config['MODEL_S3_BUCKET'][0]
+s3_prefix = config['MODEL_S3_PREFIX'][0]
 s3_mode = os.environ.get('DR_LOCAL_S3_AUTH_MODE','profile')
 if s3_mode == 'profile':
     s3_profile = os.environ.get('DR_LOCAL_S3_PROFILE', 'default')
 else: # mode is 'role'
     s3_profile = None
-s3_yaml_name = os.environ.get('DR_LOCAL_S3_EVAL_PARAMS_FILE', 'eval-params.yaml')
+s3_yaml_name = os.environ.get('DR_LOCAL_S3_EVAL_PARAMS_FILE', 'eval_params.yaml')
 yaml_key = os.path.normpath(os.path.join(s3_prefix, s3_yaml_name))
 
 session = boto3.session.Session(profile_name=s3_profile)
