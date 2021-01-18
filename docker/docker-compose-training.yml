@@ -39,3 +39,4 @@ services:
       - ENABLE_GUI=${DR_GUI_ENABLE}
       - CUDA_VISIBLE_DEVICES
       - MULTI_CONFIG
+      - RTF_OVERRIDE=${DR_TRAIN_RTF}      
