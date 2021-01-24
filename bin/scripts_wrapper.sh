@@ -19,6 +19,10 @@ function dr-upload-model {
   dr-update-env && ${DIR}/scripts/upload/upload-model.sh "$@"
 }
 
+function dr-download-model {
+  dr-update-env && ${DIR}/scripts/upload/download-model.sh "$@"
+}
+
 function dr-upload-car-zip {
   dr-update-env && ${DIR}/scripts/upload/upload-car.sh "$@"
 }
@@ -72,6 +76,17 @@ function dr-stop-evaluation {
   ROBOMAKER_COMMAND="" bash -c "cd $DIR/scripts/evaluation && ./stop.sh"
 }
 
+
+function dr-start-tournament {
+  dr-update-env
+  $DIR/scripts/tournament/start.sh "$@"
+}
+
+function dr-stop-tournament {
+  ROBOMAKER_COMMAND="" bash -c "cd $DIR/scripts/tournament && ./stop.sh"
+}
+
+
 function dr-start-loganalysis {
   ROBOMAKER_COMMAND="" bash -c "cd $DIR/scripts/log-analysis && ./start.sh"
 }
@@ -91,7 +106,7 @@ function dr-logs-sagemaker {
   local OPTIND
   OPT_TIME="--since 5m"
 
-  while getopts ":w:" opt; do
+  while getopts ":w:a" opt; do
   case $opt in
   w) OPT_WAIT=$OPTARG
   ;;
@@ -171,6 +186,7 @@ function dr-find-sagemaker {
 function dr-logs-robomaker {
 
   OPT_REPLICA=1
+  OPT_EVAL=""
   local OPTIND
   OPT_TIME="--since 5m"
 
@@ -204,7 +220,7 @@ function dr-logs-robomaker {
           echo "Robomaker #${OPT_REPLICA} is not running."
           return 1
         fi
-        ROBOMAKER_CONTAINER=$(dr-find-robomaker -n ${OPT_REPLICA})
+        ROBOMAKER_CONTAINER=$(dr-find-robomaker -n ${OPT_REPLICA} ${OPT_EVAL})
       done
     else
       echo "Robomaker #${OPT_REPLICA} is not running."
@@ -252,8 +268,6 @@ function dr-find-robomaker {
   eval ROBOMAKER_ID=$(docker ps | grep "${OPT_PREFIX}-${DR_RUN_ID}_robomaker.${OPT_REPLICA}" | cut -f1 -d\  | head -1)
   if [ -n "$ROBOMAKER_ID" ]; then
     echo $ROBOMAKER_ID
-  else
-    echo "Robomaker is not running."
   fi
 }
 
@@ -311,4 +325,11 @@ function dr-start-viewer {
 function dr-stop-viewer {
   dr-update-env
   $DIR/scripts/viewer/stop.sh "$@"
+}
+
+function dr-update-viewer {
+  dr-update-env
+  $DIR/scripts/viewer/stop.sh "$@"
+  $DIR/scripts/viewer/start.sh "$@"
+
 }

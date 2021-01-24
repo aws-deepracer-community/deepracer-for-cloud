@@ -1,7 +1,7 @@
 #!/bin/bash
 
 usage(){
-	echo "Usage: $0 [-f] [-w] [-d] [-c <checkpoint>] [-p <model-prefix>]"
+	echo "Usage: $0 [-f] [-w] [-d] [-b] [-c <checkpoint>] [-p <model-prefix>]"
   echo "       -f        Force upload. No confirmation question."
   echo "       -w        Wipes the target AWS DeepRacer model structure before upload."
   echo "       -d        Dry-Run mode. Does not perform any write or delete operatios on target."
@@ -74,11 +74,19 @@ WORK_DIR=${DR_DIR}/tmp/upload/
 mkdir -p ${WORK_DIR} && rm -rf ${WORK_DIR} && mkdir -p ${WORK_DIR}model ${WORK_DIR}ip
 
 # Download information on model.
-TARGET_REWARD_FILE_S3_KEY="s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/model/reward_function.py"
+TARGET_REWARD_FILE_S3_KEY="s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/reward_function.py"
 TARGET_HYPERPARAM_FILE_S3_KEY="s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/ip/hyperparameters.json"
 
 # Check if metadata-files are available
-REWARD_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_REWARD} ${WORK_DIR} --no-progress | awk '/reward/ {print $4}'| xargs readlink -f 2> /dev/null)
+REWARD_IN_ROOT=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 ls s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/reward_function.py 2> /dev/null | wc -l)
+if [ "$REWARD_IN_ROOT" -ne 0 ];
+then
+    REWARD_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/reward_function.py ${WORK_DIR} --no-progress | awk '/reward/ {print $4}'| xargs readlink -f 2> /dev/null)
+else
+    echo "Looking for Reward Function in s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_REWARD}"
+    REWARD_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_REWARD} ${WORK_DIR} --no-progress | awk '/reward/ {print $4}'| xargs readlink -f 2> /dev/null)
+fi
+
 METADATA_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/model/model_metadata.json ${WORK_DIR} --no-progress | awk '/model_metadata.json$/ {print $4}'| xargs readlink -f 2> /dev/null)
 HYPERPARAM_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/ip/hyperparameters.json ${WORK_DIR} --no-progress | awk '/hyperparameters.json$/ {print $4}'| xargs readlink -f 2> /dev/null)
 # METRICS_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_METRICS} ${WORK_DIR} --no-progress | awk '/metric/ {print $4}'| xargs readlink -f 2> /dev/null)

@@ -92,7 +92,13 @@ local_yaml_path = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'tmp', '
 with open(local_yaml_path, 'w') as yaml_file:
     yaml.dump(config, yaml_file, default_flow_style=False, default_style='\'', explicit_start=True)
 
-
+# Copy the reward function to the s3 prefix bucket for compatability with DeepRacer console.
+reward_function_key = os.path.normpath(os.path.join(s3_prefix, "reward_function.py"))
+copy_source = {
+    'Bucket': s3_bucket,
+    'Key': config['REWARD_FILE_S3_KEY']
+}
+s3_client.copy(copy_source, Bucket=s3_bucket, Key=reward_function_key)
 
 # Training with different configurations on each worker (aka Multi Config training)
 config['MULTI_CONFIG'] = os.environ.get('DR_TRAIN_MULTI_CONFIG', 'False')

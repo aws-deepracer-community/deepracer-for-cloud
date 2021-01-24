@@ -36,24 +36,24 @@ fi
 # Find CPU Level
 CPU_LEVEL="cpu-avx"
 
-if [[ "$(dmesg | grep AVX2 | wc -l)" > 0 ]]; then 
+if [[ -f /proc/cpuinfo ]] && [[ "$(cat /proc/cpuinfo | grep avx2 | wc -l)" > 0 ]]; then
+    CPU_LEVEL="cpu-avx2"
+elif [[ "$(type sysctl 2> /dev/null)" ]] && [[ "$(sysctl -n hw.optional.avx2_0)" == 1 ]]; then
     CPU_LEVEL="cpu-avx2"
 fi
 
-# Disabled due to performance issues with AVX-512 image
-# if [[ "$(dmesg | grep AVX-512 | wc -l)" > 0 ]]; then 
-#    CPU_LEVEL="cpu-avx512"
-# fi
-    
 # Check if Intel (to ensure MKN)
-if [[ "$(dmesg | grep GenuineIntel | wc -l)" > 0 ]]; then 
+if [[ -f /proc/cpuinfo ]] && [[ "$(cat /proc/cpuinfo | grep GenuineIntel | wc -l)" > 0 ]]; then
+    CPU_INTEL="true"
+elif [[ "$(type sysctl 2> /dev/null)" ]] && [[ "$(sysctl -n machdep.cpu.vendor)" == "GenuineIntel" ]]; then
     CPU_INTEL="true"
 fi
 
 # Check GPU
 if [[ "${OPT_ARCH}" == "gpu" ]]
 then
-    GPUS=$(docker run --rm --gpus all nvidia/cuda:10.2-base nvidia-smi "-L" 2> /dev/null | awk  '/GPU .:/' | wc -l )
+    docker build -t local/gputest - < $INSTALL_DIR/utils/Dockerfile.gpu-detect 
+    GPUS=$(docker run --rm --gpus all local/gputest 2> /dev/null | awk  '/Device: ./' | wc -l )
     if [ $? -ne 0 ] || [ $GPUS -eq 0 ]
     then
         echo "No GPU detected in docker. Using CPU".
@@ -67,6 +67,7 @@ cd $INSTALL_DIR
 mkdir -p $INSTALL_DIR/data $INSTALL_DIR/data/minio $INSTALL_DIR/data/minio/bucket 
 mkdir -p $INSTALL_DIR/data/logs $INSTALL_DIR/data/analysis $INSTALL_DIR/tmp
 sudo mkdir -p /tmp/sagemaker
+sudo chmod -R g+w /tmp/sagemaker
 
 # create symlink to current user's home .aws directory 
 # NOTE: AWS cli must be installed for this to work
@@ -160,10 +161,12 @@ else
     docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm
 fi
 
-# ensure our variables are set on startup
-NUM_IN_PROFILE=$(cat $HOME/.profile | grep "$INSTALL_DIR/bin/activate.sh" | wc -l)
-if [ "$NUM_IN_PROFILE" -eq 0 ]; then
-    echo "source $INSTALL_DIR/bin/activate.sh" >> $HOME/.profile
+# ensure our variables are set on startup - not for local setup.
+if [[ "${OPT_CLOUD}" != "local" ]]; then
+    NUM_IN_PROFILE=$(cat $HOME/.profile | grep "$INSTALL_DIR/bin/activate.sh" | wc -l)
+    if [ "$NUM_IN_PROFILE" -eq 0 ]; then
+        echo "source $INSTALL_DIR/bin/activate.sh" >> $HOME/.profile
+    fi
 fi
 
 # mark as done

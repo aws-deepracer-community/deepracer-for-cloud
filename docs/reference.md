@@ -89,3 +89,4 @@ The scripts assume that two files `system.env` containing constant configuration
 | `dr-list-aws-models` | Lists the models that are currently stored in your AWS DeepRacer S3 bucket. |
 | `dr-set-upload-model` | Updates the `run.env` with the prefix and name of your selected model. |
 | `dr-upload-model` | Uploads the model defined in `DR_LOCAL_S3_MODEL_PREFIX` to the AWS DeepRacer S3 prefix defined in `DR_UPLOAD_S3_PREFIX` |
+| `dr-download-model` | Downloads a file from a 'real' S3 location into a local prefix of choice. |

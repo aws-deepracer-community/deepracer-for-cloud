@@ -64,6 +64,11 @@ else
   return 1
 fi
 
+# Check if Docker runs -- if not, then start it.
+if [[ "$(type service 2> /dev/null)" ]]; then
+  service docker status > /dev/null || sudo service docker start
+fi
+
 # Check if we will use Docker Swarm or Docker Compose
 # If not defined then use Swarm
 if [[ -z "${DR_DOCKER_STYLE}" ]]; then
@@ -111,6 +116,7 @@ fi
 if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
 then
     DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training-swarm.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval-swarm.yml"
 fi
 
 # Enable logs in CloudWatch
@@ -153,19 +159,22 @@ fi
 ## Version check
 DEPENDENCY_VERSION=$(jq -r '.master_version  | select (.!=null)' $DIR/defaults/dependencies.json)
 
-SAGEMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-sagemaker:$DR_SAGEMAKER_IMAGE | jq -r .[].Config.Labels.version)
+SAGEMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-sagemaker:$DR_SAGEMAKER_IMAGE 2> /dev/null | jq -r .[].Config.Labels.version)
+if [ -z "$SAGEMAKER_VER" ]; then SAGEMAKER_VER=$DR_SAGEMAKER_IMAGE; fi
 if ! verlte $DEPENDENCY_VERSION $SAGEMAKER_VER; then
-  echo "WARNING: Incompatible version of Deepracer Sagemaker. Expected >$DEPENDENCY_VERSION. Got $SAGEMAKER_VER"
+  echo "WARNING: Incompatible version of Deepracer Sagemaker. Expected >$DEPENDENCY_VERSION. Got $SAGEMAKER_VER."
 fi
 
-ROBOMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-robomaker:$DR_ROBOMAKER_IMAGE | jq -r .[].Config.Labels.version)
+ROBOMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-robomaker:$DR_ROBOMAKER_IMAGE 2> /dev/null | jq -r .[].Config.Labels.version )
+if [ -z "$ROBOMAKER_VER" ]; then ROBOMAKER_VER=$DR_ROBOMAKER_IMAGE; fi
 if ! verlte $DEPENDENCY_VERSION $ROBOMAKER_VER; then
-  echo "WARNING: Incompatible version of Deepracer Robomaker. Expected >$DEPENDENCY_VERSION. Got $ROBOMAKER_VER"
+  echo "WARNING: Incompatible version of Deepracer Robomaker. Expected >$DEPENDENCY_VERSION. Got $ROBOMAKER_VER."
 fi
 
-COACH_VER=$(docker inspect larsll/deepracer-rlcoach:$DR_COACH_IMAGE | jq -r .[].Config.Labels.version)
+COACH_VER=$(docker inspect larsll/deepracer-rlcoach:$DR_COACH_IMAGE 2> /dev/null | jq -r .[].Config.Labels.version)
+if [ -z "$COACH_VER" ]; then COACH_VER=$DR_COACH_IMAGE; fi
 if ! verlte $DEPENDENCY_VERSION $COACH_VER; then
-  echo "WARNING: Incompatible version of Deepracer-for-Cloud Coach. Expected >$DEPENDENCY_VERSION. Got $COACH_VER"
+  echo "WARNING: Incompatible version of Deepracer-for-Cloud Coach. Expected >$DEPENDENCY_VERSION. Got $COACH_VER."
 fi
 
 source $SCRIPT_DIR/scripts_wrapper.sh

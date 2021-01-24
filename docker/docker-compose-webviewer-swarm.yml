@@ -1,0 +1,15 @@
+version: '3.7'
+
+networks:
+  default:
+    external: true
+    name: sagemaker-local
+
+services:
+  proxy:
+    deploy:
+      restart_policy:
+        condition: none
+      replicas: 1
+      placement:
+        constraints: [node.labels.Sagemaker == true ]
