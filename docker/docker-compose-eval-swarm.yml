@@ -1,0 +1,18 @@
+version: '3.7'
+
+services:
+  rl_coach:
+    deploy:
+      restart_policy:
+        condition: none
+      placement:
+        constraints: [node.labels.Sagemaker == true ]
+  robomaker:
+    deploy:
+      restart_policy:
+        condition: none
+      replicas: 1
+      placement:
+        constraints: [node.labels.Robomaker == true ]
+    environment:
+        - DOCKER_REPLICA_SLOT={{.Task.Slot}}

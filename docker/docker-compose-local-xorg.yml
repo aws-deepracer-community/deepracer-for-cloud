@@ -1,0 +1,12 @@
+version: '3.7'
+
+services:
+  robomaker:
+    environment:
+      - DISPLAY
+      - USE_EXTERNAL_X=${DR_HOST_X}
+      - XAUTHORITY=/root/.Xauthority
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      - '/tmp/.X11-unix/:/tmp/.X11-unix'
+      - '${XAUTHORITY}:/root/.Xauthority'

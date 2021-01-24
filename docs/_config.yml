@@ -1,0 +1,9 @@
+---
+theme: jekyll-theme-slate
+markdown: GFM
+name: Deepracer-for-Cloud
+plugins:
+  - jekyll-relative-links
+relative_links:
+  enabled:     true
+  collections: false

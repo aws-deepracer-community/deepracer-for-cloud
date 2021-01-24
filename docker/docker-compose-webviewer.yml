@@ -1,0 +1,16 @@
+version: '3.7'
+
+networks:
+  default:
+    external: true
+    name: sagemaker-local
+
+services:
+  proxy:
+    image: nginx
+    ports:
+      - "${DR_WEBVIEWER_PORT}:80"
+    volumes:
+      - ${DR_VIEWER_HTML}:/usr/share/nginx/html/index.html
+      - ${DR_NGINX_CONF}:/etc/nginx/conf.d/default.conf
+

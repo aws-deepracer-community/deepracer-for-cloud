@@ -1,0 +1,6 @@
+version: '3.7'
+
+services:
+  robomaker:
+    volumes:
+      - "${DR_MOUNT_DIR}:/root/.ros/log"

@@ -1,0 +1,9 @@
+version: '3.7'
+
+services:
+  rl_coach:
+    environment:
+      - S3_ENDPOINT_URL=http://minio:9000
+  robomaker:
+    environment:
+      - S3_ENDPOINT_URL=http://minio:9000
