@@ -171,7 +171,7 @@ if ! verlte $DEPENDENCY_VERSION $ROBOMAKER_VER; then
   echo "WARNING: Incompatible version of Deepracer Robomaker. Expected >$DEPENDENCY_VERSION. Got $ROBOMAKER_VER."
 fi
 
-COACH_VER=$(docker inspect larsll/deepracer-rlcoach:$DR_COACH_IMAGE 2> /dev/null | jq -r .[].Config.Labels.version)
+COACH_VER=$(docker inspect awsdeepracercommunity/deepracer-rlcoach:$DR_COACH_IMAGE 2> /dev/null | jq -r .[].Config.Labels.version)
 if [ -z "$COACH_VER" ]; then COACH_VER=$DR_COACH_IMAGE; fi
 if ! verlte $DEPENDENCY_VERSION $COACH_VER; then
   echo "WARNING: Incompatible version of Deepracer-for-Cloud Coach. Expected >$DEPENDENCY_VERSION. Got $COACH_VER."

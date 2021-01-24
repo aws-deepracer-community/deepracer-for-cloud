@@ -142,7 +142,7 @@ else
 fi
 sed -i "s/<SAGE_TAG>/$SAGEMAKER_VERSION/g" $INSTALL_DIR/system.env
 
-docker pull larsll/deepracer-rlcoach:$COACH_VERSION
+docker pull awsdeepracercommunity/deepracer-rlcoach:$COACH_VERSION
 docker pull awsdeepracercommunity/deepracer-robomaker:$ROBOMAKER_VERSION
 docker pull awsdeepracercommunity/deepracer-sagemaker:$SAGEMAKER_VERSION
 
