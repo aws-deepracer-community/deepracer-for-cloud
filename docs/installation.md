@@ -34,7 +34,7 @@ Depending on your needs as well as specific needs of the cloud platform you can 
 
 The package comes with preparation and setup scripts that would allow a turn-key setup for a fresh virtual machine.
 
-	git clone https://github.com/awsdeepracercommunity/deepracer-for-cloud.git
+	git clone https://github.com/aws-deepracer-community/deepracer-for-cloud.git
 	
 **For cloud setup** execute:
 	
