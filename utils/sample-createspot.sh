@@ -138,4 +138,4 @@ aws ec2 run-instances \
     --iam-instance-profile Arn=arn:aws:iam::<####acct_num####>:instance-profile/<####role_name####> \
     --instance-market-options MarketType=spot \
     --user-data "#!/bin/bash
-    su -c 'git clone https://github.com/awsdeepracercommunity/deepracer-for-cloud.git && echo "$S3_LOCATION/node-config" > /home/ubuntu/deepracer-for-cloud/autorun.s3url && /home/ubuntu/deepracer-for-cloud/bin/prepare.sh' - ubuntu"
+    su -c 'git clone https://github.com/aws-deepracer-community/deepracer-for-cloud.git && echo "$S3_LOCATION/node-config" > /home/ubuntu/deepracer-for-cloud/autorun.s3url && /home/ubuntu/deepracer-for-cloud/bin/prepare.sh' - ubuntu"
