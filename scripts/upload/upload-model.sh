@@ -7,6 +7,8 @@ usage(){
   echo "       -d        Dry-Run mode. Does not perform any write or delete operatios on target."
   echo "       -b        Uploads best checkpoint. Default is last checkpoint."
   echo "       -p model  Uploads model in specified S3 prefix."
+  echo "       -i        Import model with the upload name"
+  echo "       -I name   Import model with a specific name"
 	exit 1
 }
 
@@ -30,6 +32,10 @@ d) OPT_DRYRUN="--dryrun"
 p) OPT_PREFIX="$OPTARG"
 ;;
 w) OPT_WIPE="--delete"
+;;
+i) OPT_IMPORT="$DR_UPLOAD_S3_PREFIX"
+;;
+I) OPT_IMPORT="$OPTARG"
 ;;
 h) usage
 ;;
@@ -171,3 +177,9 @@ aws ${DR_UPLOAD_PROFILE} s3 cp ${REWARD_FILE} ${TARGET_REWARD_FILE_S3_KEY} ${OPT
 aws ${DR_UPLOAD_PROFILE} s3 cp ${METRICS_FILE} ${TARGET_METRICS_FILE_S3_KEY} ${OPT_DRYRUN}
 aws ${DR_UPLOAD_PROFILE} s3 cp ${PARAMS_FILE} ${TARGET_PARAMS_FILE_S3_KEY} ${OPT_DRYRUN}
 aws ${DR_UPLOAD_PROFILE} s3 cp ${HYPERPARAM_FILE} ${TARGET_HYPERPARAM_FILE_S3_KEY} ${OPT_DRYRUN}
+
+# After upload trigger the import
+if [[ -n "${OPT_IMPORT}" ]];
+then
+    $DR_DIR/scripts/upload/prepare-config.py ${DR_UPLOAD_PROFILE} ${DR_UPLOAD_S3_ROLE} ${TARGET_S3_BUCKET} ${TARGET_S3_PREFIX} ${OPT_IMPORT}
+fi
