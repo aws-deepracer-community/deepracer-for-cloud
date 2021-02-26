@@ -149,4 +149,13 @@ After a while you will see the sagemaker logs on the screen.
 
 ## Troubleshooting
 
-If things do not start as expected - e.g. you get a message "Sagemaker is not running" then run `docker ps -a` to see if the containers are running or if they stopped due to errors. You can use `docker logs -f <containerid>` to check the errors.
+Here are some hints for troubleshooting specific issues you may encounter
+
+### Local training troubleshooting
+
+| Issue        | Troubleshooting hint |
+|------------- | ---------------------|
+Get messages like "Sagemaker is not running" | Run `docker -ps a` to see if the containers are running or if they stopped due to some errors
+Check docker errors for specific container | Run `docker logs -f <containerid>`
+Get message "Error response from daemon: could not choose an IP address to advertise since this system has multiple addresses on interface wlp6s0 ..." when running `./bin/init.sh -c local -a cpu` | It means you have multiple IP addresses and you need to specify one within `./bin/init.sh`.<br> If you don't care which one to use, you can get the first one by running `ifconfig | grep wlp6s0 -a1 | grep -o -P '(?<=inet ).*(?= netmask)`.<br> Edit `./bin/init.sh` and locate line `docker swarm init` and change it to `docker swarm init --advertise-addr 192.168.1.109`.<br> Rerun `./bin/init.sh -c local -a cpu`
+
