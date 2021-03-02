@@ -36,6 +36,6 @@ print('Importing from s3://{}/{}'.format(aws_s3_bucket,aws_s3_prefix))
 response = dr.import_model(Name=dr_model_name, ModelArtifactsS3Path='s3://{}/{}'.format(aws_s3_bucket,aws_s3_prefix), RoleArn=aws_s3_role, Type='REINFORCEMENT_LEARNING')
 
 if response['ResponseMetadata']['HTTPStatusCode'] == 200:
-    print('Model uploaded as {}'.format(response['ModelArn']))
+    print('Model importing as {}'.format(response['ModelArn']))
 else:
     sys.exit('Error occcured when uploading')

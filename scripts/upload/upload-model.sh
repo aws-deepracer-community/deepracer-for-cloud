@@ -19,7 +19,7 @@ function ctrl_c() {
         exit 1
 }
 
-while getopts ":fwdhbp:c:" opt; do
+while getopts ":fwdhbp:c:iI:" opt; do
 case $opt in
 b) OPT_CHECKPOINT="Best"
 ;; 
@@ -181,5 +181,5 @@ aws ${DR_UPLOAD_PROFILE} s3 cp ${HYPERPARAM_FILE} ${TARGET_HYPERPARAM_FILE_S3_KE
 # After upload trigger the import
 if [[ -n "${OPT_IMPORT}" ]];
 then
-    $DR_DIR/scripts/upload/prepare-config.py ${DR_UPLOAD_PROFILE} ${DR_UPLOAD_S3_ROLE} ${TARGET_S3_BUCKET} ${TARGET_S3_PREFIX} ${OPT_IMPORT}
+    $DR_DIR/scripts/upload/import-model.py "${DR_UPLOAD_S3_PROFILE}" "${DR_UPLOAD_S3_ROLE}" "${TARGET_S3_BUCKET}" "${TARGET_S3_PREFIX}" "${OPT_IMPORT}"
 fi
