@@ -8,6 +8,7 @@ import json
 import io
 import yaml
 import pandas as pd
+from botocore.loaders import UnknownServiceError
 
 # Read in command 
 aws_profile = sys.argv[1]
@@ -17,7 +18,13 @@ aws_s3_prefix = sys.argv[4]
 dr_model_name = sys.argv[5]
 
 session = boto3.session.Session(region_name='us-east-1', profile_name=aws_profile)
-dr = session.client('deepracer')
+
+try:
+    dr = session.client('deepracer')
+except UnknownServiceError:
+    print ("Boto3 service 'deepracer' is not installed. Cannot import model.")
+    print ("Install with 'pip install deepracer-utils' and 'python -m deepracer install-cli --force'")
+    exit(1)
 
 # Load model to check if it already exists
 a = dr.list_models(ModelType='REINFORCEMENT_LEARNING', MaxResults=25)
