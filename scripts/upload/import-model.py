@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import boto3
 import sys
@@ -7,8 +7,14 @@ import time
 import json
 import io
 import yaml
-import pandas as pd
 from botocore.loaders import UnknownServiceError
+
+try:
+    import pandas as pd
+    import deepracer
+except ImportError:
+    print("You need to install pandas and deepracer-utils to use the import function.")
+    exit(1)
 
 # Read in command 
 aws_profile = sys.argv[1]
@@ -16,6 +22,10 @@ aws_s3_role = sys.argv[2]
 aws_s3_bucket = sys.argv[3]
 aws_s3_prefix = sys.argv[4]
 dr_model_name = sys.argv[5]
+
+if not aws_s3_role:
+    print("You must configure an IAM role with access to the S3 bucket in variable DR_UPLOAD_S3_ROLE ")
+    exit(1)
 
 session = boto3.session.Session(region_name='us-east-1', profile_name=aws_profile)
 
