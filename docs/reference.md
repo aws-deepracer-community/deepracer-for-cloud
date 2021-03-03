@@ -81,7 +81,7 @@ The scripts assume that two files `system.env` containing constant configuration
 | `dr-start-evaluation` | Starts a evaluation session in the local VM based on current configuration.|
 | `dr-stop-evaluation` | Stops the current local evaluation session. Uploads log files.|
 | `dr-start-loganalysis` | Starts a Jupyter log-analysis container, available on port 8888.|
-| `dr-start-loganalysis` | Starts the Jupyter log-analysis container.|
+| `dr-stop-loganalysis` | Stops the Jupyter log-analysis container.|
 | `dr-start-viewer` | Starts an NGINX proxy to stream all the robomaker streams, available on port 8080.|
 | `dr-stop-viewer` | Stops the NGINX proxy.|
 | `dr-logs-sagemaker` | Displays the logs from the running Sagemaker container.|
