@@ -83,7 +83,7 @@ def main():
     my_model =  models[models['ModelName'] == model_name]
     if my_model.size > 0:
         my_model_arn = models[models['ModelName'] == model_name]['ModelArn'].values[0]
-        print("Found model ARN for model {}: {}".format(model_name, my_model_arn))
+        print("Found ModelARN for model {}: {}".format(model_name, my_model_arn))
     else:
         print("Did not find model with name {}".format(model_name))
         exit(1)
@@ -131,6 +131,7 @@ def main():
 
             # Submit again
             _ = dr.create_leaderboard_submission(ModelArn=my_model_arn, LeaderboardArn=leaderboard_arn)
+            print("Submitted {} to {}.".format(model_name, leaderboard_arn))
 
 
     # Maintain our summary
@@ -152,8 +153,9 @@ def download_file(f_name, url):
 
     dirPath = os.path.dirname(f_name)
     os.makedirs(dirPath, exist_ok=True)
- 
-    urllib.request.urlretrieve(url, f_name)
+    if not os.path.isfile(f_name):
+        print("Downloading {}".format(os.path.basename(f_name)))
+        urllib.request.urlretrieve(url, f_name)
 
 
 if __name__ == "__main__":
