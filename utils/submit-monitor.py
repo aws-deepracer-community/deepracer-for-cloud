@@ -5,11 +5,9 @@ import sys
 import getopt
 import os
 import time
-import json
-import io
-import yaml
 import pickle
 import urllib.request
+
 from botocore.loaders import UnknownServiceError
 
 try:
@@ -19,17 +17,12 @@ except ImportError:
     print("You need to install pandas and deepracer-utils to use this utility.")
     exit(1)
 
-
-def usage():
-    print("usage")
-
-
 def main():
 
     # Parse Arguments
     try:
-        opts, _ = getopt.getopt(sys.argv[1:], "lvshm:b:", [
-                                   "logs", "videos", "summary", "help", "model=", "board="])
+        opts, _ = getopt.getopt(sys.argv[1:], "lvsghm:b:", [
+                                   "logs", "verbose", "summary", "graphics", "help", "model=", "board="])
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
@@ -40,21 +33,24 @@ def main():
 
     download_logs = False
     download_videos = False
+    verbose = False
     create_summary = False
     model_name = None
-    leaderboard_arn = None
+    leaderboard_guid = None
 
     for o, a in opts:
         if o in ("-l", "--logs"):
             download_logs = True
-        elif o in ("-v", "--videos"):
-            download_videos = True
+        elif o in ("-g", "--graphics"):
+            download_videos = True            
+        elif o in ("-v", "--verbose"):
+            verbose = True
         elif o in ("-s", "--summary"):
             create_summary = True
         elif o in ("-m", "--model"):
-            model_name = a
+            model_name = a.strip()
         elif o in ("-b", "--board"):
-            leaderboard_arn = a
+            leaderboard_guid = a.strip()
         elif o in ("-h", "--help"):
             usage()
             sys.exit()
@@ -83,12 +79,15 @@ def main():
     my_model =  models[models['ModelName'] == model_name]
     if my_model.size > 0:
         my_model_arn = models[models['ModelName'] == model_name]['ModelArn'].values[0]
-        print("Found ModelARN for model {}: {}".format(model_name, my_model_arn))
+        if verbose:
+            print("Found ModelARN for model {}: {}".format(model_name, my_model_arn))
     else:
         print("Did not find model with name {}".format(model_name))
         exit(1)
 
     # Find the leaderboard
+    leaderboard_arn = 'arn:aws:deepracer:::leaderboard/{}'.format(leaderboard_guid)
+
     l_response = dr.list_leaderboards(MaxResults=50)
     lboards_dict = l_response['Leaderboards']
     while "NextToken" in l_response:
@@ -97,8 +96,8 @@ def main():
 
     leaderboards = pd.DataFrame.from_dict(lboards_dict)
     if leaderboards[leaderboards['Arn'] == leaderboard_arn].size > 0:
-        print("Found Leaderboard with ARN {}".format(leaderboard_arn))
-        leaderboard_guid = leaderboard_arn.split('/', 1)[1]
+        if verbose:
+            print("Found Leaderboard with ARN {}".format(leaderboard_arn))
     else:
         print("Did not find Leaderboard with ARN {}".format(leaderboard_arn))
         exit(1)
@@ -121,13 +120,25 @@ def main():
     latest_submission = submission_response['LeaderboardSubmission']
     if latest_submission:
         jobid = latest_submission['ActivityArn'].split('/',1)[1]
+        print("Job {} has status {}".format(jobid, latest_submission['LeaderboardSubmissionStatusType']))
+
         if latest_submission['LeaderboardSubmissionStatusType'] == 'SUCCESS':   
+            if download_logs:
+                download_file('{}/{}/robomaker-{}-{}.log'.format(logs_path, leaderboard_guid, latest_submission['SubmissionTime'], jobid), 
+                    dr.get_asset_url(Arn=latest_submission['ActivityArn'], AssetType='ROBOMAKER_CLOUDWATCH_LOG')['Url'])
+            if download_videos:
+                download_file('{}/{}/video-{}-{}.mp4'.format(logs_path, leaderboard_guid, latest_submission['SubmissionTime'], jobid), 
+                    latest_submission['SubmissionVideoS3path'])
+
+            # Submit again
+            _ = dr.create_leaderboard_submission(ModelArn=my_model_arn, LeaderboardArn=leaderboard_arn)
+            print("Submitted {} to {}.".format(model_name, leaderboard_arn))
+        
+        elif latest_submission['LeaderboardSubmissionStatusType'] == 'ERROR':
+            print("Error in previous submission")
             if download_logs:
                 download_file('{}/{}/robomaker-{}.log'.format(logs_path, leaderboard_guid, latest_submission['SubmissionTime']), 
                     dr.get_asset_url(Arn=latest_submission['ActivityArn'], AssetType='ROBOMAKER_CLOUDWATCH_LOG')['Url'])
-            if download_videos:
-                download_file('{}/{}/video-{}.mp4'.format(logs_path, leaderboard_guid, latest_submission['SubmissionTime']), 
-                    latest_submission['SubmissionVideoS3path'])
 
             # Submit again
             _ = dr.create_leaderboard_submission(ModelArn=my_model_arn, LeaderboardArn=leaderboard_arn)
@@ -141,13 +152,14 @@ def main():
                 del my_submissions['LeaderboardSubmissions'][idx]
         my_submissions['LeaderboardSubmissions'].append(latest_submission)
 
-        my_submissions_df = pd.DataFrame.from_dict(my_submissions['LeaderboardSubmissions'])       
-        print(my_submissions_df)
-
         # Save summary
         outfile = open(pkl_f,'wb')
         pickle.dump(my_submissions, outfile)
         outfile.close()
+        
+        # Display summary
+        if verbose:
+            display_submissions(my_submissions)
 
 def download_file(f_name, url):
 
@@ -157,6 +169,33 @@ def download_file(f_name, url):
         print("Downloading {}".format(os.path.basename(f_name)))
         urllib.request.urlretrieve(url, f_name)
 
+def display_submissions(submissions_dict):
+        # Display status
+        my_columns = ['SubmissionTime', 'TotalLapTime', 'BestLapTime', 'ResetCount', 'CollisionCount', 
+                      'OffTrackCount', 'Model', 'JobId', 'Status']
+        my_submissions_df = pd.DataFrame.from_dict(submissions_dict['LeaderboardSubmissions'])
+        my_submissions_df['SubmissionTime'] = my_submissions_df['SubmissionTime'].values.astype(dtype='datetime64[ms]').astype(dtype='datetime64[s]')
+        my_submissions_df['TotalLapTime'] = my_submissions_df['TotalLapTime'].values.astype(dtype='datetime64[ms]')
+        my_submissions_df['TotalLapTime'] = my_submissions_df['TotalLapTime'].dt.strftime('%M:%S.%f').str[:-4]
+        my_submissions_df['BestLapTime'] = my_submissions_df['BestLapTime'].values.astype(dtype='datetime64[ms]')
+        my_submissions_df['BestLapTime'] = my_submissions_df['BestLapTime'].dt.strftime('%M:%S.%f').str[:-4]
+        my_submissions_df['JobId'] = my_submissions_df['ActivityArn'].str.split('/').str[1]
+        my_submissions_df['Status'] = my_submissions_df['LeaderboardSubmissionStatusType']
+        my_submissions_df[[None,None,'Model']] = my_submissions_df.ModelArn.str.split("/",expand=True,)
+
+        # Display
+        print("")
+        print(my_submissions_df[my_columns])
+
+def usage():
+    print("Usage: submit-monitor.py [-v] [-s] [-l] [-g] -m <model-name> -b <leaderboard guid>")
+    print("        -v                Verbose output.")
+    print("        -s                Store a summary of all submissions.")
+    print("        -l                Download robomaker logfiles.")
+    print("        -g                Download video recordings.")
+    print("        -m                Display name of the model to submit.")
+    print("        -b                GUID (not ARN) of the leaderboard to submit to.")
+    exit(1)
 
 if __name__ == "__main__":
     main()
