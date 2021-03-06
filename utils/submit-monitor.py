@@ -113,7 +113,9 @@ def main():
         else:
             my_submissions = {}
             my_submissions['LeaderboardSubmissions'] = []
-
+        
+            dirPath = os.path.dirname(pkl_f)
+            os.makedirs(dirPath, exist_ok=True)
 
     # Collect data about latest submission
     submission_response = dr.get_latest_user_submission(LeaderboardArn=leaderboard_arn)
