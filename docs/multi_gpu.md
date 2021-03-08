@@ -56,6 +56,6 @@ Sagemaker is more critical to place, but also more complicated, as you will have
 
 A template is in `utils/Dockerfile.sagemaker-gpu`. Again the number is the applicable CUDA number.
 
-Build the image with `docker build -t awsdeepracercommunity/deepracer-sagemaker:gpu-x -f utils/Dockerfile.sagemaker-gpu` with x being anything you like.
+Build the image with `docker build -t awsdeepracercommunity/deepracer-sagemaker:gpu-x -f utils/Dockerfile.sagemaker-gpu .` with x being anything you like.
 
 Update `system.env` to use the new image.
