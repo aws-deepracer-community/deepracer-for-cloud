@@ -7,11 +7,10 @@ import pickle
 import urllib.request
 
 import boto3
-from botocore.loaders import UnknownServiceError
 
 try:
     import pandas as pd
-    import deepracer
+    from deepracer import boto3_enhancer
 except ImportError:
     print("You need to install pandas and deepracer-utils to use this utility.")
     sys.exit(1)
@@ -64,14 +63,7 @@ def main():
         profile_name=os.environ.get("DR_UPLOAD_S3_PROFILE", None),
     )
 
-    try:
-        dr = session.client("deepracer")
-    except UnknownServiceError:
-        print("Boto3 service 'deepracer' is not installed. Cannot import model.")
-        print(
-            "Install with 'pip install deepracer-utils' and 'python -m deepracer install-cli --force'"
-        )
-        sys.exit(1)
+    dr = boto3_enhancer.deepracer_client(session=session)
 
     # Find the ARN for my model
     m_response = dr.list_models(ModelType="REINFORCEMENT_LEARNING", MaxResults=50)
