@@ -15,6 +15,7 @@ except ImportError:
     print("You need to install pandas and deepracer-utils to use this utility.")
     sys.exit(1)
 
+dr = None
 
 def main():
 
@@ -63,42 +64,25 @@ def main():
         profile_name=os.environ.get("DR_UPLOAD_S3_PROFILE", None),
     )
 
+    global dr
     dr = boto3_enhancer.deepracer_client(session=session)
 
     # Find the ARN for my model
-    m_response = dr.list_models(ModelType="REINFORCEMENT_LEARNING", MaxResults=50)
-    model_dict = m_response["Models"]
-    while "NextToken" in m_response:
-        m_response = dr.list_models(
-            ModelType="REINFORCEMENT_LEARNING",
-            MaxResults=50,
-            NextToken=m_response["NextToken"],
-        )
-        model_dict.extend(m_response["Models"])
+    my_model = find_model(model_name)
 
-    models = pd.DataFrame.from_dict(model_dict)
-    my_model = models[models["ModelName"] == model_name]
-    if my_model.size > 0:
-        my_model_arn = models[models["ModelName"] == model_name]["ModelArn"].values[0]
+    if my_model is not None:
+        my_model_arn = my_model["ModelArn"].values[0]
         if verbose:
             print("Found ModelARN for model {}: {}".format(model_name, my_model_arn))
     else:
         print("Did not find model with name {}".format(model_name))
         sys.exit(1)
 
+
     # Find the leaderboard
-    leaderboard_arn = "arn:aws:deepracer:::leaderboard/{}".format(leaderboard_guid)
+    leaderboard_arn = find_leaderboard(leaderboard_guid)
 
-    l_response = dr.list_leaderboards(MaxResults=50)
-    lboards_dict = l_response["Leaderboards"]
-    while "NextToken" in l_response:
-        l_response = dr.list_leaderboards(
-            MaxResults=50, NextToken=l_response["NextToken"]
-        )
-        lboards_dict.extend(l_response["Leaderboards"])
-
-    leaderboards = pd.DataFrame.from_dict(lboards_dict)
-    if leaderboards[leaderboards["Arn"] == leaderboard_arn].size > 0:
+    if leaderboard_arn is not None:
         if verbose:
             print("Found Leaderboard with ARN {}".format(leaderboard_arn))
     else:
@@ -206,6 +190,51 @@ def download_file(f_name, url):
         print("Downloading {}".format(os.path.basename(f_name)))
         urllib.request.urlretrieve(url, f_name)
 
+def find_model(model_name):
+
+    m_response = dr.list_models(ModelType="REINFORCEMENT_LEARNING", MaxResults=25)
+    model_dict = m_response["Models"]
+    models = pd.DataFrame.from_dict(model_dict)
+    my_model = models[models["ModelName"] == model_name]
+    
+    if my_model.size > 0:
+        return my_model
+    
+    while "NextToken" in m_response:
+        m_response = dr.list_models(
+            ModelType="REINFORCEMENT_LEARNING",
+            MaxResults=50,
+            NextToken=m_response["NextToken"],
+        )
+        model_dict = m_response["Models"]
+
+        models = pd.DataFrame.from_dict(model_dict)
+        my_model = models[models["ModelName"] == model_name]
+        if my_model.size > 0:
+            return my_model
+
+    return None
+
+def find_leaderboard(leaderboard_guid):
+    leaderboard_arn = "arn:aws:deepracer:::leaderboard/{}".format(leaderboard_guid)
+
+    l_response = dr.list_leaderboards(MaxResults=25)
+    lboards_dict = l_response["Leaderboards"]
+    leaderboards = pd.DataFrame.from_dict(l_response["Leaderboards"])
+    if leaderboards[leaderboards["Arn"] == leaderboard_arn].size > 0:
+        return leaderboard_arn
+
+    while "NextToken" in l_response:
+        l_response = dr.list_leaderboards(
+            MaxResults=50, NextToken=l_response["NextToken"]
+        )
+        lboards_dict = l_response["Leaderboards"]
+
+        leaderboards = pd.DataFrame.from_dict(lboards_dict)
+        if leaderboards[leaderboards["Arn"] == leaderboard_arn].size > 0:
+            return leaderboard_arn
+
+    return None
 
 def display_submissions(submissions_dict):
     # Display status
