@@ -113,6 +113,10 @@ fi
 # Check if we are using Host X -- ensure variables are populated
 if [[ "${DR_HOST_X,,}" == "true" ]];
 then
+  if [[ -n "$DR_DISPLAY" ]]; then
+    DISPLAY_ORIG=$DISPLAY
+    export DISPLAY=$DR_DISPLAY
+  fi
   if [[ -z "$XAUTHORITY" ]]; then
     export XAUTHORITY=~/.Xauthority
   fi
@@ -141,6 +145,8 @@ then
 else
   docker-compose $COMPOSE_FILES -p $STACK_NAME --log-level ERROR up -d --scale robomaker=$DR_WORKERS
 fi
+
+export DISPLAY=$DISPLAY_ORIG
 
 # Request to be quiet. Quitting here.
 if [ -n "$OPT_QUIET" ]; then

@@ -47,6 +47,18 @@ fi
 echo "Creating Robomaker configuration in $S3_PATH/$DR_CURRENT_PARAMS_FILE"
 python3 $DR_DIR/scripts/evaluation/prepare-config.py
 
+# Check if we are using Host X -- ensure variables are populated
+if [[ "${DR_HOST_X,,}" == "true" ]];
+then
+  if [[ -n "$DR_DISPLAY" ]]; then
+    DISPLAY_ORIG=$DISPLAY
+    export DISPLAY=$DR_DISPLAY
+  fi
+  if [[ -z "$XAUTHORITY" ]]; then
+    export XAUTHORITY=~/.Xauthority
+  fi
+fi
+
 # Check if we will use Docker Swarm or Docker Compose
 if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
 then
@@ -54,6 +66,8 @@ then
 else
   docker-compose $COMPOSE_FILES --log-level ERROR -p $STACK_NAME up -d
 fi
+
+export DISPLAY=$DISPLAY_ORIG
 
 # Request to be quiet. Quitting here.
 if [ -n "$OPT_QUIET" ]; then
