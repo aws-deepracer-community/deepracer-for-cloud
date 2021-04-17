@@ -14,6 +14,8 @@ On a Ubuntu desktop running Unity there are hardly any additional steps required
 
 Before running `dr-start-training` ensure that environment variables `DISPLAY` and `XAUTHORITY` are defined.
 
+NOTE: Users have experienced issues to start training process from remote (SSH / RDP), as a local X session may not be running / you are not allowed to connect to it. Workaround is to start an additional X server following the steps for Headless Server.
+
 With recent Nvidia drivers you can confirm that the setup is working by running `nvidia-smi` on the host and see that `gzserver` is listed as running on the GPU. Older drivers (e.g. 390 for NVS 315) may not support showing which processes are running on the GPU.
 
 ## Headless Server
@@ -26,8 +28,8 @@ Also a headless server with a GPU, e.g. an EC2 instance, or a local computer wit
     * `DR_HOST_X=True`; uses the local X server rather than starting one within the docker container.
     * `DR_ROBOMAKER_IMAGE`; choose the tag for an OpenGL enabled image - e.g. `cpu-gl-avx` for an image where Tensorflow will use CPU or `gpu-gl` for an image where also Tensorflow will use the GPU.
 
-Before training ensure that the server is running, including VNC if you want to connect. Ensure that environment variables `DISPLAY` and `XAUTHORITY` are defined.
+Before training ensure that the server is running. Ensure that `DR_DISPLAY` is configured in `system.env` to a value that is unused on local computer. Start up the X server with `utils\start-xorg.sh`. 
 
-Basic start-up including creation of variables can be achieved with `source utils\start-xorg.sh`.
+If `DR_GUI_ENABLE=True` then a VNC server will be started on port 5900.
 
 With recent Nvidia drivers you can confirm that the setup is working by running `nvidia-smi` on the host and see that `gzserver` is listed as running on the GPU.
