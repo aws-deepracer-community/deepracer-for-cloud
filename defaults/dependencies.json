@@ -2,7 +2,7 @@
     "master_version": "3.1",
     "containers": {
         "rl_coach": "3.1.0",
-        "robomaker": "3.1.0",
+        "robomaker": "4.0.2-dev",
         "sagemaker": "3.1.0"
     }
 }
