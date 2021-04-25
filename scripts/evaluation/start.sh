@@ -56,6 +56,11 @@ then
     ROBO_DISPLAY=$DISPLAY
   fi
 
+  if ! timeout 1s xset q &>/dev/null; then 
+      echo "No X Server running on display $DISPLAY. Exiting"
+      exit 0
+  fi
+
   if [[ -z "$XAUTHORITY" ]]; then
     export XAUTHORITY=~/.Xauthority
     if [[ ! -f "$XAUTHORITY" ]]; then
