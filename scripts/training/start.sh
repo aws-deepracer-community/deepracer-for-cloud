@@ -114,11 +114,17 @@ fi
 if [[ "${DR_HOST_X,,}" == "true" ]];
 then
   if [[ -n "$DR_DISPLAY" ]]; then
-    DISPLAY_ORIG=$DISPLAY
-    export DISPLAY=$DR_DISPLAY
+    ROBO_DISPLAY=$DR_DISPLAY
+  else
+    ROBO_DISPLAY=$DISPLAY
   fi
+
   if [[ -z "$XAUTHORITY" ]]; then
     export XAUTHORITY=~/.Xauthority
+    if [[ ! -f "$XAUTHORITY" ]]; then
+      echo "No XAUTHORITY defined. .Xauthority does not exist. Stopping."
+      exit 0
+    fi
   fi
 fi
 
@@ -141,12 +147,11 @@ then
     exit 0
   fi
 
-  docker stack deploy $COMPOSE_FILES $STACK_NAME
-else
-  docker-compose $COMPOSE_FILES -p $STACK_NAME --log-level ERROR up -d --scale robomaker=$DR_WORKERS
-fi
+  DISPLAY=$ROBO_DISPLAY docker stack deploy $COMPOSE_FILES $STACK_NAME
 
-export DISPLAY=$DISPLAY_ORIG
+else
+  DISPLAY=$ROBO_DISPLAY docker-compose $COMPOSE_FILES -p $STACK_NAME --log-level ERROR up -d --scale robomaker=$DR_WORKERS
+fi
 
 # Request to be quiet. Quitting here.
 if [ -n "$OPT_QUIET" ]; then
