@@ -30,10 +30,20 @@ There are several useful switches to the upload command:
   * d - dry-Run mode, does not perform any write or delete operatios on target
   * b - uploads best checkpoint instead of default which is last checkpoint
   * p prefix - uploads model into specified S3 prefix
+  * i - imports model using the prefix as the model name
+  * I name - import model with a specific model name"
+
+### Import
+If you want to use the import switches (`-i` or `-I`) there are a few pre-requisites.
+
+* Python packages to be installed with `pip install`:
+  * pandas
+  * deepracer-utils
+* Install boto3 service `deepracer` with `python -m deepracer install-cli --force`.
+* Create an IAM Role which the Deepracer service can use to access S3. Declare the ARN in `DR_UPLOAD_S3_ROLE` in `system.env`.
 
 ### Managing your models
 You should decide how you're going to manage your models. Upload to AWS does not preserve all the files created locally so if you delete your local files you will find it hard to go back to a previous model and resume training.
-
 
 ### Create file formatted for physical car, and upload to S3
 You can also create the file in the format necessary to run on the physical car directly from DRfC, without going through the AWS console.

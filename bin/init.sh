@@ -105,7 +105,7 @@ else
     sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
     echo "Please run 'aws configure --profile minio' to set the credentials"
 fi
-
+sed -i "s/<AWS_DR_BUCKET_ROLE>/to-be-defined/g" $INSTALL_DIR/system.env
 sed -i "s/<CLOUD_REPLACE>/$OPT_CLOUD/g" $INSTALL_DIR/system.env
 sed -i "s/<REGION_REPLACE>/$AWS_REGION/g" $INSTALL_DIR/system.env
 

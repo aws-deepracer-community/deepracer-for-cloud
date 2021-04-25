@@ -1,6 +1,7 @@
 # Deepracer-for-Cloud Reference
 
 ## Environment Variables
+
 The scripts assume that two files `system.env` containing constant configuration values and  `run.env` with run specific values is populated with the required values. Which values go into which file is not really important.
 
 | Variable | Description |
@@ -66,12 +67,11 @@ The scripts assume that two files `system.env` containing constant configuration
 | `DR_WEBVIEWER_PORT` | Port for the web-viewer proxy which enables the streaming of all robomaker workers at once.|
 | `CUDA_VISIBLE_DEVICES` | Used in multi-GPU configurations. See additional documentation for more information about this feature.|
 
-
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `dr-update` | Loads in all scripts and environment variables again.| 
+| `dr-update` | Loads in all scripts and environment variables again.|
 | `dr-update-env` | Loads in all environment variables from `system.env` and `run.env`.|
 | `dr-upload-custom-files` | Uploads changed configuration files from `custom_files/` into `s3://{DR_LOCAL_S3_BUCKET}/custom_files`.|
 | `dr-download-custom-files` | Downloads changed configuration files from `s3://{DR_LOCAL_S3_BUCKET}/custom_files` into `custom_files/`.|
@@ -81,8 +81,8 @@ The scripts assume that two files `system.env` containing constant configuration
 | `dr-start-evaluation` | Starts a evaluation session in the local VM based on current configuration.|
 | `dr-stop-evaluation` | Stops the current local evaluation session. Uploads log files.|
 | `dr-start-loganalysis` | Starts a Jupyter log-analysis container, available on port 8888.|
-| `dr-start-loganalysis` | Stops the Jupyter log-analysis container.|
-| `dr-start-viewer` | Starts an NGINX proxy to stream all the robomaker streams; accessible from remote.|
+| `dr-stop-loganalysis` | Stops the Jupyter log-analysis container.|
+| `dr-start-viewer` | Starts an NGINX proxy to stream all the robomaker streams; accessible remotly.|
 | `dr-stop-viewer` | Stops the NGINX proxy.|
 | `dr-logs-sagemaker` | Displays the logs from the running Sagemaker container.|
 | `dr-logs-robomaker` | Displays the logs from the running Robomaker container.|
