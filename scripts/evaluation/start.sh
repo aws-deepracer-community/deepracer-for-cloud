@@ -56,8 +56,8 @@ then
     ROBO_DISPLAY=$DISPLAY
   fi
 
-  if ! timeout 1s xset q &>/dev/null; then 
-      echo "No X Server running on display $DISPLAY. Exiting"
+  if ! DISPLAY=$ROBO_DISPLAY timeout 1s xset q &>/dev/null; then 
+      echo "No X Server running on display $ROBO_DISPLAY. Exiting"
       exit 0
   fi
 
