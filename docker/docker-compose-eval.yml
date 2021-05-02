@@ -15,7 +15,6 @@ services:
     ports:
       - "${DR_ROBOMAKER_EVAL_PORT}:8080"
     environment:
-      - DISPLAY_N=:0
       - CUDA_VISIBLE_DEVICES
       - DEBUG_REWARD=${DR_EVAL_DEBUG_REWARD}
       - WORLD_NAME=${DR_WORLD_NAME}
