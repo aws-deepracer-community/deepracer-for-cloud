@@ -25,12 +25,12 @@ def main():
     try:
         opts, _ = getopt.getopt(
             sys.argv[1:],
-            "lvsghm:b:",
-            ["logs", "verbose", "summary", "graphics", "help", "model=", "board="],
+            "lvsghm:b:a:",
+            ["logs", "verbose", "summary", "graphics", "help", "model=", "board=", "arn="],
         )
     except getopt.GetoptError as err:
         # print help information and exit:
-        print(err)  # will print something like "option -a not recognized"
+        print(err)  # will print something like "option -x not recognized"
         usage()
         sys.exit(2)
 
@@ -42,6 +42,7 @@ def main():
     create_summary = False
     model_name = None
     leaderboard_guid = None
+    leaderboard_arn = None
 
     for opt, arg in opts:
         if opt in ("-l", "--logs"):
@@ -56,6 +57,8 @@ def main():
             model_name = arg.strip()
         elif opt in ("-b", "--board"):
             leaderboard_guid = arg.strip()
+        elif opt in ("-a", "--arn"):
+            leaderboard_arn = arg.strip()
         elif opt in ("-h", "--help"):
             usage()
             sys.exit()
@@ -81,7 +84,8 @@ def main():
         sys.exit(1)
 
     # Find the leaderboard
-    leaderboard_arn = find_leaderboard(leaderboard_guid)
+    if not leaderboard_arn:
+      leaderboard_arn = find_leaderboard(leaderboard_guid)
 
     if leaderboard_arn is not None:
         if verbose:
@@ -306,6 +310,7 @@ def usage():
     print("        -g                Download video recordings.")
     print("        -m                Display name of the model to submit.")
     print("        -b                GUID (not ARN) of the leaderboard to submit to.")
+    print("        -a                ARN  of the leaderboard to submit to.")
     sys.exit(1)
 
 
