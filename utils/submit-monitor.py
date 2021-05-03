@@ -85,7 +85,7 @@ def main():
 
     # Find the leaderboard
     if not leaderboard_arn:
-      leaderboard_arn = find_leaderboard(leaderboard_guid)
+        leaderboard_arn = find_leaderboard(leaderboard_guid)
 
     if leaderboard_arn is not None:
         if verbose:
