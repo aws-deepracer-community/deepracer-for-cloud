@@ -26,7 +26,7 @@ def main():
         opts, _ = getopt.getopt(
             sys.argv[1:],
             "lvsghm:b:",
-            ["logs", "verbose", "summary", "graphics", "help", "model=", "board=", "arn="],
+            ["logs", "verbose", "summary", "graphics", "help", "model=", "board="],
         )
     except getopt.GetoptError as err:
         # print help information and exit:
@@ -311,7 +311,6 @@ def usage():
     print("        -g                Download video recordings.")
     print("        -m                Display name of the model to submit.")
     print("        -b                GUID or ARN of the leaderboard to submit to.")
-    print("        -a                ARN  of the leaderboard to submit to.")
     sys.exit(1)
 
 
