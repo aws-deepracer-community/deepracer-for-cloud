@@ -25,7 +25,7 @@ def main():
     try:
         opts, _ = getopt.getopt(
             sys.argv[1:],
-            "lvsghm:b:a:",
+            "lvsghm:b:",
             ["logs", "verbose", "summary", "graphics", "help", "model=", "board=", "arn="],
         )
     except getopt.GetoptError as err:
@@ -57,8 +57,6 @@ def main():
             model_name = arg.strip()
         elif opt in ("-b", "--board"):
             leaderboard_guid = arg.strip()
-        elif opt in ("-a", "--arn"):
-            leaderboard_arn = arg.strip()
         elif opt in ("-h", "--help"):
             usage()
             sys.exit()
@@ -82,6 +80,9 @@ def main():
     else:
         print("Did not find model with name {}".format(model_name))
         sys.exit(1)
+
+    if leaderboard_guid.startswith('arn'):
+        leaderboard_arn = leaderboard_guid
 
     # Find the leaderboard
     if not leaderboard_arn:
@@ -309,7 +310,7 @@ def usage():
     print("        -l                Download robomaker logfiles.")
     print("        -g                Download video recordings.")
     print("        -m                Display name of the model to submit.")
-    print("        -b                GUID (not ARN) of the leaderboard to submit to.")
+    print("        -b                GUID or ARN of the leaderboard to submit to.")
     print("        -a                ARN  of the leaderboard to submit to.")
     sys.exit(1)
 
