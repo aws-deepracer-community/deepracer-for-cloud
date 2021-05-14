@@ -30,7 +30,7 @@ def main():
         )
     except getopt.GetoptError as err:
         # print help information and exit:
-        print(err)  # will print something like "option -a not recognized"
+        print(err)  # will print something like "option -x not recognized"
         usage()
         sys.exit(2)
 
@@ -42,6 +42,7 @@ def main():
     create_summary = False
     model_name = None
     leaderboard_guid = None
+    leaderboard_arn = None
 
     for opt, arg in opts:
         if opt in ("-l", "--logs"):
@@ -80,8 +81,12 @@ def main():
         print("Did not find model with name {}".format(model_name))
         sys.exit(1)
 
+    if leaderboard_guid.startswith('arn'):
+        leaderboard_arn = leaderboard_guid
+
     # Find the leaderboard
-    leaderboard_arn = find_leaderboard(leaderboard_guid)
+    if not leaderboard_arn:
+        leaderboard_arn = find_leaderboard(leaderboard_guid)
 
     if leaderboard_arn is not None:
         if verbose:
@@ -305,7 +310,7 @@ def usage():
     print("        -l                Download robomaker logfiles.")
     print("        -g                Download video recordings.")
     print("        -m                Display name of the model to submit.")
-    print("        -b                GUID (not ARN) of the leaderboard to submit to.")
+    print("        -b                GUID or ARN of the leaderboard to submit to.")
     sys.exit(1)
 
 
