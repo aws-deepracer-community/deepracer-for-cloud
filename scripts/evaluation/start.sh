@@ -47,12 +47,36 @@ fi
 echo "Creating Robomaker configuration in $S3_PATH/$DR_CURRENT_PARAMS_FILE"
 python3 $DR_DIR/scripts/evaluation/prepare-config.py
 
+# Check if we are using Host X -- ensure variables are populated
+if [[ "${DR_HOST_X,,}" == "true" ]];
+then
+  if [[ -n "$DR_DISPLAY" ]]; then
+    ROBO_DISPLAY=$DR_DISPLAY
+  else
+    ROBO_DISPLAY=$DISPLAY
+  fi
+
+  if ! DISPLAY=$ROBO_DISPLAY timeout 1s xset q &>/dev/null; then 
+      echo "No X Server running on display $ROBO_DISPLAY. Exiting"
+      exit 0
+  fi
+
+  if [[ -z "$XAUTHORITY" ]]; then
+    export XAUTHORITY=~/.Xauthority
+    if [[ ! -f "$XAUTHORITY" ]]; then
+      echo "No XAUTHORITY defined. .Xauthority does not exist. Stopping."
+      exit 0
+    fi
+  fi
+fi
+
+
 # Check if we will use Docker Swarm or Docker Compose
 if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
 then
-  docker stack deploy $COMPOSE_FILES $STACK_NAME
+  DISPLAY=$ROBO_DISPLAY docker stack deploy $COMPOSE_FILES $STACK_NAME
 else
-  docker-compose $COMPOSE_FILES --log-level ERROR -p $STACK_NAME up -d
+  DISPLAY=$ROBO_DISPLAY docker-compose $COMPOSE_FILES --log-level ERROR -p $STACK_NAME up -d
 fi
 
 # Request to be quiet. Quitting here.
