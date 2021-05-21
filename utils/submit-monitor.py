@@ -152,7 +152,7 @@ def main():
             )
             print("Submitted {} to {}.".format(model_name, leaderboard_arn))
 
-        elif latest_submission["LeaderboardSubmissionStatusType"] == "ERROR":
+        elif latest_submission["LeaderboardSubmissionStatusType"] == "ERROR" or latest_submission["LeaderboardSubmissionStatusType"] == "FAILED":
             print("Error in previous submission")
             if download_logs:
                 try:
