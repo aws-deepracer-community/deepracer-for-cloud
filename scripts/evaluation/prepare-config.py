@@ -68,6 +68,7 @@ is_continous = str2bool(os.environ.get('DR_EVAL_IS_CONTINUOUS', 'False'))
 if is_continous:
     config['NUMBER_OF_RESETS'] = '10000'
     config['IS_CONTINUOUS'] = os.environ.get('DR_EVAL_IS_CONTINUOUS', 'True')
+    config['RESET_BEHIND_DIST'] = os.environ.get('DR_EVAL_RESET_BEHIND_DIST', '1.0')
 
 config['OFF_TRACK_PENALTY'] = os.environ.get('DR_EVAL_OFF_TRACK_PENALTY', '5.0')
 config['COLLISION_PENALTY'] = os.environ.get('DR_COLLISION_PENALTY', '5.0')
