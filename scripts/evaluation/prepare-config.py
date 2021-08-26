@@ -98,6 +98,7 @@ if config['RACE_TYPE'] == 'HEAD_TO_BOT':
     config['MIN_DISTANCE_BETWEEN_BOT_CARS'] = os.environ.get('DR_H2B_MIN_DISTANCE_BETWEEN_BOT_CARS', '2.0')
     config['RANDOMIZE_BOT_CAR_LOCATIONS'] = os.environ.get('DR_H2B_RANDOMIZE_BOT_CAR_LOCATIONS', 'False')
     config['BOT_CAR_SPEED'] = os.environ.get('DR_H2B_BOT_CAR_SPEED', '0.2')
+    config['PENALTY_SECONDS'] = os.environ.get('DR_H2B_BOT_CAR_PENALTY', '2.0')
 
 # Head to Model
 if config['RACE_TYPE'] == 'HEAD_TO_MODEL':
