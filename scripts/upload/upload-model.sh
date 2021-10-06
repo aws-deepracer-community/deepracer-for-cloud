@@ -56,6 +56,7 @@ fi
 if [[ -n "${OPT_INCREMENT}" ]];
 then
   source $DR_DIR/scripts/upload/increment.sh ${OPT_FORCE}
+  OPT_IMPORT="$DR_UPLOAD_S3_PREFIX"
 fi
 
 export TARGET_S3_BUCKET=${DR_UPLOAD_S3_BUCKET}
