@@ -53,6 +53,11 @@ then
   echo "*** DRYRUN MODE ***"
 fi
 
+if [[ -n "${OPT_INCREMENT}" ]];
+then
+  source $DR_DIR/scripts/upload/increment.sh ${OPT_FORCE}
+fi
+
 export TARGET_S3_BUCKET=${DR_UPLOAD_S3_BUCKET}
 export TARGET_S3_PREFIX=${DR_UPLOAD_S3_PREFIX}
 
@@ -66,11 +71,6 @@ if [[ -z "${DR_UPLOAD_S3_PREFIX}" ]];
 then
   echo "No upload prefix defined. Exiting."
   exit 1
-fi
-
-if [[ -n "${OPT_INCREMENT}" ]];
-then
-  $DR_DIR/scripts/upload/increment.sh ${OPT_FORCE}
 fi
 
 SOURCE_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
