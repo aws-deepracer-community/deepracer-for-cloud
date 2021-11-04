@@ -3,11 +3,12 @@
 source $DR_DIR/bin/scripts_wrapper.sh
 
 usage(){
-	echo "Usage: $0 [-w] [-q | -s | -r [n] | -a ]"
+	echo "Usage: $0 [-w] [-q | -s | -r [n] | -a ] [-v]"
   echo "       -w        Wipes the target AWS DeepRacer model structure before upload."
   echo "       -q        Do not output / follow a log when starting."
   echo "       -a        Follow all Sagemaker and Robomaker logs."
   echo "       -s        Follow Sagemaker logs (default)."
+  echo "       -v        Updates the viewer webpage."
   echo "       -r [n]    Follow Robomaker logs for worker n (default worker 0 / replica 1)."
 	exit 1
 }
@@ -21,7 +22,7 @@ function ctrl_c() {
 
 OPT_DISPLAY="SAGEMAKER"
 
-while getopts ":whqsar:" opt; do
+while getopts ":whqsavr:" opt; do
 case $opt in
 w) OPT_WIPE="WIPE"
 ;;
@@ -40,6 +41,8 @@ r)  # Check if value is in numeric format.
         ((OPTIND--))
     fi
 ;;  
+v) OPT_VIEWER="VIEWER"
+;;
 h) usage
 ;;
 \?) echo "Invalid option -$OPTARG" >&2
@@ -157,6 +160,11 @@ then
 
 else
   DISPLAY=$ROBO_DISPLAY docker-compose $COMPOSE_FILES -p $STACK_NAME --log-level ERROR up -d --scale robomaker=$DR_WORKERS
+fi
+
+# Viewer
+if [ -n "$OPT_VIEWER" ]; then
+  (sleep 5; dr-update-viewer) 
 fi
 
 # Request to be quiet. Quitting here.

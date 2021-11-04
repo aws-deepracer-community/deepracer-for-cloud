@@ -73,6 +73,7 @@ if config['RACE_TYPE'] == 'HEAD_TO_BOT':
     config['MIN_DISTANCE_BETWEEN_BOT_CARS'] = os.environ.get('DR_H2B_MIN_DISTANCE_BETWEEN_BOT_CARS', '2.0')
     config['RANDOMIZE_BOT_CAR_LOCATIONS'] = os.environ.get('DR_H2B_RANDOMIZE_BOT_CAR_LOCATIONS', 'False')
     config['BOT_CAR_SPEED'] = os.environ.get('DR_H2B_BOT_CAR_SPEED', '0.2')
+    config['PENALTY_SECONDS'] = os.environ.get('DR_H2B_BOT_CAR_PENALTY', '2.0')
 
 s3_endpoint_url = os.environ.get('DR_LOCAL_S3_ENDPOINT_URL', None)
 s3_region = config['AWS_REGION']
@@ -180,6 +181,7 @@ if config['MULTI_CONFIG'] == "True" and num_workers > 0:
                 config.update({'MIN_DISTANCE_BETWEEN_BOT_CARS': os.environ.get('DR_H2B_MIN_DISTANCE_BETWEEN_BOT_CARS')})
                 config.update({'RANDOMIZE_BOT_CAR_LOCATIONS': os.environ.get('DR_H2B_RANDOMIZE_BOT_CAR_LOCATIONS')})
                 config.update({'BOT_CAR_SPEED': os.environ.get('DR_H2B_BOT_CAR_SPEED')})
+                config.update({'PENALTY_SECONDS': os.environ.get('DR_H2B_BOT_CAR_PENALTY')})
             else:
                 config.pop('IS_LANE_CHANGE', None)
                 config.pop('LOWER_LANE_CHANGE_TIME', None)

@@ -72,6 +72,8 @@ else
     exit 1
 fi
 
+export DR_UPLOAD_S3_PREFIX=$(eval echo "${NEW_UPLOAD_MODEL}")
+
 if [[ -n "${OPT_WIPE}" ]];
 then
     MODEL_DIR_S3=$(aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 ls s3://${DR_LOCAL_S3_BUCKET}/${NEW_UPLOAD_MODEL} )
