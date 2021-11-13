@@ -186,7 +186,10 @@ def main():
     # Maintain our summary
     if create_summary:
         for idx, i in enumerate(my_submissions["LeaderboardSubmissions"]):
-            if i["SubmissionTime"] == latest_submission["SubmissionTime"]:
+            if "SubmissionTime" in i:
+                if i["SubmissionTime"] == latest_submission["SubmissionTime"]:
+                    del my_submissions["LeaderboardSubmissions"][idx]
+            else:
                 del my_submissions["LeaderboardSubmissions"][idx]
         my_submissions["LeaderboardSubmissions"].append(latest_submission)
 
