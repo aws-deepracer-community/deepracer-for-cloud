@@ -51,6 +51,9 @@ if save_mp4:
     config['MP4_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
     config['MP4_S3_OBJECT_PREFIX'].append('{}/{}'.format(os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'bucket'),'mp4'))
 
+# Checkpoint
+config['EVAL_CHECKPOINT'] = os.environ.get('DR_EVAL_CHECKPOINT', 'last')
+
 # Car and training 
 body_shell_type = os.environ.get('DR_CAR_BODY_SHELL_TYPE', 'deepracer')
 config['BODY_SHELL_TYPE'].append(body_shell_type)
