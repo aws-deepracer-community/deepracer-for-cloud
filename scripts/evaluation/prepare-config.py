@@ -65,10 +65,13 @@ config['NUMBER_OF_TRIALS'] = os.environ.get('DR_EVAL_NUMBER_OF_TRIALS', '5')
 config['ENABLE_DOMAIN_RANDOMIZATION'] = os.environ.get('DR_ENABLE_DOMAIN_RANDOMIZATION', 'false')
 
 is_continous = str2bool(os.environ.get('DR_EVAL_IS_CONTINUOUS', 'False'))
+is_reset = str2bool(os.environ.get('DR_EVAL_ENABLE_RESETS', 'False'))
 if is_continous:
-    config['NUMBER_OF_RESETS'] = '10000'
     config['IS_CONTINUOUS'] = os.environ.get('DR_EVAL_IS_CONTINUOUS', 'True')
+
+if is_reset:
     config['RESET_BEHIND_DIST'] = os.environ.get('DR_EVAL_RESET_BEHIND_DIST', '1.0')
+    config['NUMBER_OF_RESETS'] = '10000'
 
 config['OFF_TRACK_PENALTY'] = os.environ.get('DR_EVAL_OFF_TRACK_PENALTY', '5.0')
 config['COLLISION_PENALTY'] = os.environ.get('DR_COLLISION_PENALTY', '5.0')
