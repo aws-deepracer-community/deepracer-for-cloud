@@ -51,6 +51,9 @@ if save_mp4:
     config['MP4_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
     config['MP4_S3_OBJECT_PREFIX'].append('{}/{}'.format(os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'bucket'),'mp4'))
 
+# Checkpoint
+config['EVAL_CHECKPOINT'] = os.environ.get('DR_EVAL_CHECKPOINT', 'last')
+
 # Car and training 
 body_shell_type = os.environ.get('DR_CAR_BODY_SHELL_TYPE', 'deepracer')
 config['BODY_SHELL_TYPE'].append(body_shell_type)
@@ -63,12 +66,10 @@ config['RACE_TYPE'] = os.environ.get('DR_RACE_TYPE', 'TIME_TRIAL')
 config['WORLD_NAME'] = os.environ.get('DR_WORLD_NAME', 'LGSWide')
 config['NUMBER_OF_TRIALS'] = os.environ.get('DR_EVAL_NUMBER_OF_TRIALS', '5')
 config['ENABLE_DOMAIN_RANDOMIZATION'] = os.environ.get('DR_ENABLE_DOMAIN_RANDOMIZATION', 'false')
+config['RESET_BEHIND_DIST'] = os.environ.get('DR_EVAL_RESET_BEHIND_DIST', '1.0')
 
-is_continous = str2bool(os.environ.get('DR_EVAL_IS_CONTINUOUS', 'False'))
-if is_continous:
-    config['NUMBER_OF_RESETS'] = '10000'
-    config['IS_CONTINUOUS'] = os.environ.get('DR_EVAL_IS_CONTINUOUS', 'True')
-    config['RESET_BEHIND_DIST'] = os.environ.get('DR_EVAL_RESET_BEHIND_DIST', '1.0')
+config['IS_CONTINUOUS'] = os.environ.get('DR_EVAL_IS_CONTINUOUS', 'True')
+config['NUMBER_OF_RESETS'] = os.environ.get('DR_EVAL_MAX_RESETS', '0')
 
 config['OFF_TRACK_PENALTY'] = os.environ.get('DR_EVAL_OFF_TRACK_PENALTY', '5.0')
 config['COLLISION_PENALTY'] = os.environ.get('DR_COLLISION_PENALTY', '5.0')

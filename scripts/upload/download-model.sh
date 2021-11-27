@@ -45,7 +45,7 @@ then
   echo "*** DRYRUN MODE ***"
 fi
 
-SOURCE_S3_URL=${OPT_SOURCE}
+SOURCE_S3_URL="${OPT_SOURCE}"
 
 if [[ -z "${SOURCE_S3_URL}" ]];
 then
@@ -69,11 +69,11 @@ WORK_DIR=${DR_DIR}/tmp/download
 mkdir -p ${WORK_DIR} && rm -rf ${WORK_DIR} && mkdir -p ${WORK_DIR}/config ${WORK_DIR}/full
 
 # Check if metadata-files are available
-REWARD_FILE=$(aws ${DR_UPLOAD_PROFILE} s3 cp ${SOURCE_REWARD_FILE_S3_KEY} ${WORK_DIR}/config/ --no-progress | awk '/reward/ {print $4}'| xargs readlink -f 2> /dev/null)
-METADATA_FILE=$(aws ${DR_UPLOAD_PROFILE} s3 cp ${SOURCE_METADATA_S3_KEY} ${WORK_DIR}/config/ --no-progress | awk '/model_metadata.json$/ {print $4}'| xargs readlink -f 2> /dev/null)
-HYPERPARAM_FILE=$(aws ${DR_UPLOAD_PROFILE} s3 cp ${SOURCE_HYPERPARAM_FILE_S3_KEY} ${WORK_DIR}/config/ --no-progress | awk '/hyperparameters.json$/ {print $4}'| xargs readlink -f 2> /dev/null)
+REWARD_FILE=$(aws ${DR_UPLOAD_PROFILE} s3 cp "${SOURCE_REWARD_FILE_S3_KEY}" ${WORK_DIR}/config/ --no-progress | awk '/reward/ {print $4}'| xargs readlink -f 2> /dev/null)
+METADATA_FILE=$(aws ${DR_UPLOAD_PROFILE} s3 cp "${SOURCE_METADATA_S3_KEY}" ${WORK_DIR}/config/ --no-progress | awk '/model_metadata.json$/ {print $4}'| xargs readlink -f 2> /dev/null)
+HYPERPARAM_FILE=$(aws ${DR_UPLOAD_PROFILE} s3 cp "${SOURCE_HYPERPARAM_FILE_S3_KEY}" ${WORK_DIR}/config/ --no-progress | awk '/hyperparameters.json$/ {print $4}'| xargs readlink -f 2> /dev/null)
 
-if [ -n "$METADATA_FILE" ] && [ -n "$REWARD_FILE" ] && [ -n "$HYPERPARAM_FILE" ]; 
+if [ -n "$METADATA_FILE" ] && [ -n "$REWARD_FILE" ] && [ -n "$HYPERPARAM_FILE" ];
 then
     echo "All meta-data files found. Source model ${SOURCE_S3_URL} valid."
 else
@@ -94,7 +94,7 @@ then
 fi
 
 cd ${WORK_DIR}
-aws ${DR_UPLOAD_PROFILE} s3 sync ${SOURCE_S3_URL} ${WORK_DIR}/full/ ${OPT_DRYRUN}
+aws ${DR_UPLOAD_PROFILE} s3 sync "${SOURCE_S3_URL}" ${WORK_DIR}/full/ ${OPT_DRYRUN}
 aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 sync ${WORK_DIR}/full/ s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/ ${OPT_DRYRUN} ${OPT_WIPE}
 
 if [[ -n "${OPT_CONFIG}" ]];
