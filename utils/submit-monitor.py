@@ -3,6 +3,7 @@
 import sys
 import getopt
 import os
+import traceback
 import pickle
 import urllib.request
 
@@ -126,10 +127,10 @@ def main():
                 try:
                     f_url = dr.get_asset_url(
                         Arn=latest_submission["ActivityArn"],
-                        AssetType="ROBOMAKER_CLOUDWATCH_LOG",
+                        AssetType="LOGS",
                     )["Url"]
                     download_file(
-                        "{}/{}/robomaker-{}-{}.log".format(
+                        "{}/{}/robomaker-{}-{}.tar.gz".format(
                             logs_path,
                             leaderboard_guid,
                             latest_submission["SubmissionTime"],
@@ -139,6 +140,7 @@ def main():
                     )
                 except ClientError:
                     print(("WARNING: Logfile for job {} not available.").format(jobid))
+                    traceback.print_exc()
 
             if download_videos:
                 download_file(
@@ -163,10 +165,10 @@ def main():
                 try:
                     f_url = dr.get_asset_url(
                         Arn=latest_submission["ActivityArn"],
-                        AssetType="ROBOMAKER_CLOUDWATCH_LOG",
+                        AssetType="LOGS",
                     )["Url"]
                     download_file(
-                        "{}/{}/robomaker-{}-{}.log".format(
+                        "{}/{}/robomaker-{}-{}.tar.gz".format(
                             logs_path,
                             leaderboard_guid,
                             latest_submission["SubmissionTime"],
@@ -176,6 +178,7 @@ def main():
                     )
                 except ClientError:
                     print(("WARNING: Logfile for job {} not available.").format(jobid))
+                    traceback.print_exc()
 
             # Submit again
             _ = dr.create_leaderboard_submission(
