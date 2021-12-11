@@ -54,8 +54,8 @@ The scripts assume that two files `system.env` containing constant configuration
 | `DR_UPLOAD_S3_BUCKET` | Name of the AWS DeepRacer bucket where models will be uploaded. (Typically starts with `aws-deepracer-`.)|
 | `DR_LOCAL_S3_PROFILE` | Name of AWS profile with credentials to be used. Stored in `~/.aws/credentials` unless AWS IAM Roles are used.|
 | `DR_GUI_ENABLE` | Enable or disable the Gazebo GUI in Robomaker |
-| `DR_KINESIS_STREAM_NAME` | Kinesis stream name |
-| `DR_KINESIS_STREAM_ENABLE` | Enable or disable Kinesis Stream |
+| `DR_KINESIS_STREAM_NAME` | Kinesis stream name. Used if you actually publish to the AWS KVS service. Leave blank if you do not want this. |
+| `DR_KINESIS_STREAM_ENABLE` | Enable or disable 'Kinesis Stream', True both publishes to a AWS KVS stream (if name not None), and to the topic `/racecar/deepracer/kvs_stream`. Leave True if you want to watch the car racing. |
 | `DR_SAGEMAKER_IMAGE` | Determines which sagemaker image will be used for training.|
 | `DR_ROBOMAKER_IMAGE` | Determines which robomaker image will be used for training or evaluation.|
 | `DR_COACH_IMAGE` | Determines which coach image will be used for training.|
