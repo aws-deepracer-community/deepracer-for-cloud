@@ -74,7 +74,7 @@ then
 fi
 
 # Base compose file
-if [ ${DR_ROBOMAKER_MOUNT_LOGS,,} = "true" ];
+if [ ${DR_ROBOMAKER_MOUNT_LOGS} = "true" ];
 then
   COMPOSE_FILES="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DR_DIR/docker/docker-compose-mount.yml"
   export DR_MOUNT_DIR="$DR_DIR/data/logs/robomaker/$DR_LOCAL_S3_MODEL_PREFIX"
@@ -88,7 +88,7 @@ STACK_NAME="deepracer-$DR_RUN_ID"
 
 export DR_CURRENT_PARAMS_FILE=${DR_LOCAL_S3_TRAINING_PARAMS_FILE}
 
-WORKER_CONFIG=$(python3 $DR_DIR/scripts/training/prepare-config.py)
+WORKER_CONFIG=$(python $DR_DIR/scripts/training/prepare-config.py)
 
 if [ "$DR_WORKERS" -gt 1 ]; then
   echo "Starting $DR_WORKERS workers"
@@ -114,7 +114,7 @@ else
 fi
 
 # Check if we are using Host X -- ensure variables are populated
-if [[ "${DR_HOST_X,,}" == "true" ]];
+if [[ "${DR_HOST_X}" == "true" ]];
 then
   if [[ -n "$DR_DISPLAY" ]]; then
     ROBO_DISPLAY=$DR_DISPLAY
@@ -138,7 +138,7 @@ then
 fi
 
 # Check if we will use Docker Swarm or Docker Compose
-if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+if [[ "${DR_DOCKER_STYLE}" == "swarm" ]];
 then
   ROBOMAKER_NODES=$(docker node ls --format '{{.ID}}' | xargs docker inspect | jq '.[] | select (.Spec.Labels.Robomaker == "true") | .ID' | wc -l)
   if [[ "$ROBOMAKER_NODES" -eq 0 ]]; 
@@ -173,7 +173,7 @@ if [ -n "$OPT_QUIET" ]; then
 fi
 
 # Trigger requested log-file
-if [[ "${OPT_DISPLAY,,}" == "all" && -n "${DISPLAY}" && "${DR_HOST_X,,}" == "true" ]]; then
+if [[ "${OPT_DISPLAY}" == "all" && -n "${DISPLAY}" && "${DR_HOST_X,,}" == "true" ]]; then
   dr-logs-sagemaker -w 15
   if [ "${DR_WORKERS}" -gt 1 ]; then
     for i in $(seq 1 ${DR_WORKERS})
@@ -183,9 +183,9 @@ if [[ "${OPT_DISPLAY,,}" == "all" && -n "${DISPLAY}" && "${DR_HOST_X,,}" == "tru
   else
     dr-logs-robomaker -w 15
   fi
-elif [[ "${OPT_DISPLAY,,}" == "robomaker" ]]; then
+elif [[ "${OPT_DISPLAY}" == "robomaker" ]]; then
   dr-logs-robomaker -w 15 -n $OPT_ROBOMAKER
-elif [[ "${OPT_DISPLAY,,}" == "sagemaker" ]]; then
+elif [[ "${OPT_DISPLAY}" == "sagemaker" ]]; then
   dr-logs-sagemaker -w 15
 fi
 

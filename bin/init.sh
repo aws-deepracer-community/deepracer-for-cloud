@@ -10,7 +10,7 @@ function ctrl_c() {
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 INSTALL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
 
-OPT_ARCH="gpu"
+OPT_ARCH="cpu"
 OPT_CLOUD=""
 
 while getopts ":m:c:a:" opt; do
@@ -42,12 +42,17 @@ elif [[ "$(type sysctl 2> /dev/null)" ]] && [[ "$(sysctl -n hw.optional.avx2_0)"
     CPU_LEVEL="cpu-avx2"
 fi
 
+echo  "cpu level is  $CPU_LEVEL"
+
 # Check if Intel (to ensure MKN)
 if [[ -f /proc/cpuinfo ]] && [[ "$(cat /proc/cpuinfo | grep GenuineIntel | wc -l)" > 0 ]]; then
     CPU_INTEL="true"
 elif [[ "$(type sysctl 2> /dev/null)" ]] && [[ "$(sysctl -n machdep.cpu.vendor)" == "GenuineIntel" ]]; then
     CPU_INTEL="true"
 fi
+
+echo  "cpu intel  is $CPU_INTEL"
+
 
 # Check GPU
 if [[ "${OPT_ARCH}" == "gpu" ]]
@@ -66,6 +71,9 @@ cd $INSTALL_DIR
 # create directory structure for docker volumes
 mkdir -p $INSTALL_DIR/data $INSTALL_DIR/data/minio $INSTALL_DIR/data/minio/bucket 
 mkdir -p $INSTALL_DIR/data/logs $INSTALL_DIR/data/analysis $INSTALL_DIR/tmp
+echo "OPT_CLOUD is $OPT_CLOUD"
+echo "input sudoer passwd to continue:"
+read 
 sudo mkdir -p /tmp/sagemaker
 sudo chmod -R g+w /tmp/sagemaker
 
@@ -83,6 +91,9 @@ cp $INSTALL_DIR/defaults/reward_function.py $INSTALL_DIR/custom_files/
 
 cp $INSTALL_DIR/defaults/template-system.env $INSTALL_DIR/system.env
 cp $INSTALL_DIR/defaults/template-run.env $INSTALL_DIR/run.env
+
+echo "OPT_CLOUD is $OPT_CLOUD"
+
 if [[ "${OPT_CLOUD}" == "aws" ]]; then
     AWS_EC2_AVAIL_ZONE=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
     AWS_REGION="`echo \"$AWS_EC2_AVAIL_ZONE\" | sed 's/[a-z]$//'`"
@@ -148,6 +159,7 @@ else
 fi
 sed -i "s/<SAGE_TAG>/$SAGEMAKER_VERSION/g" $INSTALL_DIR/system.env
 
+echo "going to pull docker images:"
 docker pull awsdeepracercommunity/deepracer-rlcoach:$COACH_VERSION
 docker pull awsdeepracercommunity/deepracer-robomaker:$ROBOMAKER_VERSION
 docker pull awsdeepracercommunity/deepracer-sagemaker:$SAGEMAKER_VERSION
@@ -155,9 +167,11 @@ docker pull awsdeepracercommunity/deepracer-sagemaker:$SAGEMAKER_VERSION
 # create the network sagemaker-local if it doesn't exit
 SAGEMAKER_NW='sagemaker-local'
 docker swarm init
+echo "docker swarm initialized"
 SWARM_NODE=$(docker node inspect self | jq .[0].ID -r)
 docker node update --label-add Sagemaker=true $SWARM_NODE
 docker node update --label-add Robomaker=true $SWARM_NODE
+echo "querying docker nod network status"
 docker network ls | grep -q $SAGEMAKER_NW
 if [ $? -ne 0 ]
 then
