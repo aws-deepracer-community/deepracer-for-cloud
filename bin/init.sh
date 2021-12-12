@@ -28,6 +28,7 @@ esac
 done
 
 if [[ -z "$OPT_CLOUD" ]]; then
+    # 根据 /var/run/cloud-init/instance-data.json 文件是否存在来判断是什么cloud 
     source $SCRIPT_DIR/detect.sh
     OPT_CLOUD=$CLOUD_NAME
     echo "Detected cloud type to be $CLOUD_NAME"
