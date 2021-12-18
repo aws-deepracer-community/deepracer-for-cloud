@@ -43,5 +43,5 @@ DRfC supports a wide set of features to ensure that you can focus on creating th
 
 # Support
 
-* For general support it is suggested to join the [AWS DeepRacing Community](https://deepracing.io/). The Community Slack has a channel #dr-drfc-setup where the community provides active support.
+* For general support it is suggested to join the [AWS DeepRacing Community](https://deepracing.io/). The Community Slack has a channel #dr-training-local where the community provides active support.
 * Create a GitHub issue if you find an actual code issue, or where updates to documentation would be required.
