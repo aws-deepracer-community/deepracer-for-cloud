@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-The basic installation steps to get a NVIDIA GPU / CUDA enabled Ubuntu subsystem on Windows can be found in the [Cuda on WSL User Guide](https://docs.nvidia.com/cuda/wsl-user-guide/index.html).  Ensure you have an [updated nvidia driver](https://developer.nvidia.com/cuda/wsl/download) that will work with WSL.
+The basic installation steps to get a NVIDIA GPU / CUDA enabled Ubuntu subsystem on Windows can be found in the [Cuda on WSL User Guide](https://docs.nvidia.com/cuda/wsl-user-guide/index.html).  Ensure you have an updated [nvidia cuda enabled driver](https://developer.nvidia.com/cuda/wsl/download) that will work with WSL.
 
 The further instructions assume that you have a basic working WSL using the default Ubuntu distribution.
 
@@ -64,10 +64,10 @@ You can now run `bin/init.sh -a gpu -c local` to setup DRfC, following the typic
         
      - In **Actions** tab, click New ... > Action: **Start a program**
                             
-              program/script:  **wsl**
+       program/script:  **wsl**
                    
-              add arguments:  **-u root /etc/init-wsl**
+       add arguments:  **-u root /etc/init-wsl**
                    
      - Click OK to exit
           
-     *4)* You can run the task manually to confirm, or after Windows reboot docker should not automatically start.
+     *4)* You can run the task manually to confirm, or after Windows reboot docker should now automatically start.
