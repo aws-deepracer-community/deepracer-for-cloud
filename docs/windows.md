@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-The basic installation steps to get a NVIDIA GPU / CUDA enabled Ubuntu subsystem on Windows can be found in the [Cuda on WSL User Guide](https://docs.nvidia.com/cuda/wsl-user-guide/index.html).  Ensure you have an updated nvidia driver that will work with WSL (https://developer.nvidia.com/cuda/wsl/download)
+The basic installation steps to get a NVIDIA GPU / CUDA enabled Ubuntu subsystem on Windows can be found in the [Cuda on WSL User Guide](https://docs.nvidia.com/cuda/wsl-user-guide/index.html).  Ensure you have an [updated nvidia driver](https://developer.nvidia.com/cuda/wsl/download) that will work with WSL.
 
 The further instructions assume that you have a basic working WSL using the default Ubuntu distribution.
 
@@ -45,28 +45,29 @@ You can now run `bin/init.sh -a gpu -c local` to setup DRfC, following the typic
 
      You can also configure the service to start automatically using the Windows Task Scheduler
      
-     1) Create a new file at /etc/init-wsl  (sudo vi /etc/init-wsl) with the following contents.
+     **1)** Create a new file at /etc/init-wsl  (sudo vi /etc/init-wsl) with the following contents.
+     
              ```
              #!/bin/sh
              service start docker
              ```
  
-     2) Make the script executable `sudo chmod +x /etc/init-wsl`
+     **2)** Make the script executable `sudo chmod +x /etc/init-wsl`
        
-     3) Open Task Scheduler in Windows 10
+     **3)** Open Task Scheduler in Windows 10
        
-          A. On the left, click **Task Scheduler Library** option, and then on the right, click **Create Task**
+          A: On the left, click **Task Scheduler Library** option, and then on the right, click **Create Task**
           
-          B. In **General** Tab, Enter Name **WSL Startup**, and select **Run whether user is logged on or not** and **Run with highest privileges** options.
+          B: In **General** Tab, Enter Name **WSL Startup**, and select **Run whether user is logged on or not** and **Run with highest privileges** options.
           
-          C. In **Trigger** tab, click New ... > Begin the task: **At startup** > OK
+          C: In **Trigger** tab, click New ... > Begin the task: **At startup** > OK
           
-          D. In **Actions** tab, click New ... > Action: **Start a program**
-                             
+          D: In **Actions** tab, click New ... > Action: **Start a program**
+                            
                    program/script:  **wsl**
                    
                    add arguments:  **-u root /etc/init-wsl**
                    
-          E. Click OK to exit
+          E: Click OK to exit
           
-     4) You can run the task manually to confirm, or after Windows reboot docker should not automatically start.
+     **4)** You can run the task manually to confirm, or after Windows reboot docker should not automatically start.
