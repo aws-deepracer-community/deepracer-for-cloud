@@ -54,15 +54,19 @@ You can now run `bin/init.sh -a gpu -c local` to setup DRfC, following the typic
        Make the script executable `sudo chmod +x /etc/init-wsl`
        
        Open Task Scheduler in Windows 10
-          - On the left, click **Task Scheduler Library** option, and then on the right, click **Create Task**
-          - In **General** Tab, Enter Name **WSL Startup**, and select **Run whether user is logged on or not** and **Run with highest privileges** options.
-          - In **Trigger** tab, click New ... > Begin the task: **At startup** > OK
-          - In **Actions** tab, click New ... > Action: **Start a program**
+       
+          A. On the left, click **Task Scheduler Library** option, and then on the right, click **Create Task**
           
+          B. In **General** Tab, Enter Name **WSL Startup**, and select **Run whether user is logged on or not** and **Run with highest privileges** options.
+          
+          C. In **Trigger** tab, click New ... > Begin the task: **At startup** > OK
+          
+          D. In **Actions** tab, click New ... > Action: **Start a program**
+                             
                    program/script:  **wsl**
                    
                    add arguments:  **-u root /etc/init-wsl**
                    
-          - Click OK to exit
+          E. Click OK to exit
           
        You can run the task manually to confirm, or after Windows reboot docker should not automatically start.
