@@ -45,29 +45,29 @@ You can now run `bin/init.sh -a gpu -c local` to setup DRfC, following the typic
 
      You can also configure the service to start automatically using the Windows Task Scheduler
      
-     **1)** Create a new file at /etc/init-wsl  (sudo vi /etc/init-wsl) with the following contents.
+     *1)* Create a new file at /etc/init-wsl  (sudo vi /etc/init-wsl) with the following contents.
      
              ```
              #!/bin/sh
              service start docker
              ```
  
-     **2)** Make the script executable `sudo chmod +x /etc/init-wsl`
+     *2)* Make the script executable `sudo chmod +x /etc/init-wsl`
        
-     **3)** Open Task Scheduler in Windows 10
+     *3)* Open Task Scheduler in Windows 10
        
-          A: On the left, click **Task Scheduler Library** option, and then on the right, click **Create Task**
+          - On the left, click **Task Scheduler Library** option, and then on the right, click **Create Task**
           
-          B: In **General** Tab, Enter Name **WSL Startup**, and select **Run whether user is logged on or not** and **Run with highest privileges** options.
+          - In **General** Tab, Enter Name **WSL Startup**, and select **Run whether user is logged on or not** and **Run with highest privileges** options.
           
-          C: In **Trigger** tab, click New ... > Begin the task: **At startup** > OK
+          - In **Trigger** tab, click New ... > Begin the task: **At startup** > OK
           
-          D: In **Actions** tab, click New ... > Action: **Start a program**
+          - In **Actions** tab, click New ... > Action: **Start a program**
                             
                    program/script:  **wsl**
                    
                    add arguments:  **-u root /etc/init-wsl**
                    
-          E: Click OK to exit
+          - Click OK to exit
           
-     **4)** You can run the task manually to confirm, or after Windows reboot docker should not automatically start.
+     *4)* You can run the task manually to confirm, or after Windows reboot docker should not automatically start.
