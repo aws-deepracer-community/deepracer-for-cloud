@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-The basic installation steps to get a NVIDIA GPU / CUDA enabled Ubuntu subsystem on Windows can be found in the [Cuda on WSL User Guide](https://docs.nvidia.com/cuda/wsl-user-guide/index.html).  Ensure you have an updated [nvidia cuda enabled driver](https://developer.nvidia.com/cuda/wsl/download) that will work with WSL.
+The basic installation steps to get a NVIDIA GPU / CUDA enabled Ubuntu subsystem on Windows can be found in the [Cuda on WSL User Guide](https://docs.nvidia.com/cuda/wsl-user-guide/index.html).  Ensure your windows has an updated [nvidia cuda enabled driver](https://developer.nvidia.com/cuda/wsl/download) that will work with WSL.
 
 The further instructions assume that you have a basic working WSL using the default Ubuntu distribution.
 
