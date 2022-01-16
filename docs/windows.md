@@ -36,7 +36,7 @@ sudo usermod -a -G docker $(id -un)
 
 ### Install DRfC
 
-You can now run `bin/init.sh -a gpu -c local` to setup DRfC, following the typical DRfC instructions
+You can now run `bin/init.sh -a gpu -c local` to setup DRfC, and follow the typical DRfC startup instructions
 
 ## Known Issues
 
@@ -71,3 +71,6 @@ You can now run `bin/init.sh -a gpu -c local` to setup DRfC, following the typic
      - Click OK to exit
           
      *4)* You can run the task manually to confirm, or after Windows reboot docker should now automatically start.
+
+* To access the html video streams from your windows browser, you may need to use the IP address of the WSL VM.  From a WSL terminal, determine your IP address by the command 'ip addr' and look for **eth0** then **inet** (e.g. ip = 172.29.38.21).  Then from your windows browser (edge, chrome, etc) navigate to **ip:8080** (e.g. 172.29.38.21:8080)
+     
