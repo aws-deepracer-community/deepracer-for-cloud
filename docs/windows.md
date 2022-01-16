@@ -43,17 +43,17 @@ You can now run `bin/init.sh -a gpu -c local` to setup DRfC, following the typic
 * `init.sh` is not able to detect the GPU given differences in the Nvidia drivers, and the WSL2 Linux Kernel. You need to manually set the GPU image in `system.env`.
 * Docker does not start automatically when you launch Ubuntu. Start it manually with `sudo service docker start` 
 
-     You can also configure the service to start automatically using the Windows Task scheduler
+     You can also configure the service to start automatically using the Windows Task Scheduler
      
-       Create a new file at /etc/init-wsl  (sudo vi /etc/init-wsl) with the following contents.
+     1) Create a new file at /etc/init-wsl  (sudo vi /etc/init-wsl) with the following contents.
              ```
              #!/bin/sh
              service start docker
              ```
-             
-       Make the script executable `sudo chmod +x /etc/init-wsl`
+ 
+     2) Make the script executable `sudo chmod +x /etc/init-wsl`
        
-       Open Task Scheduler in Windows 10
+     3) Open Task Scheduler in Windows 10
        
           A. On the left, click **Task Scheduler Library** option, and then on the right, click **Create Task**
           
@@ -69,4 +69,4 @@ You can now run `bin/init.sh -a gpu -c local` to setup DRfC, following the typic
                    
           E. Click OK to exit
           
-       You can run the task manually to confirm, or after Windows reboot docker should not automatically start.
+     4) You can run the task manually to confirm, or after Windows reboot docker should not automatically start.
