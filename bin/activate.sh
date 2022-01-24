@@ -138,16 +138,16 @@ if [[ "${DR_CLOUD_WATCH_ENABLE,,}" == "true" ]]; then
 fi
 
 ## Check if we have an AWS IAM assumed role, or if we need to set specific credentials.
-if [ $(aws --output json sts get-caller-identity 2> /dev/null | jq '.Arn' | awk /assumed-role/ | wc -l ) -eq 0 ];
+if [ "${DR_CLOUD,,}" == "aws" ] && [ $(aws --output json sts get-caller-identity 2> /dev/null | jq '.Arn' | awk /assumed-role/ | wc -l ) -gt 0 ];
 then
+    export DR_LOCAL_S3_AUTH_MODE="role"
+else 
     export DR_LOCAL_ACCESS_KEY_ID=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_access_key_id | xargs)
     export DR_LOCAL_SECRET_ACCESS_KEY=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_secret_access_key | xargs)
     DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-keys.yml"
     DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-keys.yml"
     export DR_UPLOAD_PROFILE="--profile $DR_UPLOAD_S3_PROFILE"
     export DR_LOCAL_S3_AUTH_MODE="profile"
-else 
-    export DR_LOCAL_S3_AUTH_MODE="role"
 fi
 
 export DR_TRAIN_COMPOSE_FILE
