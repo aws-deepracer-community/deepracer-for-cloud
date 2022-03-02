@@ -18,7 +18,7 @@ Note; Sagemaker will stop collecting experiences once you have reached 10.000 st
 
 ## Training with different parameters for each worker
 
-It is also possible to use different configurations between workers, such as different tracks (WORLD_NAME).  To enable, set DR_MULTI_CONFIG=True inside run.env, then make copies of defaults/template-worker.env in the main deepracer-for-cloud directory with format worker-2.env, worker-3.env, etc.  (So alongside run.env, you should have woker-2.env, worker-3.env, etc.  run.env is still used for worker 1)  Modify the worker env files with your desired changes, which can be more than just the world_name.  These additional worker env files are only used if you are training with multiple workers.
+It is also possible to use different configurations between workers, such as different tracks (WORLD_NAME).  To enable, set DR_TRAIN_MULTI_CONFIG=True inside run.env, then make copies of defaults/template-worker.env in the main deepracer-for-cloud directory with format worker-2.env, worker-3.env, etc.  (So alongside run.env, you should have woker-2.env, worker-3.env, etc.  run.env is still used for worker 1)  Modify the worker env files with your desired changes, which can be more than just the world_name.  These additional worker env files are only used if you are training with multiple workers.
 
 ## Watching the streams
 

@@ -40,6 +40,7 @@ DRfC supports a wide set of features to ensure that you can focus on creating th
 * [Having multiple GPUs in one Computer](multi_gpu.md)
 * [Installing on Windows](windows.md)
 * [Run a Head-to-Head Race](head-to-head.md)
+* [Watching the car](video.md)
 
 # Support
 

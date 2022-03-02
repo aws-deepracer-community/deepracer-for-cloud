@@ -3,8 +3,9 @@
 source $DR_DIR/bin/scripts_wrapper.sh
 
 usage(){
-	echo "Usage: $0 [-q]"
+	echo "Usage: $0 [-q] [-c]"
   echo "       -q        Quiet - does not start log tracing."
+  echo "       -c        Clone - copies model into new prefix before evaluating."
 	exit 1
 }
 
@@ -15,9 +16,11 @@ function ctrl_c() {
         exit 1
 }
 
-while getopts ":q" opt; do
+while getopts ":qc" opt; do
 case $opt in
 q) OPT_QUIET="QUIET"
+;;
+c) OPT_CLONE="CLONE"
 ;;
 h) usage
 ;;
@@ -27,6 +30,13 @@ usage
 esac
 done
 
+# clone if required
+if [ -n "$OPT_CLONE" ]; then
+  echo "Cloning model into s3://$DR_LOCAL_S3_BUCKET/${DR_LOCAL_S3_MODEL_PREFIX}-E"
+  aws  $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX/model s3://$DR_LOCAL_S3_BUCKET/${DR_LOCAL_S3_MODEL_PREFIX}-E/model
+  aws  $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX/ip s3://$DR_LOCAL_S3_BUCKET/${DR_LOCAL_S3_MODEL_PREFIX}-E/ip
+  export DR_LOCAL_S3_MODEL_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}-E
+fi
 
 # set evaluation specific environment variables
 S3_PATH="s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX"
