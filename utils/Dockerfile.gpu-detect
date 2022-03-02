@@ -1,4 +1,4 @@
-FROM FROM nvidia/cuda:11.4.2-base-ubuntu18.04
+FROM nvidia/cuda:11.4.2-base-ubuntu18.04
 RUN apt-get update && apt-get install -y --no-install-recommends wget python3
 RUN wget https://gist.githubusercontent.com/f0k/63a664160d016a491b2cbea15913d549/raw/f25b6b38932cfa489150966ee899e5cc899bf4a6/cuda_check.py
 CMD ["python3","cuda_check.py"]
