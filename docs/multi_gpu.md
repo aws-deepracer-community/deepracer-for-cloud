@@ -54,7 +54,7 @@ The number is the CUDA number of the GPU you want the Robomakers to use.
 
 Sagemaker is more critical to place, but also more complicated, as you will have to build a new Docker image for it to work.
 
-A template is in `utils/Dockerfile.sagemaker-gpu`. Again the number is the applicable CUDA number.
+A template is in `utils/Dockerfile.sagemaker-gpu`. Open it to alter the source image in `FROM`, and adapt `CUDA_VISIBLE_DEVICES`.
 
 Build the image with `docker build -t awsdeepracercommunity/deepracer-sagemaker:gpu-x -f utils/Dockerfile.sagemaker-gpu .` with x being anything you like.
 
