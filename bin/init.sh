@@ -113,7 +113,7 @@ sed -i "s/<REGION_REPLACE>/$AWS_REGION/g" $INSTALL_DIR/system.env
 if [[ "${OPT_ARCH}" == "gpu" ]]; then
     SAGEMAKER_TAG="gpu"   
 elif [[ -n "${CPU_INTEL}" ]]; then
-    SAGEMAKER_TAG="cpu-avx-mkl" 
+    SAGEMAKER_TAG="cpu" 
 else
     SAGEMAKER_TAG="cpu" 
 fi
