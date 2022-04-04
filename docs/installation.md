@@ -7,7 +7,7 @@ Depending on your needs as well as specific needs of the cloud platform you can 
 **AWS**:
 
 * EC2 instance of type G3, G4, P2 or P3 - recommendation is g4dn.2xlarge - for GPU enabled training. C5 or M6 types - recommendation is c5.2xlarge - for CPU training.
-  * Ubuntu 18.04
+  * Ubuntu 20.04
   * Minimum 30 GB, preferred 40 GB of OS disk.
   * Ephemeral Drive connected
   * Minimum of 8 GB GPU-RAM if running with GPU.
@@ -17,7 +17,7 @@ Depending on your needs as well as specific needs of the cloud platform you can 
 **Azure**:
 
 * N-Series VM that comes with NVIDIA Graphics Adapter - recommendation is NC6_Standard
-  * Ubuntu 18.04
+  * Ubuntu 20.04
   * Standard 30 GB OS drive is sufficient to get started.
   * Recommended to add an additional 32 GB data disk if you want to use the Log Analysis container.
   * Minimum 8 GB GPU-RAM
@@ -27,7 +27,7 @@ Depending on your needs as well as specific needs of the cloud platform you can 
 **Local**:
 
 * A modern, comparatively powerful, Intel based system.
-  * Ubuntu 18.04 or 20.04, other Linux-dristros likely to work.
+  * Ubuntu 20.04, other Linux-dristros likely to work.
   * 4 core-CPU, equivalent to 8 vCPUs; the more the better.
   * NVIDIA Graphics adapter with minimum 8 GB RAM for Sagemaker to run GPU. Robomaker enabled GPU instances need ~1 GB each.
   * System RAM + GPU RAM should be at least 32 GB.
