@@ -11,6 +11,8 @@ sudo sed -i -e "s/console/anybody/" /etc/X11/Xwrapper.config
 BUS_ID=$(nvidia-xconfig --query-gpu-info | grep "PCI BusID" | cut -f2- -d: | sed -e 's/^[[:space:]]*//' | head -1)
 sudo nvidia-xconfig --busid=$BUS_ID -o $DR_DIR/tmp/xorg.conf
 
+touch ~/.Xauthority
+
 sudo tee -a $DR_DIR/tmp/xorg.conf << EOF
 
 Section "DRI"
