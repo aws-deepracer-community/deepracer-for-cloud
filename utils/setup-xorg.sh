@@ -4,7 +4,7 @@
 
 # Install additional packages
 sudo apt-get install xinit xserver-xorg-legacy x11-xserver-utils x11-utils \
-                    menu mesa-utils xterm jwm x11vnc -y --no-install-recommends
+                    menu mesa-utils xterm jwm x11vnc pkg-config -y --no-install-recommends
 
 # Configure
 sudo sed -i -e "s/console/anybody/" /etc/X11/Xwrapper.config
