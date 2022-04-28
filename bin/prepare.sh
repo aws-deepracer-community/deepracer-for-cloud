@@ -12,7 +12,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 ## Patch system
 sudo apt-get update && sudo apt-mark hold grub-pc && sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o \
                         DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" -qq --force-yes upgrade && \
-                        sudo apt-get install --no-install-recommends -y jq 
+                        sudo apt-get install --no-install-recommends -y jq
 source $DIR/detect.sh
 echo "Detected cloud type ${CLOUD_NAME}"
 
@@ -60,7 +60,7 @@ fi
 ## Adding Nvidia Drivers
 if [[ "${ARCH}" == "gpu" ]];
 then
-	sudo apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
+	sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
 	sudo bash -c 'echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64 /" > /etc/apt/sources.list.d/cuda.list'
 	sudo bash -c 'echo "deb http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64 /" > /etc/apt/sources.list.d/cuda_learn.list'
 	sudo bash -c 'apt update && apt install -y nvidia-driver-440-server cuda-minimal-build-10-2 --no-install-recommends -o Dpkg::Options::="--force-overwrite"'
