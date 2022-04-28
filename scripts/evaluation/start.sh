@@ -3,8 +3,9 @@
 source $DR_DIR/bin/scripts_wrapper.sh
 
 usage(){
-	echo "Usage: $0 [-q]"
+	echo "Usage: $0 [-q] [-c]"
   echo "       -q        Quiet - does not start log tracing."
+  echo "       -c        Clone - copies model into new prefix before evaluating."
 	exit 1
 }
 
@@ -15,9 +16,11 @@ function ctrl_c() {
         exit 1
 }
 
-while getopts ":q" opt; do
+while getopts ":qc" opt; do
 case $opt in
 q) OPT_QUIET="QUIET"
+;;
+c) OPT_CLONE="CLONE"
 ;;
 h) usage
 ;;
@@ -27,6 +30,13 @@ usage
 esac
 done
 
+# clone if required
+if [ -n "$OPT_CLONE" ]; then
+  echo "Cloning model into s3://$DR_LOCAL_S3_BUCKET/${DR_LOCAL_S3_MODEL_PREFIX}-E"
+  aws  $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX/model s3://$DR_LOCAL_S3_BUCKET/${DR_LOCAL_S3_MODEL_PREFIX}-E/model
+  aws  $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX/ip s3://$DR_LOCAL_S3_BUCKET/${DR_LOCAL_S3_MODEL_PREFIX}-E/ip
+  export DR_LOCAL_S3_MODEL_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}-E
+fi
 
 # set evaluation specific environment variables
 S3_PATH="s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX"
@@ -47,12 +57,36 @@ fi
 echo "Creating Robomaker configuration in $S3_PATH/$DR_CURRENT_PARAMS_FILE"
 python3 $DR_DIR/scripts/evaluation/prepare-config.py
 
+# Check if we are using Host X -- ensure variables are populated
+if [[ "${DR_HOST_X,,}" == "true" ]];
+then
+  if [[ -n "$DR_DISPLAY" ]]; then
+    ROBO_DISPLAY=$DR_DISPLAY
+  else
+    ROBO_DISPLAY=$DISPLAY
+  fi
+
+  if ! DISPLAY=$ROBO_DISPLAY timeout 1s xset q &>/dev/null; then 
+      echo "No X Server running on display $ROBO_DISPLAY. Exiting"
+      exit 0
+  fi
+
+  if [[ -z "$XAUTHORITY" ]]; then
+    export XAUTHORITY=~/.Xauthority
+    if [[ ! -f "$XAUTHORITY" ]]; then
+      echo "No XAUTHORITY defined. .Xauthority does not exist. Stopping."
+      exit 0
+    fi
+  fi
+fi
+
+
 # Check if we will use Docker Swarm or Docker Compose
 if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
 then
-  docker stack deploy $COMPOSE_FILES $STACK_NAME
+  DISPLAY=$ROBO_DISPLAY docker stack deploy $COMPOSE_FILES $STACK_NAME
 else
-  docker-compose $COMPOSE_FILES --log-level ERROR -p $STACK_NAME up -d
+  DISPLAY=$ROBO_DISPLAY docker-compose $COMPOSE_FILES --log-level ERROR -p $STACK_NAME up -d
 fi
 
 # Request to be quiet. Quitting here.

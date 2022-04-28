@@ -4,14 +4,16 @@
 
 # Install additional packages
 sudo apt-get install xinit xserver-xorg-legacy x11-xserver-utils x11-utils \
-                    menu mesa-utils xterm jwm x11vnc -y --no-install-recommends
+                    menu mesa-utils xterm jwm x11vnc pkg-config -y --no-install-recommends
 
 # Configure
 sudo sed -i -e "s/console/anybody/" /etc/X11/Xwrapper.config
 BUS_ID=$(nvidia-xconfig --query-gpu-info | grep "PCI BusID" | cut -f2- -d: | sed -e 's/^[[:space:]]*//' | head -1)
-sudo nvidia-xconfig --busid=$BUS_ID --enable-all-gpus -o /etc/X11/xorg.conf
+sudo nvidia-xconfig --busid=$BUS_ID -o $DR_DIR/tmp/xorg.conf
 
-sudo tee -a /etc/X11/xorg.conf << EOF
+touch ~/.Xauthority
+
+sudo tee -a $DR_DIR/tmp/xorg.conf << EOF
 
 Section "DRI"
         Mode 0666

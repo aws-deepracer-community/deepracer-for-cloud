@@ -4,5 +4,5 @@
     "neural_network": "DEEP_CONVOLUTIONAL_NETWORK_SHALLOW",
     "training_algorithm": "sac", 
     "action_space_type": "continuous",
-    "version": "3"
+    "version": "4"
 }

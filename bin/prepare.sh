@@ -7,6 +7,8 @@ function ctrl_c() {
         exit 1
 }
 
+
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 ## Patch system
@@ -60,14 +62,15 @@ fi
 ## Adding Nvidia Drivers
 if [[ "${ARCH}" == "gpu" ]];
 then
-	sudo apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
-	sudo bash -c 'echo "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64 /" > /etc/apt/sources.list.d/cuda.list'
-	sudo bash -c 'echo "deb http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64 /" > /etc/apt/sources.list.d/cuda_learn.list'
-	sudo bash -c 'apt update && apt install -y nvidia-driver-440-server cuda-minimal-build-10-2 --no-install-recommends -o Dpkg::Options::="--force-overwrite"'
+	distribution=$(. /etc/os-release;echo $ID$VERSION_ID | sed 's/\.//')
+	sudo apt-key adv --fetch-keys http://developer.download.nvidia.com/compute/cuda/repos/$distribution/x86_64/3bf863cc.pub
+	echo "deb http://developer.download.nvidia.com/compute/cuda/repos/$distribution/x86_64 /" | sudo tee /etc/apt/sources.list.d/cuda.list
+	echo "deb http://developer.download.nvidia.com/compute/machine-learning/repos/$distribution/x86_64 /" | sudo tee /etc/apt/sources.list.d/cuda_learn.list
+	sudo apt update && sudo apt install -y nvidia-driver-470-server cuda-minimal-build-11-4 --no-install-recommends -o Dpkg::Options::="--force-overwrite"
 fi
 
 ## Adding AWSCli
-sudo apt-get install -y awscli python3-boto3
+sudo apt-get install -y --no-install-recommends awscli python3-boto3
 
 ## Installing Docker
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
@@ -90,7 +93,7 @@ sudo systemctl restart docker
 sudo usermod -a -G docker $(id -un)
 
 ## Installing Docker Compose
-sudo curl -L https://github.com/docker/compose/releases/download/1.25.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+sudo curl -L https://github.com/docker/compose/releases/download/1.29.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose
 
 ## Reboot to load driver -- continue install if in cloud-init

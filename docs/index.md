@@ -2,7 +2,7 @@
 
 Provides a quick and easy way to get up and running with a DeepRacer training environment in AWS or Azure, using either the Azure [N-Series Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-gpu) or [AWS EC2 Accelerated Computing instances](https://aws.amazon.com/ec2/instance-types/?nc1=h_ls#Accelerated_Computing), or locally on your own desktop or server.
 
-DeepRacer-For-Cloud (DRfC) started as an extension of the work done by Alex (https://github.com/alexschultz/deepracer-for-dummies), which is again a wrapper around the amazing work done by Chris (https://github.com/crr0004/deepracer). With the introduction of the second generation Deepracer Console the repository has been split up. This repository contains the scripts needed to *run* the training, but depends on Docker Hub to provide pre-built docker images. All the under-the-hood building capabilities have been moved to my [Deepracer Build](https://gitbub.com/aws-deepracer-community/deepracer) repository.
+DeepRacer-For-Cloud (DRfC) started as an extension of the work done by Alex (https://github.com/alexschultz/deepracer-for-dummies), which is again a wrapper around the amazing work done by Chris (https://github.com/crr0004/deepracer). With the introduction of the second generation Deepracer Console the repository has been split up. This repository contains the scripts needed to *run* the training, but depends on Docker Hub to provide pre-built docker images. All the under-the-hood building capabilities have been moved to my [Deepracer Build](https://github.com/aws-deepracer-community/deepracer) repository.
 
 # Main Features
 
@@ -40,8 +40,9 @@ DRfC supports a wide set of features to ensure that you can focus on creating th
 * [Having multiple GPUs in one Computer](multi_gpu.md)
 * [Installing on Windows](windows.md)
 * [Run a Head-to-Head Race](head-to-head.md)
+* [Watching the car](video.md)
 
 # Support
 
-* For general support it is suggested to join the [AWS DeepRacing Community](https://deepracing.io/). The Community Slack has a channel #dr-drfc-setup where the community provides active support.
+* For general support it is suggested to join the [AWS DeepRacing Community](https://deepracing.io/). The Community Slack has a channel #dr-training-local where the community provides active support.
 * Create a GitHub issue if you find an actual code issue, or where updates to documentation would be required.

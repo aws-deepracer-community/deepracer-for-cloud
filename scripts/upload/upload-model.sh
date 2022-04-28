@@ -9,6 +9,7 @@ usage(){
   echo "       -p model  Uploads model in specified S3 prefix."
   echo "       -i        Import model with the upload name"
   echo "       -I name   Import model with a specific name"
+  echo "       -1        Increment upload name with 1 (dr-increment-upload-model)"
 	exit 1
 }
 
@@ -19,13 +20,13 @@ function ctrl_c() {
         exit 1
 }
 
-while getopts ":fwdhbp:c:iI:" opt; do
+while getopts ":fwdhbp:c:1iI:" opt; do
 case $opt in
 b) OPT_CHECKPOINT="Best"
 ;; 
 c) OPT_CHECKPOINT_NUM="$OPTARG"
 ;;
-f) OPT_FORCE="True"
+f) OPT_FORCE="-f"
 ;;
 d) OPT_DRYRUN="--dryrun"
 ;;
@@ -36,6 +37,8 @@ w) OPT_WIPE="--delete"
 i) OPT_IMPORT="$DR_UPLOAD_S3_PREFIX"
 ;;
 I) OPT_IMPORT="$OPTARG"
+;;
+1) OPT_INCREMENT="Yes"
 ;;
 h) usage
 ;;
@@ -48,6 +51,12 @@ done
 if [[ -n "${OPT_DRYRUN}" ]];
 then
   echo "*** DRYRUN MODE ***"
+fi
+
+if [[ -n "${OPT_INCREMENT}" ]];
+then
+  source $DR_DIR/scripts/upload/increment.sh ${OPT_FORCE}
+  OPT_IMPORT="$DR_UPLOAD_S3_PREFIX"
 fi
 
 export TARGET_S3_BUCKET=${DR_UPLOAD_S3_BUCKET}
