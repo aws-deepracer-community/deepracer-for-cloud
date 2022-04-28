@@ -17,7 +17,7 @@ The scripts assume that two files `system.env` containing constant configuration
 | `DR_EVAL_IS_CONTINUOUS` | If False, your evaluation trial will end if you car goes off track or is in a collision. If True, your car will take the penalty times as configured in those parameters, but continue evaluating the trial.|
 | `DR_EVAL_OFF_TRACK_PENALTY` | Number of seconds penalty time added for an off track during evaluation.  Only takes effect if `DR_EVAL_IS_CONTINUOUS` is set to True.|
 | `DR_EVAL_COLLISION_PENALTY` | Number of seconds penalty time added for a collision during evaluation.  Only takes effect if `DR_EVAL_IS_CONTINUOUS` is set to True.|
-| `DR_EVAL_SAVE_MP4` | TODO |
+| `DR_EVAL_SAVE_MP4` | Set to `True` to save MP4 of an evaluation run. |
 | `DR_TRAIN_CHANGE_START_POSITION` | Determines if the racer shall round-robin the starting position during training sessions. (Recommended to be `True` for initial training.)|
 | `DR_TRAIN_ALTERNATE_DRIVING_DIRECTION` | `True` or `False`.  If `True`, the car will alternate driving between clockwise and counter-clockwise each episode.|
 | `DR_TRAIN_START_POSITION_OFFSET` | Used to control where to start the training from on first episode.|
@@ -39,7 +39,7 @@ The scripts assume that two files `system.env` containing constant configuration
 | `DR_OA_MIN_DISTANCE_BETWEEN_OBSTACLES` | Minimum distance in meters between obstacles.|
 | `DR_OA_RANDOMIZE_OBSTACLE_LOCATIONS` | If True, obstacle locations will randomly change after each episode.|
 | `DR_OA_IS_OBSTACLE_BOT_CAR` | If True, obstacles will appear as a stationary car instead of a box.|
-| `DR_OA_OBJECT_POSITIONS` | TODO.|
+| `DR_OA_OBJECT_POSITIONS` | Positions of boxes on the track. Tuples consisting of progress (fraction [0..1]) and inside or outside lane (-1 or 1). Example: `"0.23,-1;0.46,1"`|
 | `DR_H2B_IS_LANE_CHANGE` | If True, bot cars will change lanes based on configuration.|
 | `DR_H2B_LOWER_LANE_CHANGE_TIME` | Minimum time in seconds before car will change lanes.|
 | `DR_H2B_UPPER_LANE_CHANGE_TIME` | Maximum time in seconds before car will change langes.|
@@ -48,14 +48,14 @@ The scripts assume that two files `system.env` containing constant configuration
 | `DR_H2B_MIN_DISTANCE_BETWEEN_BOT_CARS` | Minimum distance between bot cars.|
 | `DR_H2B_RANDOMIZE_BOT_CAR_LOCATIONS` | If True, bot car locations will randomly change after each episode.|
 | `DR_H2B_BOT_CAR_SPEED` | How fast the bot cars go in meters per second.|
-| `DR_CLOUD` | Can be `azure`, `aws` or `local`; determines how the storage will be configured.|
+| `DR_CLOUD` | Can be `azure`, `aws`, `local` or `remote`; determines how the storage will be configured.|
 | `DR_AWS_APP_REGION` | (AWS only) Region for other AWS resources (e.g. Kinesis) |
 | `DR_UPLOAD_S3_PROFILE` | AWS Cli profile to be used that holds the 'real' S3 credentials needed to upload a model into AWS DeepRacer.|
 | `DR_UPLOAD_S3_BUCKET` | Name of the AWS DeepRacer bucket where models will be uploaded. (Typically starts with `aws-deepracer-`.)|
 | `DR_LOCAL_S3_PROFILE` | Name of AWS profile with credentials to be used. Stored in `~/.aws/credentials` unless AWS IAM Roles are used.|
 | `DR_GUI_ENABLE` | Enable or disable the Gazebo GUI in Robomaker |
-| `DR_KINESIS_STREAM_NAME` | Kinesis stream name |
-| `DR_KINESIS_STREAM_ENABLE` | Enable or disable Kinesis Stream |
+| `DR_KINESIS_STREAM_NAME` | Kinesis stream name. Used if you actually publish to the AWS KVS service. Leave blank if you do not want this. |
+| `DR_KINESIS_STREAM_ENABLE` | Enable or disable 'Kinesis Stream', True both publishes to a AWS KVS stream (if name not None), and to the topic `/racecar/deepracer/kvs_stream`. Leave True if you want to watch the car racing. |
 | `DR_SAGEMAKER_IMAGE` | Determines which sagemaker image will be used for training.|
 | `DR_ROBOMAKER_IMAGE` | Determines which robomaker image will be used for training or evaluation.|
 | `DR_COACH_IMAGE` | Determines which coach image will be used for training.|

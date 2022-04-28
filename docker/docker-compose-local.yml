@@ -1,3 +1,4 @@
+
 version: '3.7'
 
 networks:
@@ -10,14 +11,14 @@ services:
     image: minio/minio
     ports:
       - "9000:9000"
-    command: server /data
+      - "9001:9001"
+    command: server /data --console-address ":9001"
     environment:
-      - MINIO_ACCESS_KEY=${DR_LOCAL_ACCESS_KEY_ID}
-      - MINIO_SECRET_KEY=${DR_LOCAL_SECRET_ACCESS_KEY}
+      - MINIO_ROOT_USER=${DR_LOCAL_ACCESS_KEY_ID}
+      - MINIO_ROOT_PASSWORD=${DR_LOCAL_SECRET_ACCESS_KEY}
       - MINIO_UID
       - MINIO_GID
       - MINIO_USERNAME
       - MINIO_GROUPNAME
     volumes:
       - ${DR_DIR}/data/minio:/data
-
