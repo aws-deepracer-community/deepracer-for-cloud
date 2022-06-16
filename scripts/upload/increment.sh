@@ -43,7 +43,7 @@ CONFIG_FILE=$DR_CONFIG
 echo "Configuration file $CONFIG_FILE will be updated."
 
 ## Read in data
-CURRENT_UPLOAD_MODEL=$(grep -e "^DR_UPLOAD_S3_PREFIX" ${CONFIG_FILE} | awk '{split($0,a,"="); print a[2] }')
+CURRENT_UPLOAD_MODEL=$(grep -e "^DR_UPLOAD_S3_PREFIX" "${CONFIG_FILE}" | awk '{split($0,a,"="); print a[2] }')
 CURRENT_UPLOAD_MODEL_NUM=$(echo "${CURRENT_UPLOAD_MODEL}" | \
                     awk -v DELIM="${OPT_DELIM}" '{ n=split($0,a,DELIM); if (a[n] ~ /[0-9]*/) print a[n]; else print ""; }')
 if [[ -z ${CURRENT_UPLOAD_MODEL_NUM} ]];
@@ -76,7 +76,7 @@ export DR_UPLOAD_S3_PREFIX=$(eval echo "${NEW_UPLOAD_MODEL}")
 
 if [[ -n "${OPT_WIPE}" ]];
 then
-    MODEL_DIR_S3=$(aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 ls s3://${DR_LOCAL_S3_BUCKET}/${NEW_UPLOAD_MODEL} )
+    MODEL_DIR_S3=$(aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 ls "s3://${DR_LOCAL_S3_BUCKET}/${NEW_UPLOAD_MODEL}" )
     if [[ -n "${MODEL_DIR_S3}" ]];
     then
         echo "The new model's S3 prefix s3://${DR_LOCAL_S3_BUCKET}/${NEW_UPLOAD_MODEL} exists. Will wipe."
@@ -90,5 +90,5 @@ then
             exit 1
         fi
     fi
-    aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 rm s3://${DR_LOCAL_S3_BUCKET}/${NEW_UPLOAD_MODEL} --recursive
+    aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 rm "s3://${DR_LOCAL_S3_BUCKET}/${NEW_UPLOAD_MODEL}" --recursive
 fi

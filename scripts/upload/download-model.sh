@@ -65,13 +65,13 @@ SOURCE_REWARD_FILE_S3_KEY="${SOURCE_S3_URL}/reward_function.py"
 SOURCE_HYPERPARAM_FILE_S3_KEY="${SOURCE_S3_URL}/ip/hyperparameters.json"
 SOURCE_METADATA_S3_KEY="${SOURCE_S3_URL}/model/model_metadata.json"
 
-WORK_DIR=${DR_DIR}/tmp/download
-mkdir -p ${WORK_DIR} && rm -rf ${WORK_DIR} && mkdir -p ${WORK_DIR}/config ${WORK_DIR}/full
+WORK_DIR="${DR_DIR}/tmp/download"
+mkdir -p "${WORK_DIR}" && rm -rf "${WORK_DIR}" && mkdir -p "${WORK_DIR}/config" "${WORK_DIR}/full"
 
 # Check if metadata-files are available
-REWARD_FILE=$(aws ${DR_UPLOAD_PROFILE} s3 cp "${SOURCE_REWARD_FILE_S3_KEY}" ${WORK_DIR}/config/ --no-progress | awk '/reward/ {print $4}'| xargs readlink -f 2> /dev/null)
-METADATA_FILE=$(aws ${DR_UPLOAD_PROFILE} s3 cp "${SOURCE_METADATA_S3_KEY}" ${WORK_DIR}/config/ --no-progress | awk '/model_metadata.json$/ {print $4}'| xargs readlink -f 2> /dev/null)
-HYPERPARAM_FILE=$(aws ${DR_UPLOAD_PROFILE} s3 cp "${SOURCE_HYPERPARAM_FILE_S3_KEY}" ${WORK_DIR}/config/ --no-progress | awk '/hyperparameters.json$/ {print $4}'| xargs readlink -f 2> /dev/null)
+REWARD_FILE=$(aws ${DR_UPLOAD_PROFILE} s3 cp "${SOURCE_REWARD_FILE_S3_KEY}" "${WORK_DIR}/config/" --no-progress | awk '/reward/ {print $4}'| xargs readlink -f 2> /dev/null)
+METADATA_FILE=$(aws ${DR_UPLOAD_PROFILE} s3 cp "${SOURCE_METADATA_S3_KEY}" "${WORK_DIR}/config/" --no-progress | awk '/model_metadata.json$/ {print $4}'| xargs readlink -f 2> /dev/null)
+HYPERPARAM_FILE=$(aws ${DR_UPLOAD_PROFILE} s3 cp "${SOURCE_HYPERPARAM_FILE_S3_KEY}" "${WORK_DIR}/config/" --no-progress | awk '/hyperparameters.json$/ {print $4}'| xargs readlink -f 2> /dev/null)
 
 if [ -n "$METADATA_FILE" ] && [ -n "$REWARD_FILE" ] && [ -n "$HYPERPARAM_FILE" ];
 then
@@ -93,14 +93,14 @@ then
     fi
 fi
 
-cd ${WORK_DIR}
-aws ${DR_UPLOAD_PROFILE} s3 sync "${SOURCE_S3_URL}" ${WORK_DIR}/full/ ${OPT_DRYRUN}
-aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 sync ${WORK_DIR}/full/ s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/ ${OPT_DRYRUN} ${OPT_WIPE}
+cd "${WORK_DIR}"
+aws ${DR_UPLOAD_PROFILE} s3 sync "${SOURCE_S3_URL}" "${WORK_DIR}/full/" ${OPT_DRYRUN}
+aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 sync "${WORK_DIR}/full/" "s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/" ${OPT_DRYRUN} ${OPT_WIPE}
 
 if [[ -n "${OPT_CONFIG}" ]];
 then
   echo "Copy configuration to custom_files"
-  cp ${WORK_DIR}/config/* ${DR_DIR}/custom_files/
+  cp "${WORK_DIR}/config/"* "${DR_DIR}/custom_files/"
 fi
 
 echo "Done."

@@ -15,7 +15,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 sudo apt-get update && sudo apt-mark hold grub-pc && sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o \
                         DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" -qq --force-yes upgrade && \
                         sudo apt-get install --no-install-recommends -y jq
-source $DIR/detect.sh
+source "$DIR"/detect.sh
 echo "Detected cloud type ${CLOUD_NAME}"
 
 ## Do I have a GPU
@@ -103,7 +103,7 @@ CLOUD_INIT=$(pstree -s $BASHPID | awk /cloud-init/ | wc -l)
 if [[ "$CLOUD_INIT" -ne 0 ]];
 then
     echo "Rebooting in 5 seconds. Will continue with install."
-    cd $DIR
+    cd "$DIR"
     ./runonce.sh "./init.sh -c ${CLOUD_NAME} -a ${ARCH}"
     sleep 5s
     sudo reboot

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source $DR_DIR/bin/scripts_wrapper.sh
+source "$DR_DIR/bin/scripts_wrapper.sh"
 
 usage(){
 	echo "Usage: $0 [-q] [-c]"
@@ -47,7 +47,7 @@ export DR_CURRENT_PARAMS_FILE=${DR_LOCAL_S3_EVAL_PARAMS_FILE}
 
 if [ ${DR_ROBOMAKER_MOUNT_LOGS,,} = "true" ];
 then
-  COMPOSE_FILES="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DR_DIR/docker/docker-compose-mount.yml"
+  COMPOSE_FILES="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP \"$DR_DIR/docker/docker-compose-mount.yml\""
   export DR_MOUNT_DIR="$DR_DIR/data/logs/robomaker/$DR_LOCAL_S3_MODEL_PREFIX"
   mkdir -p $DR_MOUNT_DIR
 else
@@ -55,7 +55,7 @@ else
 fi
 
 echo "Creating Robomaker configuration in $S3_PATH/$DR_CURRENT_PARAMS_FILE"
-python3 $DR_DIR/scripts/evaluation/prepare-config.py
+python3 "$DR_DIR/scripts/evaluation/prepare-config.py"
 
 # Check if we are using Host X -- ensure variables are populated
 if [[ "${DR_HOST_X,,}" == "true" ]];

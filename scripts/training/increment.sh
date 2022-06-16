@@ -43,7 +43,7 @@ CONFIG_FILE=$DR_CONFIG
 echo "Configuration file $CONFIG_FILE will be updated."
 
 ## Read in data
-CURRENT_RUN_MODEL=$(grep -e "^DR_LOCAL_S3_MODEL_PREFIX" ${CONFIG_FILE} | awk '{split($0,a,"="); print a[2] }')
+CURRENT_RUN_MODEL=$(grep -e "^DR_LOCAL_S3_MODEL_PREFIX" "$CONFIG_FILE" | awk '{split($0,a,"="); print a[2] }')
 CURRENT_RUN_MODEL_NUM=$(echo "${CURRENT_RUN_MODEL}" | \
                     awk -v DELIM="${OPT_DELIM}" '{ n=split($0,a,DELIM); if (a[n] ~ /[0-9]*/) print a[n]; else print ""; }')
 if [[ -z ${CURRENT_RUN_MODEL_NUM} ]];

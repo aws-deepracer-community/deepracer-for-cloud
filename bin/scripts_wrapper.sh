@@ -3,19 +3,19 @@
 function dr-upload-custom-files {
   eval CUSTOM_TARGET=$(echo s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_CUSTOM_FILES_PREFIX/)
   echo "Uploading files to $CUSTOM_TARGET"
-  aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync $DR_DIR/custom_files/ $CUSTOM_TARGET
+  aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync "$DR_DIR"/custom_files/ $CUSTOM_TARGET
 }
 
 function dr-upload-model {
-  dr-update-env && ${DR_DIR}/scripts/upload/upload-model.sh "$@"
+  dr-update-env && "$DR_DIR"/scripts/upload/upload-model.sh "$@"
 }
 
 function dr-download-model {
-  dr-update-env && ${DR_DIR}/scripts/upload/download-model.sh "$@"
+  dr-update-env && "$DR_DIR"/scripts/upload/download-model.sh "$@"
 }
 
 function dr-upload-car-zip {
-  dr-update-env && ${DR_DIR}/scripts/upload/upload-car.sh "$@"
+  dr-update-env && "$DR_DIR"/scripts/upload/upload-car.sh "$@"
 }
 
 function dr-list-aws-models {
@@ -27,35 +27,35 @@ function dr-set-upload-model {
 }
 
 function dr-increment-upload-model {
-  dr-update-env && ${DR_DIR}/scripts/upload/increment.sh "$@" && dr-update-env
+  dr-update-env && "$DR_DIR"/scripts/upload/increment.sh "$@" && dr-update-env
 }
 
 function dr-download-custom-files {
   eval CUSTOM_TARGET=$(echo s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_CUSTOM_FILES_PREFIX/)
   echo "Downloading files from $CUSTOM_TARGET"
-  aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync $CUSTOM_TARGET $DR_DIR/custom_files/
+  aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync $CUSTOM_TARGET "$DR_DIR"/custom_files/
 }
 
 function dr-start-training {
   dr-update-env
-  $DR_DIR/scripts/training/start.sh "$@"
+  "$DR_DIR"/scripts/training/start.sh "$@"
 }
 
 function dr-increment-training {
-  dr-update-env && ${DR_DIR}/scripts/training/increment.sh "$@" && dr-update-env
+  dr-update-env && "$DR_DIR"/scripts/training/increment.sh "$@" && dr-update-env
 }
 
 function dr-stop-training {
-  ROBOMAKER_COMMAND="" bash -c "cd $DR_DIR/scripts/training && ./stop.sh"
+  ROBOMAKER_COMMAND="" bash -c "cd \"$DR_DIR\"/scripts/training && ./stop.sh"
 }
 
 function dr-start-evaluation {
   dr-update-env
-  $DR_DIR/scripts/evaluation/start.sh "$@"
+  "$DR_DIR"/scripts/evaluation/start.sh "$@"
 }
 
 function dr-stop-evaluation {
-  ROBOMAKER_COMMAND="" bash -c "cd $DR_DIR/scripts/evaluation && ./stop.sh"
+  ROBOMAKER_COMMAND="" bash -c "cd \"$DR_DIR\"/scripts/evaluation && ./stop.sh"
 }
 
 
@@ -65,14 +65,14 @@ function dr-start-tournament {
 
 
 function dr-start-loganalysis {
-  ROBOMAKER_COMMAND="" bash -c "cd $DR_DIR/scripts/log-analysis && ./start.sh"
+  ROBOMAKER_COMMAND="" bash -c "cd \"$DR_DIR\"/scripts/log-analysis && ./start.sh"
 }
 
 
 function dr-stop-loganalysis {
   eval LOG_ANALYSIS_ID=$(docker ps | awk ' /loganalysis/ { print $1 }')
   if [ -n "$LOG_ANALYSIS_ID" ]; then
-    ROBOMAKER_COMMAND="" bash -c "cd $DR_DIR/scripts/log-analysis && ./stop.sh"
+    ROBOMAKER_COMMAND="" bash -c "cd \"$DR_DIR\"/scripts/log-analysis && ./stop.sh"
   else
     echo "Log-analysis is not running."
   fi
@@ -292,18 +292,18 @@ function dr-url-loganalysis {
 }
 
 function dr-view-stream {
-  ${DR_DIR}/utils/start-local-browser.sh "$@"
+  "$DR_DIR"/utils/start-local-browser.sh "$@"
 }
 
 function dr-start-viewer {
-  $DR_DIR/scripts/viewer/start.sh "$@"
+  "$DR_DIR"/scripts/viewer/start.sh "$@"
 }
 
 function dr-stop-viewer {
-  $DR_DIR/scripts/viewer/stop.sh "$@"
+  "$DR_DIR"/scripts/viewer/stop.sh "$@"
 }
 
 function dr-update-viewer {
-  $DR_DIR/scripts/viewer/stop.sh "$@"
-  $DR_DIR/scripts/viewer/start.sh "$@"
+  "$DR_DIR"/scripts/viewer/stop.sh "$@"
+  "$DR_DIR"/scripts/viewer/start.sh "$@"
 }

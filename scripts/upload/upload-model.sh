@@ -164,7 +164,7 @@ else
 fi
 
 # Create Training Params Yaml.
-PARAMS_FILE=$(python3 $DR_DIR/scripts/upload/prepare-config.py)
+PARAMS_FILE=$(python3 "$DR_DIR/scripts/upload/prepare-config.py")
 
 # Upload files
 if [[ -z "${OPT_FORCE}" ]];
@@ -179,16 +179,16 @@ then
 fi
 
 # echo "" > ${WORK_DIR}model/.ready 
-cd ${WORK_DIR}
-echo ${CHECKPOINT_JSON} > ${WORK_DIR}model/deepracer_checkpoints.json
-aws ${DR_UPLOAD_PROFILE} s3 sync ${WORK_DIR}model/ s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/model/ ${OPT_DRYRUN} ${OPT_WIPE}
-aws ${DR_UPLOAD_PROFILE} s3 cp ${REWARD_FILE} ${TARGET_REWARD_FILE_S3_KEY} ${OPT_DRYRUN}
-aws ${DR_UPLOAD_PROFILE} s3 cp ${METRICS_FILE} ${TARGET_METRICS_FILE_S3_KEY} ${OPT_DRYRUN}
-aws ${DR_UPLOAD_PROFILE} s3 cp ${PARAMS_FILE} ${TARGET_PARAMS_FILE_S3_KEY} ${OPT_DRYRUN}
-aws ${DR_UPLOAD_PROFILE} s3 cp ${HYPERPARAM_FILE} ${TARGET_HYPERPARAM_FILE_S3_KEY} ${OPT_DRYRUN}
+cd "${WORK_DIR}"
+echo ${CHECKPOINT_JSON} > "${WORK_DIR}model/deepracer_checkpoints.json"
+aws ${DR_UPLOAD_PROFILE} s3 sync "${WORK_DIR}model/" "s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/model/" ${OPT_DRYRUN} ${OPT_WIPE}
+aws ${DR_UPLOAD_PROFILE} s3 cp "${REWARD_FILE}" "${TARGET_REWARD_FILE_S3_KEY}" ${OPT_DRYRUN}
+aws ${DR_UPLOAD_PROFILE} s3 cp "${METRICS_FILE}" "${TARGET_METRICS_FILE_S3_KEY}" ${OPT_DRYRUN}
+aws ${DR_UPLOAD_PROFILE} s3 cp "${PARAMS_FILE}" "${TARGET_PARAMS_FILE_S3_KEY}" ${OPT_DRYRUN}
+aws ${DR_UPLOAD_PROFILE} s3 cp "${HYPERPARAM_FILE}" "${TARGET_HYPERPARAM_FILE_S3_KEY}" ${OPT_DRYRUN}
 
 # After upload trigger the import
 if [[ -n "${OPT_IMPORT}" ]];
 then
-    $DR_DIR/scripts/upload/import-model.py "${DR_UPLOAD_S3_PROFILE}" "${DR_UPLOAD_S3_ROLE}" "${TARGET_S3_BUCKET}" "${TARGET_S3_PREFIX}" "${OPT_IMPORT}"
+    "$DR_DIR/scripts/upload/import-model.py" "${DR_UPLOAD_S3_PROFILE}" "${DR_UPLOAD_S3_ROLE}" "${TARGET_S3_BUCKET}" "${TARGET_S3_PREFIX}" "${OPT_IMPORT}"
 fi

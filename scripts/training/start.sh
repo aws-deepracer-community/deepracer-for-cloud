@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source $DR_DIR/bin/scripts_wrapper.sh
+source "$DR_DIR/bin/scripts_wrapper.sh"
 
 usage(){
 	echo "Usage: $0 [-w] [-q | -s | -r [n] | -a ] [-v]"
@@ -76,7 +76,7 @@ fi
 # Base compose file
 if [ ${DR_ROBOMAKER_MOUNT_LOGS,,} = "true" ];
 then
-  COMPOSE_FILES="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DR_DIR/docker/docker-compose-mount.yml"
+  COMPOSE_FILES="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP \"$DR_DIR/docker/docker-compose-mount.yml\""
   export DR_MOUNT_DIR="$DR_DIR/data/logs/robomaker/$DR_LOCAL_S3_MODEL_PREFIX"
   mkdir -p $DR_MOUNT_DIR
 else
@@ -88,16 +88,16 @@ STACK_NAME="deepracer-$DR_RUN_ID"
 
 export DR_CURRENT_PARAMS_FILE=${DR_LOCAL_S3_TRAINING_PARAMS_FILE}
 
-WORKER_CONFIG=$(python3 $DR_DIR/scripts/training/prepare-config.py)
+WORKER_CONFIG=$(python3 "$DR_DIR/scripts/training/prepare-config.py")
 
 if [ "$DR_WORKERS" -gt 1 ]; then
   echo "Starting $DR_WORKERS workers"
 
   if [[ "${DR_DOCKER_STYLE,,}" != "swarm" ]];
   then
-    mkdir -p $DR_DIR/tmp/comms.$DR_RUN_ID
-    rm -rf $DR_DIR/tmp/comms.$DR_RUN_ID/*
-    COMPOSE_FILES="$COMPOSE_FILES $DR_DOCKER_FILE_SEP $DR_DIR/docker/docker-compose-robomaker-multi.yml"
+    mkdir -p "$DR_DIR/tmp/comms.$DR_RUN_ID"
+    rm -rf "$DR_DIR"/tmp/comms.$DR_RUN_ID/*
+    COMPOSE_FILES="$COMPOSE_FILES $DR_DOCKER_FILE_SEP \"$DR_DIR/docker/docker-compose-robomaker-multi.yml\""
   fi
 
   if [ "$DR_TRAIN_MULTI_CONFIG" == "True" ]; then

@@ -8,7 +8,7 @@ function dr-update-env {
 
   if [[ -f "$DIR/system.env" ]]
   then
-    LINES=$(grep -v '^#' $DIR/system.env)
+    LINES=$(grep -v '^#' "$DIR"/system.env)
     for l in $LINES; do
       env_var=$(echo $l | cut -f1 -d\=)
       env_val=$(echo $l | cut -f2 -d\=)
@@ -50,7 +50,7 @@ function dr-update-env {
 }
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-DIR="$( dirname $SCRIPT_DIR )"
+DIR="$( dirname "$SCRIPT_DIR" )"
 export DR_DIR=$DIR
 
 if [[ -f "$1" ]];
@@ -92,49 +92,49 @@ then
     export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
     export DR_MINIO_URL="http://minio:9000"
     DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_S3_ENDPOINT_URL"
-    DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
-    DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
-    DR_MINIO_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-azure.yml"
+    DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-training.yml\" $DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-endpoint.yml\""
+    DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-eval.yml\" $DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-endpoint.yml\""
+    DR_MINIO_COMPOSE_FILE="$DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-azure.yml\""
 elif [[ "${DR_CLOUD,,}" == "local" ]];
 then
     export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
     export DR_MINIO_URL="http://minio:9000"
     DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_S3_ENDPOINT_URL"
-    DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
-    DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
-    DR_MINIO_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local.yml"
+    DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-training.yml\" $DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-endpoint.yml\""
+    DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-eval.yml\" $DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-endpoint.yml\""
+    DR_MINIO_COMPOSE_FILE="$DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-local.yml\""
 elif [[ "${DR_CLOUD,,}" == "remote" ]];
 then
     export DR_LOCAL_S3_ENDPOINT_URL="$DR_REMOTE_MINIO_URL"
     export DR_MINIO_URL="$DR_REMOTE_MINIO_URL"
     DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_S3_ENDPOINT_URL"
-    DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
-    DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
+    DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-training.yml\" $DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-endpoint.yml\""
+    DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-eval.yml\" $DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-endpoint.yml\""
     DR_MINIO_COMPOSE_FILE=""
 else
     DR_LOCAL_PROFILE_ENDPOINT_URL=""
-    DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml"
-    DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml"
+    DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-training.yml\""
+    DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-eval.yml\""
 fi
 
 # Prevent docker swarms to restart
 if [[ "${DR_HOST_X,,}" == "true" ]];
 then
-    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
-    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-local-xorg.yml\""
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-local-xorg.yml\""
 fi
 
 # Prevent docker swarms to restart
 if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
 then
-    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training-swarm.yml"
-    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval-swarm.yml"
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-training-swarm.yml\""
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-eval-swarm.yml\""
 fi
 
 # Enable logs in CloudWatch
 if [[ "${DR_CLOUD_WATCH_ENABLE,,}" == "true" ]]; then
-    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-cwlog.yml"
-    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-cwlog.yml"
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-cwlog.yml\""
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-cwlog.yml\""
 fi
 
 ## Check if we have an AWS IAM assumed role, or if we need to set specific credentials.
@@ -144,8 +144,8 @@ then
 else 
     export DR_LOCAL_ACCESS_KEY_ID=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_access_key_id | xargs)
     export DR_LOCAL_SECRET_ACCESS_KEY=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_secret_access_key | xargs)
-    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-keys.yml"
-    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-keys.yml"
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-keys.yml\""
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP \"$DIR/docker/docker-compose-keys.yml\""
     export DR_UPLOAD_PROFILE="--profile $DR_UPLOAD_S3_PROFILE"
     export DR_LOCAL_S3_AUTH_MODE="profile"
 fi
@@ -169,7 +169,7 @@ if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
 fi
 
 ## Version check
-DEPENDENCY_VERSION=$(jq -r '.master_version  | select (.!=null)' $DIR/defaults/dependencies.json)
+DEPENDENCY_VERSION=$(jq -r '.master_version  | select (.!=null)' "$DIR"/defaults/dependencies.json)
 
 SAGEMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-sagemaker:$DR_SAGEMAKER_IMAGE 2> /dev/null | jq -r .[].Config.Labels.version)
 if [ -z "$SAGEMAKER_VER" ]; then SAGEMAKER_VER=$DR_SAGEMAKER_IMAGE; fi
@@ -196,5 +196,5 @@ function dr-update {
 }
 
 function dr-reload {
-   source $DIR/bin/activate.sh $DR_CONFIG
+   source "$DIR"/bin/activate.sh $DR_CONFIG
 }
