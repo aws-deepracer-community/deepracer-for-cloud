@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import boto3
+from datetime import datetime
 import sys
 import os 
 import time
@@ -10,6 +11,8 @@ import yaml
 
 def str2bool(v):
   return v.lower() in ("yes", "true", "t", "1")
+
+eval_time = datetime.now().strftime('%Y%m%d%H%M%S')
 
 config = {}
 config['CAR_COLOR'] = []
@@ -35,15 +38,17 @@ config['ROBOMAKER_SIMULATION_JOB_ACCOUNT_ID'] = os.environ.get('', 'Dummy')
 config['MODEL_S3_PREFIX'].append(os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'))
 config['MODEL_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
 config['SIMTRACE_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
-config['SIMTRACE_S3_PREFIX'].append(os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'))
+config['SIMTRACE_S3_PREFIX'].append(
+    'evaluation-{}/{}'.format(eval_time, os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'))
+)
 
 # Metrics
 config['METRICS_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
 metrics_prefix = os.environ.get('DR_LOCAL_S3_METRICS_PREFIX', None)
 if metrics_prefix is not None:
-    config['METRICS_S3_OBJECT_KEY'].append('{}/EvaluationMetrics-{}.json'.format(metrics_prefix, str(round(time.time()))))
+    config['METRICS_S3_OBJECT_KEY'].append('{}/EvaluationMetrics-{}.json'.format(metrics_prefix, eval_time))
 else:
-    config['METRICS_S3_OBJECT_KEY'].append('DeepRacer-Metrics/EvaluationMetrics-{}.json'.format(str(round(time.time()))))
+    config['METRICS_S3_OBJECT_KEY'].append('DeepRacer-Metrics/EvaluationMetrics-{}.json'.format(eval_time))
     
 # MP4 configuration / sav
 save_mp4 = str2bool(os.environ.get("DR_EVAL_SAVE_MP4", "False"))
