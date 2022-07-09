@@ -39,7 +39,7 @@ config['MODEL_S3_PREFIX'].append(os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'rl-
 config['MODEL_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
 config['SIMTRACE_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
 config['SIMTRACE_S3_PREFIX'].append(
-    'evaluation-{}/{}'.format(eval_time, os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'))
+    '{}/evaluation-{}'.format(os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'), eval_time)
 )
 
 # Metrics
