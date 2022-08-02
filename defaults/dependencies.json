@@ -1,8 +1,8 @@
 {
     "master_version": "5.0",
     "containers": {
-        "rl_coach": "5.0.0",
+        "rl_coach": "5.0.1",
         "robomaker": "5.0.3",
-        "sagemaker": "5.0.0"
+        "sagemaker": "5.0.1"
     }
 }
