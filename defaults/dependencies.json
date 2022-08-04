@@ -3,6 +3,6 @@
     "containers": {
         "rl_coach": "5.0.1",
         "robomaker": "5.0.5",
-        "sagemaker": "5.0.1"
+        "sagemaker": "5.0.0"
     }
 }
