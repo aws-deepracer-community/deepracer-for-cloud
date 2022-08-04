@@ -42,20 +42,12 @@ In this case the CUDA device #0 is the GTX 1650 and the CUDA device #1 is the Te
 
 ### Selecting Device
 
-#### Robomaker
-To control the Robomaker then add the following to `system.env`:
+To control the CUDA assignment for Sagemaker abd Robomaker then the following to variables in `system.env`:
 
 ```
-CUDA_VISIBLE_DEVICES=1
+DR_ROBOMAKER_CUDA_DEVICES=0
+DR_SAGEMAKER_CUDA_DEVICES=1
 ``` 
-The number is the CUDA number of the GPU you want the Robomakers to use.
 
-#### Sagemaker
+The number is the CUDA number of the GPU you want the containers to use.
 
-Sagemaker is more critical to place, but also more complicated, as you will have to build a new Docker image for it to work.
-
-A template is in `utils/Dockerfile.sagemaker-gpu`. Open it to alter the source image in `FROM`, and adapt `CUDA_VISIBLE_DEVICES`.
-
-Build the image with `docker build -t awsdeepracercommunity/deepracer-sagemaker:gpu-x -f utils/Dockerfile.sagemaker-gpu .` with x being anything you like.
-
-Update `system.env` to use the new image.
