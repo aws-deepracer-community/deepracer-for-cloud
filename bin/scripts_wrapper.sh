@@ -6,6 +6,18 @@ function dr-upload-custom-files {
   aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync $DR_DIR/custom_files/ $CUSTOM_TARGET
 }
 
+function dr-load-profile {
+  dr-update-env && ${DR_DIR}/scripts/profiles/load-profile.sh "$@"
+}
+
+function dr-save-profile {
+  dr-update-env && ${DR_DIR}/scripts/profiles/save-profile.sh "$@"
+}
+
+function dr-default-profile {
+  dr-update-env && ${DR_DIR}/scripts/profiles/default-profile.sh "$@"
+}
+
 function dr-upload-model {
   dr-update-env && ${DR_DIR}/scripts/upload/upload-model.sh "$@"
 }
