@@ -101,16 +101,17 @@ elif [[ "${OPT_CLOUD}" == "remote" ]]; then
     echo "Please define DR_REMOTE_MINIO_URL in system.env to point to remote minio instance."
 else
     AWS_REGION="us-east-1"
-    sed -i "s/<LOCAL_PROFILE>/minio/g" $INSTALL_DIR/system.env
+    MINIO_PROFILE="minio"
+    sed -i "s/<LOCAL_PROFILE>/$MINIO_PROFILE/g" $INSTALL_DIR/system.env
     sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
 
-    aws configure --profile minio get aws_access_key_id > /dev/null 2> /dev/null
+    aws configure --profile $MINIO_PROFILE get aws_access_key_id > /dev/null 2> /dev/null
 
     if [[ "$?" -ne 0 ]]; then
-        echo "Creating default minio credentials in AWS profile 'minio'"
-        aws configure --profile minio set aws_access_key_id $(openssl rand -base64 12)
-        aws configure --profile minio set aws_secret_access_key $(openssl rand -base64 12)
-        aws configure --profile minio set region us-east-1
+        echo "Creating default minio credentials in AWS profile '$MINIO_PROFILE'"
+        aws configure --profile $MINIO_PROFILE set aws_access_key_id $(openssl rand -base64 12)
+        aws configure --profile $MINIO_PROFILE set aws_secret_access_key $(openssl rand -base64 12)
+        aws configure --profile $MINIO_PROFILE set region us-east-1
     fi
 fi
 sed -i "s/<AWS_DR_BUCKET_ROLE>/to-be-defined/g" $INSTALL_DIR/system.env
