@@ -110,6 +110,7 @@ else
         echo "Creating default minio credentials in AWS profile 'minio'"
         aws configure --profile minio set aws_access_key_id $(openssl rand -base64 12)
         aws configure --profile minio set aws_secret_access_key $(openssl rand -base64 12)
+        aws configure --profile minio set region us-east-1
     fi
 fi
 sed -i "s/<AWS_DR_BUCKET_ROLE>/to-be-defined/g" $INSTALL_DIR/system.env
