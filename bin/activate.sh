@@ -86,6 +86,13 @@ else
   export DR_DOCKER_FILE_SEP="-f"
 fi
 
+# Check if CUDA_VISIBLE_DEVICES is configured.
+if [[ -n "${CUDA_VISIBLE_DEVICES}" ]]; then
+  echo "WARNING: You have CUDA_VISIBLE_DEVICES defined. The will no longer work as"
+  echo "         expected. To control GPU assignment use DR_ROBOMAKER_CUDA_DEVICES"
+  echo "         and DR_SAGEMAKER_CUDA_DEVICES and rlcoach v5.0.1 or later."
+fi
+
 # Prepare the docker compose files depending on parameters
 if [[ "${DR_CLOUD,,}" == "azure" ]];
 then
