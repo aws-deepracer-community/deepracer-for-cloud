@@ -196,8 +196,8 @@ if ! verlte $DEPENDENCY_VERSION $COACH_VER; then
   echo "WARNING: Incompatible version of Deepracer-for-Cloud Coach. Expected >$DEPENDENCY_VERSION. Got $COACH_VER."
 fi
 
-## Create a dr-aws command
-alias dr-aws='aws $DR_LOCAL_PROFILE_ENDPOINT_URL'
+## Create a dr-local-aws command
+alias dr-local-aws='aws $DR_LOCAL_PROFILE_ENDPOINT_URL'
 
 source $SCRIPT_DIR/scripts_wrapper.sh
 
