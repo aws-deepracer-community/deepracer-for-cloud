@@ -1,15 +1,16 @@
 #!/bin/bash
 
 usage(){
-	echo "Usage: $0 [-f] [-w] [-d] [-b] [-c <checkpoint>] [-p <model-prefix>]"
+	echo "Usage: $0 [-f] [-w] [-d] [-b] [-1] [-i] [-I] [-L] [-c <checkpoint>] [-p <model-prefix>]"
   echo "       -f        Force upload. No confirmation question."
   echo "       -w        Wipes the target AWS DeepRacer model structure before upload."
   echo "       -d        Dry-Run mode. Does not perform any write or delete operatios on target."
   echo "       -b        Uploads best checkpoint. Default is last checkpoint."
-  echo "       -p model  Uploads model in specified S3 prefix."
+  echo "       -p model  Uploads model from specified S3 prefix."
   echo "       -i        Import model with the upload name"
   echo "       -I name   Import model with a specific name"
   echo "       -1        Increment upload name with 1 (dr-increment-upload-model)"
+  echo "       -L        Upload model to the local S3 bucket"
 	exit 1
 }
 
@@ -20,7 +21,7 @@ function ctrl_c() {
         exit 1
 }
 
-while getopts ":fwdhbp:c:1iI:" opt; do
+while getopts ":fwdhbp:c:1iI:L" opt; do
 case $opt in
 b) OPT_CHECKPOINT="Best"
 ;; 
@@ -37,6 +38,8 @@ w) OPT_WIPE="--delete"
 i) OPT_IMPORT="$DR_UPLOAD_S3_PREFIX"
 ;;
 I) OPT_IMPORT="$OPTARG"
+;;
+L) OPT_LOCAL="Local"
 ;;
 1) OPT_INCREMENT="Yes"
 ;;
@@ -56,11 +59,44 @@ fi
 if [[ -n "${OPT_INCREMENT}" ]];
 then
   source $DR_DIR/scripts/upload/increment.sh ${OPT_FORCE}
-  OPT_IMPORT="$DR_UPLOAD_S3_PREFIX"
+  if [[ -n ${OPT_IMPORT} ]];
+  then
+    OPT_IMPORT="$DR_UPLOAD_S3_PREFIX"
+  fi
 fi
 
-export TARGET_S3_BUCKET=${DR_UPLOAD_S3_BUCKET}
-export TARGET_S3_PREFIX=${DR_UPLOAD_S3_PREFIX}
+SOURCE_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
+if [[ -n "${OPT_PREFIX}" ]];
+then
+  SOURCE_S3_MODEL_PREFIX=${OPT_PREFIX}
+else
+  SOURCE_S3_MODEL_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
+fi
+SOURCE_S3_CONFIG=${DR_LOCAL_S3_CUSTOM_FILES_PREFIX}
+SOURCE_S3_REWARD=${DR_LOCAL_S3_REWARD_KEY}
+SOURCE_S3_METRICS="${DR_LOCAL_S3_METRICS_PREFIX}/TrainingMetrics.json"
+
+TARGET_S3_PREFIX=${DR_UPLOAD_S3_PREFIX}
+
+if [[ -z "${OPT_LOCAL}" ]];
+then
+  TARGET_S3_BUCKET=${DR_UPLOAD_S3_BUCKET}
+  UPLOAD_PROFILE=${DR_UPLOAD_PROFILE}
+else
+  if [[ -n "${OPT_IMPORT}" ]];
+  then
+    echo "Combination of -i and -L is not permitted."
+    exit 1
+  fi
+  if [[ "${DR_UPLOAD_S3_PREFIX}" = "${SOURCE_S3_MODEL_PREFIX}" ]];
+  then
+    echo "Target equals source. Exiting."
+    exit 1
+  fi
+
+  TARGET_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
+  UPLOAD_PROFILE=${DR_LOCAL_PROFILE_ENDPOINT_URL}
+fi
 
 if [[ -z "${DR_UPLOAD_S3_BUCKET}" ]];
 then
@@ -74,16 +110,6 @@ then
   exit 1
 fi
 
-SOURCE_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
-if [[ -n "${OPT_PREFIX}" ]];
-then
-  SOURCE_S3_MODEL_PREFIX=${OPT_PREFIX}
-else
-  SOURCE_S3_MODEL_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
-fi
-SOURCE_S3_CONFIG=${DR_LOCAL_S3_CUSTOM_FILES_PREFIX}
-SOURCE_S3_REWARD=${DR_LOCAL_S3_REWARD_KEY}
-SOURCE_S3_METRICS="${DR_LOCAL_S3_METRICS_PREFIX}/TrainingMetrics.json"
 
 export WORK_DIR=${DR_DIR}/tmp/upload/
 mkdir -p ${WORK_DIR} && rm -rf ${WORK_DIR} && mkdir -p ${WORK_DIR}model ${WORK_DIR}ip
@@ -181,11 +207,11 @@ fi
 # echo "" > ${WORK_DIR}model/.ready 
 cd ${WORK_DIR}
 echo ${CHECKPOINT_JSON} > ${WORK_DIR}model/deepracer_checkpoints.json
-aws ${DR_UPLOAD_PROFILE} s3 sync ${WORK_DIR}model/ s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/model/ ${OPT_DRYRUN} ${OPT_WIPE}
-aws ${DR_UPLOAD_PROFILE} s3 cp ${REWARD_FILE} ${TARGET_REWARD_FILE_S3_KEY} ${OPT_DRYRUN}
-aws ${DR_UPLOAD_PROFILE} s3 cp ${METRICS_FILE} ${TARGET_METRICS_FILE_S3_KEY} ${OPT_DRYRUN}
-aws ${DR_UPLOAD_PROFILE} s3 cp ${PARAMS_FILE} ${TARGET_PARAMS_FILE_S3_KEY} ${OPT_DRYRUN}
-aws ${DR_UPLOAD_PROFILE} s3 cp ${HYPERPARAM_FILE} ${TARGET_HYPERPARAM_FILE_S3_KEY} ${OPT_DRYRUN}
+aws ${UPLOAD_PROFILE} s3 sync ${WORK_DIR}model/ s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/model/ ${OPT_DRYRUN} ${OPT_WIPE}
+aws ${UPLOAD_PROFILE} s3 cp ${REWARD_FILE} ${TARGET_REWARD_FILE_S3_KEY} ${OPT_DRYRUN}
+aws ${UPLOAD_PROFILE} s3 cp ${METRICS_FILE} ${TARGET_METRICS_FILE_S3_KEY} ${OPT_DRYRUN}
+aws ${UPLOAD_PROFILE} s3 cp ${PARAMS_FILE} ${TARGET_PARAMS_FILE_S3_KEY} ${OPT_DRYRUN}
+aws ${UPLOAD_PROFILE} s3 cp ${HYPERPARAM_FILE} ${TARGET_HYPERPARAM_FILE_S3_KEY} ${OPT_DRYRUN}
 
 # After upload trigger the import
 if [[ -n "${OPT_IMPORT}" ]];

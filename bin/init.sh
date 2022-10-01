@@ -101,9 +101,18 @@ elif [[ "${OPT_CLOUD}" == "remote" ]]; then
     echo "Please define DR_REMOTE_MINIO_URL in system.env to point to remote minio instance."
 else
     AWS_REGION="us-east-1"
-    sed -i "s/<LOCAL_PROFILE>/minio/g" $INSTALL_DIR/system.env
+    MINIO_PROFILE="minio"
+    sed -i "s/<LOCAL_PROFILE>/$MINIO_PROFILE/g" $INSTALL_DIR/system.env
     sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
-    echo "Please run 'aws configure --profile minio' to set the credentials"
+
+    aws configure --profile $MINIO_PROFILE get aws_access_key_id > /dev/null 2> /dev/null
+
+    if [[ "$?" -ne 0 ]]; then
+        echo "Creating default minio credentials in AWS profile '$MINIO_PROFILE'"
+        aws configure --profile $MINIO_PROFILE set aws_access_key_id $(openssl rand -base64 12)
+        aws configure --profile $MINIO_PROFILE set aws_secret_access_key $(openssl rand -base64 12)
+        aws configure --profile $MINIO_PROFILE set region us-east-1
+    fi
 fi
 sed -i "s/<AWS_DR_BUCKET_ROLE>/to-be-defined/g" $INSTALL_DIR/system.env
 sed -i "s/<CLOUD_REPLACE>/$OPT_CLOUD/g" $INSTALL_DIR/system.env
@@ -154,10 +163,10 @@ docker pull awsdeepracercommunity/deepracer-sagemaker:$SAGEMAKER_VERSION
 
 # create the network sagemaker-local if it doesn't exit
 SAGEMAKER_NW='sagemaker-local'
-docker swarm init
+docker swarm init 
 SWARM_NODE=$(docker node inspect self | jq .[0].ID -r)
-docker node update --label-add Sagemaker=true $SWARM_NODE
-docker node update --label-add Robomaker=true $SWARM_NODE
+docker node update --label-add Sagemaker=true $SWARM_NODE > /dev/null 2> /dev/null
+docker node update --label-add Robomaker=true $SWARM_NODE > /dev/null 2> /dev/null
 docker network ls | grep -q $SAGEMAKER_NW
 if [ $? -ne 0 ]
 then
