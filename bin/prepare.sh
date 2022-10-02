@@ -85,7 +85,14 @@ then
 	curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
 
 	sudo apt-get update && sudo apt-get install -y --no-install-recommends nvidia-docker2 nvidia-container-toolkit nvidia-container-runtime
-	cat /etc/docker/daemon.json | jq 'del(."default-runtime") + {"default-runtime": "nvidia"}' | sudo tee /etc/docker/daemon.json
+    if [ -f "/etc/docker/daemon.json" ];
+    then
+        echo "Altering /etc/docker/daemon.json with default-rutime nvidia."
+        cat /etc/docker/daemon.json | jq 'del(."default-runtime") + {"default-runtime": "nvidia"}' | sudo tee /etc/docker/daemon.json
+    else
+        echo "Creating /etc/docker/daemon.json with default-rutime nvidia."    
+        sudo cp $DIR/../defaults/docker-daemon.json /etc/docker/daemon.json
+    fi
 fi
 sudo systemctl enable docker
 sudo systemctl restart docker
