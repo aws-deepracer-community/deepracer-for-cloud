@@ -54,6 +54,7 @@ if config['RACE_TYPE'] == 'OBJECT_AVOIDANCE':
     config['MIN_DISTANCE_BETWEEN_OBSTACLES'] = os.environ.get('DR_OA_MIN_DISTANCE_BETWEEN_OBSTACLES', '2.0')
     config['RANDOMIZE_OBSTACLE_LOCATIONS'] = os.environ.get('DR_OA_RANDOMIZE_OBSTACLE_LOCATIONS', 'True')
     config['IS_OBSTACLE_BOT_CAR'] = os.environ.get('DR_OA_IS_OBSTACLE_BOT_CAR', 'false')
+    config['OBSTACLE_TYPE'] = os.environ.get('DR_OA_OBSTACLE_TYPE', 'box_obstacle')
 
     object_position_str = os.environ.get('DR_OA_OBJECT_POSITIONS', "")
     if object_position_str != "":
@@ -155,6 +156,8 @@ if config['MULTI_CONFIG'] == "True" and num_workers > 0:
                 config.update({'MIN_DISTANCE_BETWEEN_OBSTACLES': os.environ.get('DR_OA_MIN_DISTANCE_BETWEEN_OBSTACLES')})
                 config.update({'RANDOMIZE_OBSTACLE_LOCATIONS': os.environ.get('DR_OA_RANDOMIZE_OBSTACLE_LOCATIONS')})
                 config.update({'IS_OBSTACLE_BOT_CAR': os.environ.get('DR_OA_IS_OBSTACLE_BOT_CAR')})
+                config.update({'OBSTACLE_TYPE': os.environ.get('DR_OA_OBSTACLE_TYPE', 'box_obstacle')})
+
                 object_position_str = os.environ.get('DR_OA_OBJECT_POSITIONS', "")
                 if object_position_str != "":
                     object_positions = []
