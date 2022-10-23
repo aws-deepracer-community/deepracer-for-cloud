@@ -1,0 +1,7 @@
+version: '3.7'
+
+services:
+  robomaker:
+    volumes:
+      - '${DR_ROBOMAKER_MOUNT_SIMAPP_DIR}/sagemaker_rl_agent:/opt/install/sagemaker_rl_agent'
+      - '${DR_ROBOMAKER_MOUNT_SIMAPP_DIR}/deepracer_simulation_environment:/opt/install/deepracer_simulation_environment'
