@@ -12,6 +12,7 @@ from botocore.loaders import UnknownServiceError
 try:
     import pandas as pd
     import deepracer
+    from deepracer import boto3_enhancer
 except ImportError:
     print("You need to install pandas and deepracer-utils to use the import function.")
     exit(1)
@@ -31,9 +32,10 @@ if len(aws_profile) > 1:
     session = boto3.session.Session(region_name='us-east-1', profile_name=aws_profile)
 else:
     session = boto3.session.Session(region_name='us-east-1')
-    
+
+global dr 
 try:
-    dr = session.client('deepracer')
+    dr = boto3_enhancer.deepracer_client(session=session)
 except UnknownServiceError:
     print ("Boto3 service 'deepracer' is not installed. Cannot import model.")
     print ("Install with 'pip install deepracer-utils' and 'python -m deepracer install-cli --force'")
