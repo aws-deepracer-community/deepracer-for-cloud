@@ -27,8 +27,11 @@ if not aws_s3_role:
     print("You must configure an IAM role with access to the S3 bucket in variable DR_UPLOAD_S3_ROLE ")
     exit(1)
 
-session = boto3.session.Session(region_name='us-east-1', profile_name=aws_profile)
-
+if len(aws_profile) > 1:
+    session = boto3.session.Session(region_name='us-east-1', profile_name=aws_profile)
+else:
+    session = boto3.session.Session(region_name='us-east-1')
+    
 try:
     dr = session.client('deepracer')
 except UnknownServiceError:

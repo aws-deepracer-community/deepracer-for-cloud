@@ -10,6 +10,11 @@ function ctrl_c() {
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 INSTALL_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
 
+if [[ "$INSTALL_DIR" == *\ * ]]; then
+    echo "Deepracer-for-Cloud cannot be installed in path with spaces. Exiting."
+    exit 1
+fi
+
 OPT_ARCH="gpu"
 OPT_CLOUD=""
 
