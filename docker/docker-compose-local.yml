@@ -8,7 +8,7 @@ networks:
 
 services:
   minio:
-    image: minio/minio
+    image: minio/minio:RELEASE.2022-05-26T05-48-41Z
     ports:
       - "9000:9000"
       - "9001:9001"
