@@ -38,5 +38,5 @@ Full documentation can be found on the [Deepracer-for-Cloud GitHub Pages](https:
 
 ## Support
 
-* For general support it is suggested to join the [AWS DeepRacing Community](https://deepracing.io/). The Community Slack has a channel #dr-drfc-setup where the community provides active support.
+* For general support it is suggested to join the [AWS DeepRacing Community](https://deepracing.io/). The Community Slack has a channel #dr-training-local where the community provides active support.
 * Create a GitHub issue if you find an actual code issue, or where updates to documentation would be required.
