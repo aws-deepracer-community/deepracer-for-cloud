@@ -61,7 +61,8 @@ The scripts assume that two files `system.env` containing constant configuration
 | `DR_MINIO_IMAGE` | Determines which Minio image will be used. |
 | `DR_COACH_IMAGE` | Determines which coach image will be used for training.|
 | `DR_WORKERS` | Number of Robomaker workers to be used for training.  See additional documentation for more information about this feature.|
-| `DR_ROBOMAKER_MOUNT_LOGS` | TODO.|
+| `DR_ROBOMAKER_MOUNT_LOGS` | True to get logs mounted to `$DR_DIR/data/logs/robomaker/$DR_LOCAL_S3_MODEL_PREFIX`|
+| `DR_ROBOMAKER_MOUNT_SIMAPP_DIR` | Path to the altered Robomaker bundle, e.g. `/home/ubuntu/deepracer-simapp/bundle`.|
 | `DR_CLOUD_WATCH_ENABLE` | Send log files to AWS CloudWatch.|
 | `DR_DOCKER_STYLE` | Valid Options are `Swarm` and `Compose`.  Use Compose for openGL optimized containers.|
 | `DR_HOST_X` | Uses the host X-windows server, rather than starting one inside of Robomaker. Required for OpenGL images.|
