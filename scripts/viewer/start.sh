@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
 usage(){
-	echo "Usage: $0 [-t topic] [-w width] [-h height] [-q quality] -b [browser-command]"
+	echo "Usage: $0 [-t topic] [-w width] [-h height] [-q quality] -b [browser-command] -p [port]"
   echo "       -w        Width of individual stream."
   echo "       -h        Heigth of individual stream."
   echo "       -q        Quality of the stream image."
   echo "       -t        Topic to follow - default /racecar/deepracer/kvs_stream"
   echo "       -b        Browser command (default: firefox --new-tab)"
+  echo "       -p        The port to use "
 	exit 1
 }
 
@@ -23,8 +24,9 @@ WIDTH=480
 HEIGHT=360
 QUALITY=75
 BROWSER="firefox --new-tab"
+PORT=$DR_WEBVIEWER_PORT
 
-while getopts ":w:h:q:t:b:" opt; do
+while getopts ":w:h:q:t:b:p:" opt; do
 case $opt in
 w) WIDTH="$OPTARG"
 ;;
@@ -36,11 +38,15 @@ t) TOPIC="$OPTARG"
 ;;
 b) BROWSER="$OPTARG"
 ;;
+p) PORT="$OPTARG"
+;;
 \?) echo "Invalid option -$OPTARG" >&2
 usage
 ;;
 esac
 done
+
+DR_WEBVIEWER_PORT=$PORT
 
 export DR_VIEWER_HTML=$DR_DIR/tmp/streams-$DR_RUN_ID.html
 export DR_NGINX_CONF=$DR_DIR/tmp/streams-$DR_RUN_ID.conf
@@ -53,7 +59,7 @@ server {
     index  index.html index.htm;
   }
 EOF
-echo "<html><head><title>DR-$DR_RUN_ID - $DR_LOCAL_S3_MODEL_PREFIX - $TOPIC</title><link href=\"https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap\" rel=\"stylesheet\"><style>body {display: block; margin: 0; background: #161e2d; color: #ffffff; font-family: \"Roboto\",sans-serif; font-size: 16px; font-weight: 400;} .container {display: flex; flex-direction: column; position: absolute; top: 42px; bottom: 0; left: 0; right: 0;} .navbar {position: fixed; top: 0; left: 0; right: 0; z-index: 2; background: #500280} .navbar-header { font-weight: 500; font-size: 1.125rem; display: flex; flex-wrap: wrap; align-items: center; padding: 12px 16px; box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 5px -1px, rgba(0, 0, 0, 0.14) 0px 6px 10px 0px, rgba(0, 0, 0, 0.12) 0px 1px 18px 0px;} .main-container {justify-content: center; align-items: center; display: flex; flex-direction: row; flex-wrap: wrap; padding: 16px;} .card {margin: 8px; max-width: 480px; box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 1px -1px, rgba(0, 0, 0, 0.14) 0px 1px 1px 0px, rgba(0, 0, 0, 0.12) 0px 1px 3px 0px; transition: box-shadow 280ms cubic-bezier(0.4, 0, 0.2, 1); border-radius: 4px; display: block; position: relative;} .card-img {border-radius: 4px;}</style></head><body><div class=\"container\"><div class=\"navbar\"><div class=\"navbar-header\">DR-$DR_RUN_ID - $DR_LOCAL_S3_MODEL_PREFIX - $TOPIC</div></div><div class=\"main-container\">" > $DR_VIEWER_HTML
+
 
 if [[ "${DR_DOCKER_STYLE,,}" != "swarm" ]]; then
   ROBOMAKER_CONTAINERS=$(docker ps --format "{{.ID}} {{.Names}}" --filter name="deepracer-${DR_RUN_ID}" | grep robomaker | cut -f1 -d\ )
@@ -70,15 +76,26 @@ if [ -z "$ROBOMAKER_CONTAINERS" ]; then
     exit
 fi
 
-
+# Expose the diamensions to the HTML template
+export QUALITY
+export WIDTH
+export HEIGHT
+# Create .js array of robomakers to pass to the HTML template 
+export ROBOMAKER_CONTAINERS_HTML="" 
 for c in $ROBOMAKER_CONTAINERS; do
-    C_URL="/$c/stream?topic=${TOPIC}&quality=${QUALITY}&width=${WIDTH}&height=${HEIGHT}"
-    C_IMG="<div class='card'><img class=\"card-img\" src=\"${C_URL}\"></img></div>"
-    echo $C_IMG >> $DR_VIEWER_HTML
+    ROBOMAKER_CONTAINERS_HTML+="'$c',"
+done
+SCRIPT_PATH="${BASH_SOURCE:-$0}"
+ABS_SCRIPT_PATH="$(realpath "${SCRIPT_PATH}")"
+ABS_DIRECTORY="$(dirname "${ABS_SCRIPT_PATH}")"
+INDEX_HTML_TEMPLATE="${ABS_DIRECTORY}/index.template.html"
+# Replace all variables in HTML template and create the viewer html file
+envsubst < "${INDEX_HTML_TEMPLATE}" > $DR_VIEWER_HTML
+
+# Add proxy paths in the NGINX file
+for c in $ROBOMAKER_CONTAINERS; do
     echo "  location /$c { proxy_pass http://$c:8080; rewrite /$c/(.*) /\$1 break; }" >> $DR_NGINX_CONF
 done
-
-echo "</div></div></body></html>" >> $DR_VIEWER_HTML
 echo "}" >> $DR_NGINX_CONF
 
 # Check if we will use Docker Swarm or Docker Compose
@@ -103,3 +120,11 @@ if [[ -n "${DISPLAY}" && "${DR_HOST_X,,}" == "true" ]]; then
   $BROWSER "http://127.0.01:8100" &
 fi
 
+CURRENT_CONTAINER_HASH=$(docker ps | grep dr_viewer | head -c 12)
+
+IP_ADDRESSES="$( hostname -I)";
+echo "The viewer will avaliable on the following hosts after initialization:"
+for ip in $IP_ADDRESSES;
+do
+    echo "http://${ip}:${PORT}"
+done
