@@ -178,7 +178,7 @@ then
     docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm
 else
     docker network rm $SAGEMAKER_NW
-    docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm
+    docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm --subnet=192.168.2.0/24
 fi
 
 # ensure our variables are set on startup - not for local setup.
