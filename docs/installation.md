@@ -13,6 +13,7 @@ Depending on your needs as well as specific needs of the cloud platform you can 
   * Minimum of 8 GB GPU-RAM if running with GPU.
   * Recommended at least 6 VCPUs
 * S3 bucket. Preferrably in same region as EC2 instance.
+* The internal `sagemaker-local` docker network runs by default on `192.168.2.0/24`. Ensure that your AWS IPC does not overlap with this subnet.
 
 **Azure**:
 
