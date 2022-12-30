@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>DR-$DR_RUN_ID - $DR_LOCAL_S3_MODEL_PREFIX - $TOPIC</title>
+    <title>DR-$DR_RUN_ID - $DR_LOCAL_S3_MODEL_PREFIX</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -18,6 +18,10 @@
             font-family: \"Roboto\", sans-serif;
             font-size: 16px;
             font-weight: 400;
+        }
+
+        input {
+            width: 100px;
         }
 
         .container {
@@ -38,17 +42,18 @@
             left: 0;
             right: 0;
             z-index: 2;
-            background: var(--primary-color)
+            background: var(--primary-color);
+            box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 5px -1px, rgba(0, 0, 0, 0.14) 0px 6px 10px 0px, rgba(0, 0, 0, 0.12) 0px 1px 18px 0px;
         }
 
-        .navbar-header {
-            font-weight: 500;
+        h1.navbar-header {
+            font-weight: 750;
             font-size: 1.125rem;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             padding: 12px 16px;
-            box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 5px -1px, rgba(0, 0, 0, 0.14) 0px 6px 10px 0px, rgba(0, 0, 0, 0.12) 0px 1px 18px 0px;
+            margin: 0;
         }
 
         #main-container {
@@ -88,6 +93,17 @@
             margin-right: 0.5rem;
         }
 
+        h2 {
+            margin-left: 0.3rem;
+            margin-top: 0.3rem;
+            margin-bottom: 0.1rem;
+        }
+
+        h3 {
+            margin-left: 0 rem;
+            margin-top: 0.3rem;
+        }
+
         .hide {
             display: none;
         }
@@ -98,8 +114,8 @@
         }
 
         .robo-maker {
-            padding: 1rem;
-            margin: 1rem;
+            padding: 0.5rem;
+            margin: 0.5rem;
             border: medium solid var(--primary-color);
             border-radius: 10px;
         }
@@ -114,10 +130,10 @@
 <body>
     <div class="container">
         <div class="navbar">
-            <div class="navbar-header">Run ID:$DR_RUN_ID - Model: $DR_LOCAL_S3_MODEL_PREFIX </div>
+            <h1 class="navbar-header">Run ID:$DR_RUN_ID - Model: $DR_LOCAL_S3_MODEL_PREFIX </h1>
             <div class="select-options">
                 <div class="select">
-                    <label for="robo-select">Robomaker:</label>
+                    <label for="robo-select">Worker:</label>
                     <select name="robo-select" id="robo-select">
                     </select>
                 </div>
@@ -259,7 +275,7 @@
                         roboMaker.classList.add('robo-maker')
                         roboMaker.dataset.robo = robo
                         let roboMakerTitle = document.createElement('h2')
-                        roboMakerTitle.innerHTML = 'Robomaker: ' + robo
+                        roboMakerTitle.innerHTML = 'Worker: ' + robo
                         roboMaker.appendChild(roboMakerTitle)
                         let roboCameras = document.createElement('div')
                         roboCameras.dataset.robo = robo
