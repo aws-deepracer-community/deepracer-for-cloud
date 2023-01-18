@@ -63,10 +63,17 @@ def main():
             sys.exit()
 
     # Prepare Boto3
-    session = boto3.session.Session(
-        region_name="us-east-1",
-        profile_name=os.environ.get("DR_UPLOAD_S3_PROFILE", None),
-    )
+    profile_name=os.environ.get("DR_UPLOAD_S3_PROFILE", None)
+
+    if (profile_name is None or len(profile_name) == 0):
+        session = boto3.session.Session(
+            region_name="us-east-1"
+        )
+    else:
+        session = boto3.session.Session(
+            region_name="us-east-1",
+            profile_name=profile_name
+        )
 
     global dr
     dr = boto3_enhancer.deepracer_client(session=session)
