@@ -41,6 +41,7 @@ config['WORLD_NAME'] = os.environ.get('DR_WORLD_NAME', 'LGSWide')
 config['DISPLAY_NAME'] = os.environ.get('DR_DISPLAY_NAME', 'racer1')
 config['RACER_NAME'] = os.environ.get('DR_RACER_NAME', 'racer1')
 
+config['REVERSE_DIR'] = os.environ.get('DR_TRAIN_REVERSE_DIRECTION', False)
 config['ALTERNATE_DRIVING_DIRECTION'] = os.environ.get('DR_TRAIN_ALTERNATE_DRIVING_DIRECTION', os.environ.get('DR_ALTERNATE_DRIVING_DIRECTION', 'false'))
 config['CHANGE_START_POSITION'] = os.environ.get('DR_TRAIN_CHANGE_START_POSITION', os.environ.get('DR_CHANGE_START_POSITION', 'true'))
 config['ROUND_ROBIN_ADVANCE_DIST'] = os.environ.get('DR_TRAIN_ROUND_ROBIN_ADVANCE_DIST', '0.05')
