@@ -79,6 +79,8 @@ config['NUMBER_OF_RESETS'] = os.environ.get('DR_EVAL_MAX_RESETS', '0')
 config['OFF_TRACK_PENALTY'] = os.environ.get('DR_EVAL_OFF_TRACK_PENALTY', '5.0')
 config['COLLISION_PENALTY'] = os.environ.get('DR_COLLISION_PENALTY', '5.0')
 
+config['REVERSE_DIR'] = os.environ.get('DR_EVAL_REVERSE_DIRECTION', False)
+
 # Object Avoidance
 if config['RACE_TYPE'] == 'OBJECT_AVOIDANCE':
     config['NUMBER_OF_OBSTACLES'] = os.environ.get('DR_OA_NUMBER_OF_OBSTACLES', '6')
