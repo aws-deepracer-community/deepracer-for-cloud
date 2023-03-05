@@ -81,6 +81,7 @@ config['COLLISION_PENALTY'] = os.environ.get('DR_COLLISION_PENALTY', '5.0')
 
 config['CAMERA_MAIN_ENABLE'] = os.environ.get('DR_CAMERA_MAIN_ENABLE', 'True')
 config['CAMERA_SUB_ENABLE'] = os.environ.get('DR_CAMERA_SUB_ENABLE', 'True')
+config['REVERSE_DIR'] = os.environ.get('DR_EVAL_REVERSE_DIRECTION', False)
 
 # Object Avoidance
 if config['RACE_TYPE'] == 'OBJECT_AVOIDANCE':

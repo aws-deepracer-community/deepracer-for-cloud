@@ -13,5 +13,5 @@ data/
 tmp/
 autorun.s3url
 nohup.out
-start.sh
+./start.sh
 _
