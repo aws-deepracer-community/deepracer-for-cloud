@@ -46,12 +46,17 @@ echo "Configuration file $CONFIG_FILE will be updated."
 CURRENT_RUN_MODEL=$(grep -e "^DR_LOCAL_S3_MODEL_PREFIX" ${CONFIG_FILE} | awk '{split($0,a,"="); print a[2] }')
 CURRENT_RUN_MODEL_NUM=$(echo "${CURRENT_RUN_MODEL}" | \
                     awk -v DELIM="${OPT_DELIM}" '{ n=split($0,a,DELIM); if (a[n] ~ /[0-9]*/) print a[n]; else print ""; }')
-if [[ -z ${CURRENT_RUN_MODEL_NUM} ]];
+if [[ -n ${OPT_PREFIX} ]];
 then
-    NEW_RUN_MODEL="${CURRENT_RUN_MODEL}${OPT_DELIM}1"
+  NEW_RUN_MODEL="${OPT_PREFIX}"
 else
-    NEW_RUN_MODEL_NUM=$(echo "${CURRENT_RUN_MODEL_NUM} + 1" | bc )
-    NEW_RUN_MODEL=$(echo $CURRENT_RUN_MODEL | sed "s/${CURRENT_RUN_MODEL_NUM}\$/${NEW_RUN_MODEL_NUM}/")
+  if [[ -z ${CURRENT_RUN_MODEL_NUM} ]];
+  then
+      NEW_RUN_MODEL="${CURRENT_RUN_MODEL}${OPT_DELIM}1"
+  else
+      NEW_RUN_MODEL_NUM=$(echo "${CURRENT_RUN_MODEL_NUM} + 1" | bc )
+      NEW_RUN_MODEL=$(echo $CURRENT_RUN_MODEL | sed "s/${CURRENT_RUN_MODEL_NUM}\$/${NEW_RUN_MODEL_NUM}/")
+  fi
 fi
 
 if [[ -n "${NEW_RUN_MODEL}" ]];
