@@ -18,12 +18,15 @@ The scripts assume that two files `system.env` containing constant configuration
 | `DR_EVAL_OFF_TRACK_PENALTY` | Number of seconds penalty time added for an off track during evaluation.  Only takes effect if `DR_EVAL_IS_CONTINUOUS` is set to True.|
 | `DR_EVAL_COLLISION_PENALTY` | Number of seconds penalty time added for a collision during evaluation.  Only takes effect if `DR_EVAL_IS_CONTINUOUS` is set to True.|
 | `DR_EVAL_SAVE_MP4` | Set to `True` to save MP4 of an evaluation run. |
+| `DR_EVAL_REVERSE_DIRECTION` | Set to `True` to reverse the direction in which the car traverses the track.|
 | `DR_TRAIN_CHANGE_START_POSITION` | Determines if the racer shall round-robin the starting position during training sessions. (Recommended to be `True` for initial training.)|
 | `DR_TRAIN_ALTERNATE_DRIVING_DIRECTION` | `True` or `False`.  If `True`, the car will alternate driving between clockwise and counter-clockwise each episode.|
 | `DR_TRAIN_START_POSITION_OFFSET` | Used to control where to start the training from on first episode.|
 | `DR_TRAIN_ROUND_ROBIN_ADVANCE_DISTANCE` | How far to progress each episode in round robin.  0.05 is 5% of the track.  Generally best to try and keep this to even numbers that match with your total number of episodes to allow for even distribution around the track.  For example, if 20 episodes per iternation, .05 or .10 or .20  would be good.|
 | `DR_TRAIN_MULTI_CONFIG` | `True` or `False`.  This is used if you want to use different run.env configurations for each worker in a multi worker training run.  See multi config documentation for more details on how to set this up.|
 | `DR_TRAIN_MIN_EVAL_TRIALS` | The minimum number of evaluation trials run between each training iteration.  Evaluations will continue as long as policy training is occuring and may be more than this number.  This establishes the minimum, and is generally useful if you want to speed up training especially when using gpu sagemaker containers.|
+| `DR_TRAIN_REVERSE_DIRECTION` | Set to `True` to reverse the direction in which the car traverses the track. |
+| `DR_TRAIN_BEST_MODEL_METRIC` | Can be used to control which model is kept as the "best" model. Set to `progress` to select the model with the highest evaluation completion percentage, set to `reward` to select the model with the highest evaluation reward.|
 | `DR_LOCAL_S3_PRETRAINED` | Determines if training or evaluation shall be based on the model created in a previous session, held in `s3://{DR_LOCAL_S3_BUCKET}/{LOCAL_S3_PRETRAINED_PREFIX}`, accessible by credentials held in profile `{DR_LOCAL_S3_PROFILE}`.|
 | `DR_LOCAL_S3_PRETRAINED_PREFIX` | Prefix of pretrained model within S3 bucket.|
 | `DR_LOCAL_S3_MODEL_PREFIX` | Prefix of model within S3 bucket.|
