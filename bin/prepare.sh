@@ -364,7 +364,7 @@ log_message debug "Checking if awscli is installed..."
 check_and_install "aws"
 
 log_message debug "Attempting to install Boto3..."
-install_package "python3-boto3"
+check_and_install "python3-boto3"
 
 
 # Detect Architecture
@@ -397,7 +397,7 @@ log_message debug "Checking if sed is installed..."
 check_and_install "sed"
 
 # Set Distribution
-# TODO: Swap maybe?
+# TODO: Swap maybe? IE logic for DISTRIBUTION and DISTRIBUTION_REAL
 log_message debug "Setting Distribution..."
 DISTRIBUTION=$(. /etc/os-release;echo $ID$VERSION_ID | sed 's/\.//')
 DISTRIBUTION_REAL=$(. /etc/os-release;echo $ID$VERSION_ID)
