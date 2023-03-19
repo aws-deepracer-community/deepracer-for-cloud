@@ -554,7 +554,7 @@ if [[ "${ARCH}" == "gpu" ]];
           emit_cmd cat /etc/docker/daemon.json | jq 'del(."default-runtime") + {"default-runtime": "nvidia"}' | sudo tee /etc/docker/daemon.json
       else
           log_message info "Creating /etc/docker/daemon.json with default-rutime nvidia."
-          emit_cmd sudo cp $DIR/../defaults/docker-daemon.json /etc/docker/daemon.json
+          emit_cmd sudo nvidia-ctk runtime configure --runtime=docker --set-as-default
       fi
 
       log_message info "Reloading docker daemon."
