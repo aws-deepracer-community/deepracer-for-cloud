@@ -548,10 +548,14 @@ fi
 
 if [[ "${ARCH}" == "gpu" ]];
   then
+
+      log_message info "Attempting to setup nvidia-container-toolkit and runtime.."
+      install_package "nvidia-container-toolkit"
+
       if [ -f "/etc/docker/daemon.json" ];
       then
           log_message info "Altering /etc/docker/daemon.json with default-runtime nvidia."
-          emit_cmd cat /etc/docker/daemon.json | jq 'del(."default-runtime") + {"default-runtime": "nvidia"}' | sudo tee /etc/docker/daemon.json
+          cat /etc/docker/daemon.json | jq 'del(."default-runtime") + {"default-runtime": "nvidia"}' | sudo tee /etc/docker/daemon.json
       else
           log_message info "Creating /etc/docker/daemon.json with default-rutime nvidia."
           emit_cmd sudo nvidia-ctk runtime configure --runtime=docker --set-as-default
