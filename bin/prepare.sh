@@ -8,18 +8,6 @@ trap ctrl_c INT
 source "$DIR"/lib/logging.sh
 source "$DIR"/lib/common/utilities.sh
 
-
-
-# Functions
-#-----------------------------------------------------------------------------------------------------------------------
-
-function ctrl_c() {
-  # Function to handle Ctrl+C
-        log_message warning "Requested to stop."
-        exit 1
-}
-
-
 # Define Global Variables
 #-----------------------------------------------------------------------------------------------------------------------
 
@@ -28,6 +16,8 @@ ERROR=0
 WARNING=1
 INFO=2
 DEBUG=3
+
+LOG_LEVEL=$INFO # Set default log level
 
 # Set default log level
 set_log_level "$DIR/../system.env"
@@ -51,6 +41,14 @@ log_message debug "ARCH: $ARCH"
 log_message debug "CLOUD_NAME: $CLOUD_NAME"
 
 
+# Functions
+#-----------------------------------------------------------------------------------------------------------------------
+
+function ctrl_c() {
+  # Function to handle Ctrl+C
+        log_message warning "Requested to stop."
+        exit 1
+}
 
 # Dependencies Check
 #-----------------------------------------------------------------------------------------------------------------------
