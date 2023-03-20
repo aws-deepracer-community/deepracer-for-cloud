@@ -71,8 +71,11 @@ DEBUG=3
 # Set default log level
 LOG_LEVEL=$INFO
 
+# Set default log level
+set_log_level "$DR_DIR/system.env"
+
 # Define the script directory
-SCRIPT_DIR=get_dir
+SCRIPT_DIR=$( get_dir )
 
 # TODO: enhance the get_dir to return the parent directory based on flags
 # Return the parent directory of the script directory
@@ -144,7 +147,7 @@ fi
 #-----------------------------------------------------------------------------------------------------------------------
 
 if check_file "$INSTALL_DIR"/DONE; then
-    log_message info "Installation already completed."
+    log_message warning "Installation already completed."
     if confirm "Do you want to re-install?"; then
         log_message info "User confirmed, Re-installing"
         emit_cmd rm -rf "$INSTALL_DIR"/DONE
