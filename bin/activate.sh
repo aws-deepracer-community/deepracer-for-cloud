@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ) # Set base Directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+DIR="$( dirname $SCRIPT_DIR )"
+export DR_DIR=$DIR
 
 # Libraries
 #-----------------------------------------------------------------------------------------------------------------------
 
-source "$DIR"/lib/logging.sh
+source "$SCRIPT_DIR"/lib/logging.sh
+source "$SCRIPT_DIR"/lib/common/utilities.sh
+source "$SCRIPT_DIR"/lib/common/docker.sh
+source "$SCRIPT_DIR"/lib/common/minio.sh
+source "$SCRIPT_DIR"/lib/common/gpu.sh
 
 # Functions
 #-----------------------------------------------------------------------------------------------------------------------
@@ -18,16 +24,24 @@ WARNING=1
 INFO=2
 DEBUG=3
 
+
+LOG_LEVEL=$INFO # Set default log level
+
 # Set default log level
-set_log_level "$DIR/../system.env"
-#LOG_LEVEL=2
+set_log_level "$DR_DIR/system.env"
+
 
 
 # Dependencies Check
 #-----------------------------------------------------------------------------------------------------------------------
+check_and_fail "docker"
+
+
 
 # Adjustable Variables
 #-----------------------------------------------------------------------------------------------------------------------
+
+MINIO_VERSION="RELEASE.2022-10-24T18-35-07Z"
 
 # Process Arguments
 #-----------------------------------------------------------------------------------------------------------------------
@@ -98,9 +112,9 @@ function dr-update-env {
 }
 
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-DIR="$( dirname $SCRIPT_DIR )"
-export DR_DIR=$DIR
+#SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+#DIR="$( dirname $SCRIPT_DIR )"
+#export DR_DIR=$DIR
 
 if [[ -f "$1" ]];
 then
@@ -116,38 +130,26 @@ else
 fi
 
 # Check if Docker runs -- if not, then start it.
-if [[ "$(type service 2> /dev/null)" ]]; then
-  service docker status > /dev/null || sudo service docker start
-fi
+check_and_start_docker
 
 # Check if we will use Docker Swarm or Docker Compose
 # If not defined then use Swarm
+log_message debug "Checking if DR_DOCKER_STYLE is defined."
 if [[ -z "${DR_DOCKER_STYLE}" ]]; then
+  log_message debug "DR_DOCKER_STYLE is not defined. Defaulting to swarm."
   export DR_DOCKER_STYLE="swarm"
 fi
 
-if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
-then
-  export DR_DOCKER_FILE_SEP="-c"
-  SWARM_NODE=$(docker node inspect self | jq .[0].ID -r)
-  SWARM_NODE_UPDATE=$(docker node update --label-add Sagemaker=true $SWARM_NODE)
-else
-  export DR_DOCKER_FILE_SEP="-f"
-fi
+log_message info "DR_DOCKER_STYLE is set to ${DR_DOCKER_STYLE}."
+
+# Check if we will use Docker Swarm or Docker Compose
+set_docker_style
 
 # Check if CUDA_VISIBLE_DEVICES is configured.
-if [[ -n "${CUDA_VISIBLE_DEVICES}" ]]; then
-  echo "WARNING: You have CUDA_VISIBLE_DEVICES defined. The will no longer work as"
-  echo "         expected. To control GPU assignment use DR_ROBOMAKER_CUDA_DEVICES"
-  echo "         and DR_SAGEMAKER_CUDA_DEVICES and rlcoach v5.0.1 or later."
-fi
+alert_cuda_devices
 
 # Check if CUDA_VISIBLE_DEVICES is configured.
-if [ "${DR_CLOUD,,}" == "local" ] && [ -z "${DR_MINIO_IMAGE}" ]; then
-  echo "WARNING: You have not configured DR_MINIO_IMAGE in system.env."
-  echo "         System will default to tag RELEASE.2022-10-24T18-35-07Z"
-  export DR_MINIO_IMAGE="RELEASE.2022-10-24T18-35-07Z"
-fi
+alert_minio_image $MINIO_VERSION
 
 # Prepare the docker compose files depending on parameters
 if [[ "${DR_CLOUD,,}" == "azure" ]];
