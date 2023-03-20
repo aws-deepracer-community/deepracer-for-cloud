@@ -35,7 +35,7 @@ function docker_swarm_init() {
   # Function to initialize Docker Swarm mode if it is not already enabled
 
     if docker node ls > /dev/null 2>&1; then
-        log_message info "Swarm mode already enabled."
+        log_message warning "Swarm mode already enabled."
     else
         log_message warning "Swarm mode not enabled. Initializing swarm..."
         emit_cmd docker swarm init
