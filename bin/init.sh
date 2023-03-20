@@ -12,6 +12,7 @@ source "$DIR"/lib/common/gpu.sh
 source "$DIR"/lib/common/cli.sh
 source "$DIR"/lib/common/docker.sh
 source "$DIR"/lib/common/autorun.sh
+source "$DIR"/lib/common/detect.sh
 
 # Functions
 #-----------------------------------------------------------------------------------------------------------------------
@@ -134,7 +135,7 @@ fi
 # Detect Cloud
 if [[ -z "$OPT_CLOUD" ]]; then
     log_message debug "Detecting cloud provider"
-    source $SCRIPT_DIR/detect.sh
+    check_cloud_init
     OPT_CLOUD=$CLOUD_NAME
     log_message info "Detected cloud type to be $CLOUD_NAME"
 fi
