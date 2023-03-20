@@ -16,9 +16,9 @@ services:
     environment:
       - MINIO_ROOT_USER=${DR_LOCAL_ACCESS_KEY_ID}
       - MINIO_ROOT_PASSWORD=${DR_LOCAL_SECRET_ACCESS_KEY}
-      - MINIO_UID
-      - MINIO_GID
-      - MINIO_USERNAME
-      - MINIO_GROUPNAME
+      - MINIO_UID=280001145
+      - MINIO_GID=280000513
+      - MINIO_USERNAME=${DR_MINIO_USERNAME}
+      - MINIO_GROUPNAME=${DR_MINIO_GROUPNAME}
     volumes:
       - ${DR_DIR}/data/minio:/data
