@@ -152,7 +152,7 @@ if check_file "$INSTALL_DIR"/DONE; then
         log_message info "User confirmed, Re-installing"
         emit_cmd rm -rf "$INSTALL_DIR"/DONE
     else
-        log_message info "User did not confirm, Exiting"
+        log_message warning "User did not confirm, Exiting"
         exit 0
     fi
 fi
@@ -257,7 +257,7 @@ else
         log_message debug "Copied: $INSTALL_DIR/defaults/template-system.env -> $INSTALL_DIR/system.env"
     else
         # User did not confirm, exit script
-        log_message info "User did not confirm, skipping system.env file."
+        log_message warning "User did not confirm, skipping system.env file."
     fi
 fi
 
@@ -276,7 +276,7 @@ else
         log_message debug "Copied: $INSTALL_DIR/defaults/template-run.env -> $INSTALL_DIR/run.env"
     else
         # User did not confirm, exit script
-        log_message info "User did not confirm, skipping run.env file."
+        log_message warning "User did not confirm, skipping run.env file."
     fi
 fi
 
