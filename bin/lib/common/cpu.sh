@@ -21,14 +21,14 @@ function get_cpu_level() {
 
 function check_intel_cpu() {
   # Function to detect if the CPU is Intel
-  log_message warning "On non intel systems you may see: sysctl: cannot stat /proc/sys/machdep/cpu/vendor: No such file or directory, this is safe to ignore"
+  # log_message warning "On non intel systems you may see: sysctl: cannot stat /proc/sys/machdep/cpu/vendor: No such file or directory, this is safe to ignore"
 
   if [[ -f /proc/cpuinfo ]] && [[ "$(cat /proc/cpuinfo | grep GenuineIntel | wc -l)" > 0 ]]; then
-      return 0 # CPU is Intel, return true
+      echo 0 # CPU is Intel, return true
   elif [[ "$(type sysctl 2> /dev/null)" ]] && [[ "$(sysctl -n machdep.cpu.vendor)" == "GenuineIntel" ]]; then
-      return 0 # CPU is Intel, return true
+      echo 0 # CPU is Intel, return true
   else
-      return 1 # CPU is not Intel, return false
+    echo 1 # CPU is not Intel, return false
   fi
 }
 
