@@ -143,7 +143,7 @@ fi
 #-----------------------------------------------------------------------------------------------------------------------
 
 if check_file "$INSTALL_DIR"/DONE; then
-    log_message info "Installation already completed already"
+    log_message info "Installation already completed."
     if confirm "Do you want to re-install?"; then
         log_message info "User confirmed, Re-installing"
         emit_cmd rm -rf "$INSTALL_DIR"/DONE
