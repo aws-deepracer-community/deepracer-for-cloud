@@ -1,6 +1,9 @@
+# Library for Utility functions
+#
+# This file is sourced by the main script and contains functions that are specific to custom utilities.
+# It is sourced after the common libraries and before the main script.
 
-
-# Common Functions
+# Utility Functions
 #-----------------------------------------------------------------------------------------------------------------------
 # LOG_LEVEL needs to be defined in the importing script
 
@@ -19,18 +22,18 @@ emit_cmd() {
 function check_file() {
   # Function to check if a file exists
 
-    file="$1"
+    local file="$1"
     if test -f "$file"; then
-       return 0 # File exists, return true
+       true # File exists, return true
     else
-        return 1 # File does not exist, return false
+       false # File does not exist, return false
     fi
 }
 
 function check_dir() {
   # Function to check if a directory exists
 
-    dir="$1"
+    local dir="$1"
     if test -d "$dir"; then
        return 0 # Directory exists, return true
     else
@@ -40,7 +43,7 @@ function check_dir() {
 
 function check_cmd() {
   # Function to check if a command exists
-    cmd="$1"
+    local cmd="$1"
     if command -v "$cmd" &> /dev/null; then
         return 0 # Command exists, return true
     else
@@ -51,7 +54,7 @@ function check_cmd() {
 function get_dir() {
   # Function to get the current directory
 
-    DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+    local DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
     echo "$DIR"
 }
 
@@ -59,7 +62,7 @@ function detect_gpu() {
   # Function to detect if a GPU is present
   # TODO: This should return arch and not set a global variable?
 
-    GPUS=$(lspci | awk '/NVIDIA/ && ( /VGA/ || /3D controller/ ) ' | wc -l )
+    local GPUS=$(lspci | awk '/NVIDIA/ && ( /VGA/ || /3D controller/ ) ' | wc -l )
     if [ $? -ne 0 ] || [ "$GPUS" -eq 0 ]; then
         ARCH="cpu"
     else
@@ -86,6 +89,7 @@ function detect_cloud() {
     fi
 }
 
+# TODO: Change to true and false, instead of 0 and 1
 is_package_installed() {
   # Function to check if a package is installed
 
@@ -229,5 +233,41 @@ function add_dep_repo() {
             exit 1
         fi
         log_message info "added to repository with tee"
+    fi
+}
+
+function hasWhiteSpace() {
+    # Function to check if a string has whitespace
+
+    local checkstring="$1"
+    if [[ "$checkstring" == *\ * ]]; then
+        log_message debug "String has whitespace: $checkstring"
+        return 0 # Has whitespace
+    else
+        log_message debug "String has no whitespace: $checkstring"
+        return 1 # No whitespace
+    fi
+}
+
+function check_and_fail() {
+    # Function to check if a package is installed and fail if not
+
+    local package="$1"
+    local isapt="$2"
+
+    if ! [[ "$isapt" ]]; then
+        if ! check_cmd "$package"; then
+            log_message error "$package is not installed. Exiting..."
+            exit 1
+        else
+            true
+        fi
+    else
+        if ! is_package_installed "$package"; then
+            log_message error "$package is not installed. Exiting..."
+            exit 1
+        else
+            true
+        fi
     fi
 }
