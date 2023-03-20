@@ -16,20 +16,20 @@ function check_cloud_init() {
       CLOUD_NAME=$(jq -r '.v1."cloud-name"' /var/run/cloud-init/instance-data.json)
       if [[ "${CLOUD_NAME}" == "azure" ]];
       then
-          export CLOUD_NAME
-          export CLOUD_INSTANCETYPE=$(jq -r '.ds."meta_data".imds.compute."vmSize"' /var/run/cloud-init/instance-data.json)
+          var_export CLOUD_NAME
+          var_export CLOUD_INSTANCETYPE=$(jq -r '.ds."meta_data".imds.compute."vmSize"' /var/run/cloud-init/instance-data.json)
           log_message debug "Detected Azure cloud environment. Setting CLOUD_NAME to '${CLOUD_NAME}' and CLOUD_INSTANCETYPE to '${CLOUD_INSTANCETYPE}'"
       elif [[ "${CLOUD_NAME}" == "aws" ]];
       then
-          export CLOUD_NAME
-          export CLOUD_INSTANCETYPE=$(jq -r '.ds."meta-data"."instance-type"' /var/run/cloud-init/instance-data.json)
+          var_export CLOUD_NAME
+          var_export CLOUD_INSTANCETYPE=$(jq -r '.ds."meta-data"."instance-type"' /var/run/cloud-init/instance-data.json)
           log_message debug "Detected AWS cloud environment. Setting CLOUD_NAME to '${CLOUD_NAME}' and CLOUD_INSTANCETYPE to '${CLOUD_INSTANCETYPE}'"
       else
-          export CLOUD_NAME=local
+          var_export CLOUD_NAME=local
           log_message debug "Detected unknown cloud environment. Defaulting CLOUD_NAME to 'local'"
       fi
   else
-      export CLOUD_NAME=local
+      var_export CLOUD_NAME=local
       log_message debug "Cloud-init environment not found. Defaulting CLOUD_NAME to 'local'"
   fi
 }

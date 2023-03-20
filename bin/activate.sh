@@ -12,6 +12,7 @@ source "$SCRIPT_DIR"/lib/common/utilities.sh
 source "$SCRIPT_DIR"/lib/common/docker.sh
 source "$SCRIPT_DIR"/lib/common/minio.sh
 source "$SCRIPT_DIR"/lib/common/gpu.sh
+source "$SCRIPT_DIR"/lib/common/environment.sh
 
 # Functions
 #-----------------------------------------------------------------------------------------------------------------------
@@ -60,7 +61,7 @@ function dr-update-env {
     log_message info "Importing system environment variables from system.env"
     while read -r line; do
       if [[ "$line" != \#* && "$line" != "" ]]; then
-        export "${line?}"
+        var_export "$line"
         log_message debug " Exporting: $line"
       fi
     done < "$DIR/system.env"
@@ -76,7 +77,7 @@ function dr-update-env {
     log_message debug "Importing environment variables from run.env"
     while read -r line; do
       if [[ "$line" != \#* && "$line" != "" ]]; then
-        export "$line"
+        var_export "$line"
         log_message debug " Exporting: $line"
       fi
     done < "$DR_CONFIG"
@@ -94,18 +95,18 @@ function dr-update-env {
   log_message info "Setting ports for RoboMaker"
   if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
     log_message debug "DR_DOCKER_STYLE: swarm"
-    export DR_ROBOMAKER_TRAIN_PORT=$((8080 + DR_RUN_ID))
+    var_export DR_ROBOMAKER_TRAIN_PORT=$((8080 + DR_RUN_ID))
     log_message debug "DR_ROBOMAKER_TRAIN_PORT: $DR_ROBOMAKER_TRAIN_PORT"
-    export DR_ROBOMAKER_EVAL_PORT=$((8180 + DR_RUN_ID))
+    var_export  DR_ROBOMAKER_EVAL_PORT=$((8180 + DR_RUN_ID))
     log_message debug "DR_ROBOMAKER_EVAL_PORT: $DR_ROBOMAKER_EVAL_PORT"
-    export DR_ROBOMAKER_GUI_PORT=$((5900 + DR_RUN_ID))
+    var_export  DR_ROBOMAKER_GUI_PORT=$((5900 + DR_RUN_ID))
     log_message debug "DR_ROBOMAKER_GUI_PORT: $DR_ROBOMAKER_GUI_PORT"
   else
-    export DR_ROBOMAKER_TRAIN_PORT="8080-8089"
+    var_export  DR_ROBOMAKER_TRAIN_PORT="8080-8089"
     log_message debug "DR_ROBOMAKER_TRAIN_PORT: $DR_ROBOMAKER_TRAIN_PORT"
-    export DR_ROBOMAKER_EVAL_PORT="8080-8089"
+    var_export  DR_ROBOMAKER_EVAL_PORT="8080-8089"
     log_message debug "DR_ROBOMAKER_EVAL_PORT: $DR_ROBOMAKER_EVAL_PORT"
-    export DR_ROBOMAKER_GUI_PORT="5901-5920"
+    var_export  DR_ROBOMAKER_GUI_PORT="5901-5920"
     log_message debug "DR_ROBOMAKER_GUI_PORT: $DR_ROBOMAKER_GUI_PORT"
   fi
   log_message info "Done updating the environment"
@@ -118,14 +119,14 @@ function dr-update-env {
 
 if [[ -f "$1" ]];
 then
-  export DR_CONFIG=$(readlink -f $1)
+  var_export  DR_CONFIG=$(readlink -f $1)
   dr-update-env
 elif [[ -f "$DIR/run.env" ]];
 then
-  export DR_CONFIG="$DIR/run.env"
+  var_export  DR_CONFIG="$DIR/run.env"
   dr-update-env
 else
-  echo "No configuration file."
+  log_message warning "No configuration file."
   return 1
 fi
 
@@ -137,7 +138,7 @@ check_and_start_docker
 log_message debug "Checking if DR_DOCKER_STYLE is defined."
 if [[ -z "${DR_DOCKER_STYLE}" ]]; then
   log_message debug "DR_DOCKER_STYLE is not defined. Defaulting to swarm."
-  export DR_DOCKER_STYLE="swarm"
+  var_export DR_DOCKER_STYLE="swarm"
 fi
 
 log_message info "DR_DOCKER_STYLE is set to ${DR_DOCKER_STYLE}."
@@ -154,24 +155,24 @@ alert_minio_image $MINIO_VERSION
 # Prepare the docker compose files depending on parameters
 if [[ "${DR_CLOUD,,}" == "azure" ]];
 then
-    export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
-    export DR_MINIO_URL="http://minio:9000"
+    var_export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
+    var_export DR_MINIO_URL="http://minio:9000"
     DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_S3_ENDPOINT_URL"
     DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
     DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
     DR_MINIO_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-azure.yml"
 elif [[ "${DR_CLOUD,,}" == "local" ]];
 then
-    export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
-    export DR_MINIO_URL="http://minio:9000"
+    var_export DR_LOCAL_S3_ENDPOINT_URL="http://localhost:9000"
+    var_export DR_MINIO_URL="http://minio:9000"
     DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_S3_ENDPOINT_URL"
     DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
     DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
     DR_MINIO_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local.yml"
 elif [[ "${DR_CLOUD,,}" == "remote" ]];
 then
-    export DR_LOCAL_S3_ENDPOINT_URL="$DR_REMOTE_MINIO_URL"
-    export DR_MINIO_URL="$DR_REMOTE_MINIO_URL"
+    var_export DR_LOCAL_S3_ENDPOINT_URL="$DR_REMOTE_MINIO_URL"
+    var_export DR_MINIO_URL="$DR_REMOTE_MINIO_URL"
     DR_LOCAL_PROFILE_ENDPOINT_URL="--profile $DR_LOCAL_S3_PROFILE --endpoint-url $DR_LOCAL_S3_ENDPOINT_URL"
     DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
     DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
@@ -211,30 +212,30 @@ fi
 ## Check if we have an AWS IAM assumed role, or if we need to set specific credentials.
 if [ "${DR_CLOUD,,}" == "aws" ] && [ $(aws --output json sts get-caller-identity 2> /dev/null | jq '.Arn' | awk /assumed-role/ | wc -l ) -gt 0 ];
 then
-    export DR_LOCAL_S3_AUTH_MODE="role"
+    var_export DR_LOCAL_S3_AUTH_MODE="role"
 else 
-    export DR_LOCAL_ACCESS_KEY_ID=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_access_key_id | xargs)
-    export DR_LOCAL_SECRET_ACCESS_KEY=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_secret_access_key | xargs)
+    var_export DR_LOCAL_ACCESS_KEY_ID=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_access_key_id | xargs)
+    var_export DR_LOCAL_SECRET_ACCESS_KEY=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_secret_access_key | xargs)
     DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-keys.yml"
     DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-keys.yml"
-    export DR_UPLOAD_PROFILE="--profile $DR_UPLOAD_S3_PROFILE"
-    export DR_LOCAL_S3_AUTH_MODE="profile"
+    var_export DR_UPLOAD_PROFILE="--profile $DR_UPLOAD_S3_PROFILE"
+    var_export DR_LOCAL_S3_AUTH_MODE="profile"
 fi
 
-export DR_TRAIN_COMPOSE_FILE
-export DR_EVAL_COMPOSE_FILE
-export DR_LOCAL_PROFILE_ENDPOINT_URL
+var_export DR_TRAIN_COMPOSE_FILE
+var_export DR_EVAL_COMPOSE_FILE
+var_export DR_LOCAL_PROFILE_ENDPOINT_URL
 
 if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
-    export MINIO_UID=$(id -u)
-    export MINIO_USERNAME=$(id -u -n)
-    export MINIO_GID=$(id -g)
-    export MINIO_GROUPNAME=$(id -g -n)
+    var_export MINIO_UID=$(id -u)
+    var_export MINIO_USERNAME=$(id -u -n)
+    var_export MINIO_GID=$(id -g)
+    var_export MINIO_GROUPNAME=$(id -g -n)
     if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
     then
-        docker stack deploy $DR_MINIO_COMPOSE_FILE s3
+        emit_cmd docker stack deploy $DR_MINIO_COMPOSE_FILE s3
     else
-        docker-compose $DR_MINIO_COMPOSE_FILE -p s3 --log-level ERROR up -d
+        emit_cmd docker-compose $DR_MINIO_COMPOSE_FILE -p s3 --log-level ERROR up -d
     fi
 
 fi
