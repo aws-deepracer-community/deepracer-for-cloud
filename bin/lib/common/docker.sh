@@ -17,6 +17,7 @@ function pull_docker_image() {
 
     local image_name="$1"
     local tag="$2"
+    log_message debug "Checking if Docker image ${image_name}:${tag} is available..."
     if docker image inspect "${image_name}:${tag}" > /dev/null 2>&1; then
         log_message info "Docker image ${image_name}:${tag} is already available."
     else
@@ -61,16 +62,47 @@ function setup_swarm_network() {
     if ! docker network ls | grep -q "$sagemaker_network"; then
         emit_cmd docker network create "$sagemaker_network" -d overlay --attachable --scope swarm --subnet=192.168.2.0/24
     else
-        log_message info "SageMaker network already exists."
+        log_message warning "SageMaker network already exists."
         if confirm "Do you want to recreate it?"; then
           log_message info "User confirmed, deleting and recreating swarm network."
           emit_cmd docker network rm "$sagemaker_network"
           emit_cmd docker network create "$sagemaker_network" -d overlay --attachable --scope swarm --subnet=192.168.2.0/24
 
         else
-          log_message info "User did not confirm, Skipping network creation."
+          log_message warning "User did not confirm, Skipping network creation."
         fi
     fi
 }
+
+function check_and_start_docker() {
+  # Check if Docker runs -- if not, then start it.
+
+  if [[ "$(type service 2> /dev/null)" ]]; then
+    if ! service docker status > /dev/null; then
+      sudo service docker start
+      log_message info "Docker daemon started."
+    else
+      log_message info "Docker daemon already running."
+    fi
+  fi
+}
+
+function set_docker_style() {
+  # Set the Docker style to either "default" or "swarm"
+
+  if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
+    log_message info "Setting DR_DOCKER_FILE_SEP to 'swarm'"
+    export DR_DOCKER_FILE_SEP="-c"
+    SWARM_NODE=$(docker node inspect self | jq .[0].ID -r)
+    log_message debug "Swarm node ID: $SWARM_NODE"
+
+    SWARM_NODE_UPDATE=$(docker node update --label-add Sagemaker=true $SWARM_NODE)
+    log_message debug "Swarm node update: $SWARM_NODE_UPDATE"
+  else
+    log_message info "Setting DR_DOCKER_FILE_SEP to 'default'"
+    export DR_DOCKER_FILE_SEP="-f"
+  fi
+}
+
 
 
