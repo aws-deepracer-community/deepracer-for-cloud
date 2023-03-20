@@ -308,14 +308,22 @@ case "${OPT_CLOUD}" in
     log_message debug "Cloud Target: Local optimizations"
     AWS_REGION="us-east-1"
     MINIO_PROFILE="minio"
+
     sed -i "s/<LOCAL_PROFILE>/$MINIO_PROFILE/g" $INSTALL_DIR/system.env
+    log_message debug "Setting LOCAL_PROFILE to '$MINIO_PROFILE'"
+
     sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
+    log_message debug "Setting AWS_DR_BUCKET to 'not-defined'"
+
+    log_message debug "Checking if AWS profile '$MINIO_PROFILE' exists"
     aws configure --profile $MINIO_PROFILE get aws_access_key_id > /dev/null 2>&1
     if [[ "$?" -ne 0 ]]; then
         log_message warning "Creating default minio credentials in AWS profile '$MINIO_PROFILE'"
         aws configure --profile $MINIO_PROFILE set aws_access_key_id $(openssl rand -base64 12)
         aws configure --profile $MINIO_PROFILE set aws_secret_access_key $(openssl rand -base64 12)
         aws configure --profile $MINIO_PROFILE set region us-east-1
+    else
+        log_message warning "AWS profile '$MINIO_PROFILE' exists, skipping creation of default credentials"
     fi
     ;;
 esac
@@ -388,7 +396,7 @@ fi
 # set the ROBO_TAG in system.env
 sed -i "s/<ROBO_TAG>/$ROBOMAKER_VERSION/g" $INSTALL_DIR/system.env
 
-log_message debug "Setting  ROBOMAKER_VERSION to '$ROBOMAKER_VERSION'"
+log_message debug "Setting ROBOMAKER_VERSION to '$ROBOMAKER_VERSION'"
 
 ## set SAGEMAKER_VERSION
 log_message debug "Setting SAGEMAKER_VERSION"
@@ -409,14 +417,12 @@ pull_docker_image "awsdeepracercommunity/deepracer-sagemaker" $SAGEMAKER_VERSION
 # Create the Docker Swarm
 log_message info "Creating Docker Swarm"
 docker_swarm_init
-log_message debug "Docker Swarm initiated"
 
 
 SAGEMAKER_NW='sagemaker-local'
 
 log_message info "Creating Docker Swarm network $SAGEMAKER_NW"
 setup_swarm_network $SAGEMAKER_NW
-log_message debug "Docker Swarm network $SAGEMAKER_NW created"
 
 # ensure our variables are set on startup - not for local setup.
 if [[ "$OPT_CLOUD" != "local" ]]; then
