@@ -1,53 +1,102 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd ) # Set base Directory
+
+# Libraries
+#-----------------------------------------------------------------------------------------------------------------------
+
+source "$DIR"/lib/logging.sh
+
+# Functions
+#-----------------------------------------------------------------------------------------------------------------------
+
+# Define Global Variables
+#-----------------------------------------------------------------------------------------------------------------------
+# Define log levels
+ERROR=0
+WARNING=1
+INFO=2
+DEBUG=3
+
+# Set default log level
+set_log_level "$DIR/../system.env"
+#LOG_LEVEL=2
+
+
+# Dependencies Check
+#-----------------------------------------------------------------------------------------------------------------------
+
+# Adjustable Variables
+#-----------------------------------------------------------------------------------------------------------------------
+
+# Process Arguments
+#-----------------------------------------------------------------------------------------------------------------------
+
+# Main
+#-----------------------------------------------------------------------------------------------------------------------
 
 verlte() {
     [  "$1" = "`echo -e "$1\n$2" | sort -V | head -n1`" ]
 }
 
 function dr-update-env {
-
-  if [[ -f "$DIR/system.env" ]]
-  then
-    LINES=$(grep -v '^#' $DIR/system.env)
-    for l in $LINES; do
-      env_var=$(echo $l | cut -f1 -d\=)
-      env_val=$(echo $l | cut -f2 -d\=)
-      eval "export $env_var=$env_val"
-    done
+  # Import system environment variables from `system.env`
+  log_message info "Updating system environment variables"
+  if [[ -f "$DIR/system.env" ]]; then
+    log_message info "Importing system environment variables from system.env"
+    while read -r line; do
+      if [[ "$line" != \#* && "$line" != "" ]]; then
+        export "${line?}"
+        log_message debug " Exporting: $line"
+      fi
+    done < "$DIR/system.env"
+    log_message debug "Done importing system environment variables from system.env"
   else
-    echo "File system.env does not exist."
+    log_message error "File system.env does not exist."
     return 1
   fi
 
-  if [[ -f "$DR_CONFIG" ]]
-  then
-    LINES=$(grep -v '^#' $DR_CONFIG)
-    for l in $LINES; do
-      env_var=$(echo $l | cut -f1 -d\=)
-      env_val=$(echo $l | cut -f2 -d\=)
-      eval "export $env_var=$env_val"
-    done
+  # Import environment variables from `run.env`
+  log_message info "Importing environment variables from run.env"
+  if [[ -f "$DR_CONFIG" ]]; then
+    log_message debug "Importing environment variables from run.env"
+    while read -r line; do
+      if [[ "$line" != \#* && "$line" != "" ]]; then
+        export "$line"
+        log_message debug " Exporting: $line"
+      fi
+    done < "$DR_CONFIG"
+    log_message debug "Done importing environment variables from run.env"
   else
-    echo "File run.env does not exist."
+    log_message error "File run.env does not exist."
     return 1
   fi
 
-  if [[ -z "${DR_RUN_ID}" ]]; then
-    export DR_RUN_ID=0
-  fi
+  # Set default value for DR_RUN_ID if it's not set
+  DR_RUN_ID=${DR_RUN_ID:-0}
+  log_message debug "DR_RUN_ID: $DR_RUN_ID"
 
-  if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
-  then
-    export DR_ROBOMAKER_TRAIN_PORT=$(expr 8080 + $DR_RUN_ID)
-    export DR_ROBOMAKER_EVAL_PORT=$(expr 8180 + $DR_RUN_ID)
-    export DR_ROBOMAKER_GUI_PORT=$(expr 5900 + $DR_RUN_ID)
+  # Set ports for RoboMaker based on DR_DOCKER_STYLE
+  log_message info "Setting ports for RoboMaker"
+  if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
+    log_message debug "DR_DOCKER_STYLE: swarm"
+    export DR_ROBOMAKER_TRAIN_PORT=$((8080 + DR_RUN_ID))
+    log_message debug "DR_ROBOMAKER_TRAIN_PORT: $DR_ROBOMAKER_TRAIN_PORT"
+    export DR_ROBOMAKER_EVAL_PORT=$((8180 + DR_RUN_ID))
+    log_message debug "DR_ROBOMAKER_EVAL_PORT: $DR_ROBOMAKER_EVAL_PORT"
+    export DR_ROBOMAKER_GUI_PORT=$((5900 + DR_RUN_ID))
+    log_message debug "DR_ROBOMAKER_GUI_PORT: $DR_ROBOMAKER_GUI_PORT"
   else
     export DR_ROBOMAKER_TRAIN_PORT="8080-8089"
+    log_message debug "DR_ROBOMAKER_TRAIN_PORT: $DR_ROBOMAKER_TRAIN_PORT"
     export DR_ROBOMAKER_EVAL_PORT="8080-8089"
+    log_message debug "DR_ROBOMAKER_EVAL_PORT: $DR_ROBOMAKER_EVAL_PORT"
     export DR_ROBOMAKER_GUI_PORT="5901-5920"
+    log_message debug "DR_ROBOMAKER_GUI_PORT: $DR_ROBOMAKER_GUI_PORT"
   fi
-
+  log_message info "Done updating the environment"
 }
+
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 DIR="$( dirname $SCRIPT_DIR )"

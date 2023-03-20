@@ -30,36 +30,14 @@ INFO=2
 DEBUG=3
 
 # Set default log level
-LOG_LEVEL=$INFO
+set_log_level "$DIR/../system.env"
 
 # Function to set log level from command-line argument
-set_log_level() {
-  if [ -z "$1" ]; then
-    return
-  fi
+# This will bypass the system.env file
 
-  case $1 in
-    error)
-      LOG_LEVEL=$ERROR
-      ;;
-    warning)
-      LOG_LEVEL=$WARNING
-      ;;
-    info)
-      LOG_LEVEL=$INFO
-      ;;
-    debug)
-      LOG_LEVEL=$DEBUG
-      ;;
-    *)
-      echo "Invalid log level: $1"
-      exit 1
-      ;;
-  esac
-}
 
 # Example usage:
-set_log_level "$1"
+cli_log_level "$1"
 
 
 # Set default architecture
