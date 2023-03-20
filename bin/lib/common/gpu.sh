@@ -22,3 +22,12 @@ function detect_gpu() {
         true
     fi
 }
+
+function alert_cuda_devices {
+  # Check if CUDA_VISIBLE_DEVICES is configured.
+  if [[ -n "${CUDA_VISIBLE_DEVICES}" ]]; then
+    log_message warning "CUDA_VISIBLE_DEVICES is defined. It will no longer work as expected."
+    log_message warning "To control GPU assignment, use DR_ROBOMAKER_CUDA_DEVICES"
+    log_message warning "and DR_SAGEMAKER_CUDA_DEVICES and rlcoach v5.0.1 or later."
+  fi
+}
