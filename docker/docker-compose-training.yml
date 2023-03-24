@@ -40,3 +40,6 @@ services:
       - CUDA_VISIBLE_DEVICES=${DR_ROBOMAKER_CUDA_DEVICES}
       - MULTI_CONFIG
       - RTF_OVERRIDE=${DR_TRAIN_RTF}      
+      - ROS_MASTER_URI=http://localhost:11311/
+      - ROS_HOSTNAME=localhost
+    init: true
