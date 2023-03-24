@@ -32,7 +32,7 @@ config['MP4_S3_OBJECT_PREFIX'] = []
 # Basic configuration; including all buckets etc.
 config['AWS_REGION'] = os.environ.get('DR_AWS_APP_REGION', 'us-east-1')
 config['JOB_TYPE'] = 'EVALUATION'
-config['KINESIS_VIDEO_STREAM_NAME'] = os.environ.get('DR_KINESIS_STREAM_NAME', 'my-kinesis-stream')
+config['KINESIS_VIDEO_STREAM_NAME'] = os.environ.get('DR_KINESIS_STREAM_NAME', '')
 config['ROBOMAKER_SIMULATION_JOB_ACCOUNT_ID'] = os.environ.get('', 'Dummy')
 
 config['MODEL_S3_PREFIX'].append(os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'))
@@ -79,6 +79,8 @@ config['NUMBER_OF_RESETS'] = os.environ.get('DR_EVAL_MAX_RESETS', '0')
 config['OFF_TRACK_PENALTY'] = os.environ.get('DR_EVAL_OFF_TRACK_PENALTY', '5.0')
 config['COLLISION_PENALTY'] = os.environ.get('DR_COLLISION_PENALTY', '5.0')
 
+config['CAMERA_MAIN_ENABLE'] = os.environ.get('DR_CAMERA_MAIN_ENABLE', 'True')
+config['CAMERA_SUB_ENABLE'] = os.environ.get('DR_CAMERA_SUB_ENABLE', 'True')
 config['REVERSE_DIR'] = os.environ.get('DR_EVAL_REVERSE_DIRECTION', False)
 
 # Object Avoidance
