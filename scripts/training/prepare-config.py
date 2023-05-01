@@ -153,7 +153,8 @@ if config['MULTI_CONFIG'] == "True" and num_workers > 0:
             config.update({'ROUND_ROBIN_ADVANCE_DIST': os.environ.get('DR_TRAIN_ROUND_ROBIN_ADVANCE_DIST')})
             config.update({'ENABLE_DOMAIN_RANDOMIZATION': os.environ.get('DR_ENABLE_DOMAIN_RANDOMIZATION')})
             config.update({'START_POSITION_OFFSET': os.environ.get('DR_TRAIN_START_POSITION_OFFSET', '0.00')})
-
+            config.update({'REVERSE_DIR': os.environ.get('DR_TRAIN_REVERSE_DIRECTION', False)})
+            
             # Update Object Avoidance parameters
             if config['RACE_TYPE'] == 'OBJECT_AVOIDANCE':
                 config.update({'NUMBER_OF_OBSTACLES': os.environ.get('DR_OA_NUMBER_OF_OBSTACLES')})
