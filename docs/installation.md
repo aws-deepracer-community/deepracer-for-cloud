@@ -33,6 +33,8 @@ Depending on your needs as well as specific needs of the cloud platform you can 
   * NVIDIA Graphics adapter with minimum 8 GB RAM for Sagemaker to run GPU. Robomaker enabled GPU instances need ~1 GB each.
   * System RAM + GPU RAM should be at least 32 GB.
 * Running DRfC Ubuntu 20.04 on Windows using Windows Subsystem for Linux 2 is possible. See [Installing on Windows](windows.md)
+* Install `aws` cli [https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+* Install `docker` 
 
 ## Installation
 
