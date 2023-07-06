@@ -34,7 +34,7 @@ Depending on your needs as well as specific needs of the cloud platform you can 
   * System RAM + GPU RAM should be at least 32 GB.
 * Running DRfC Ubuntu 20.04 on Windows using Windows Subsystem for Linux 2 is possible. See [Installing on Windows](windows.md)
 * Install `aws` cli [https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-* Install `docker` 
+* Install `docker` [https://docs.docker.com/engine/install/ubuntu/](https://docs.docker.com/engine/install/ubuntu/)
 
 ## Installation
 
