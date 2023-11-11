@@ -54,14 +54,14 @@ The installation script will adapt `.profile` to ensure that all settings are ap
 
 **For local install** it is recommended *not* to run the `bin/prepare.sh` script; it might do more changes than what you want. Rather ensure that all prerequisites are set up and run `bin/init.sh` directly.
 
+See also the [following article](https://awstip.com/deepracer-for-cloud-drfc-local-setup-3c6418b2c75a) for guidance.
+
 The Init Script takes a few parameters:
 
 | Variable | Description |
 |----------|-------------|
 | `-c <cloud>` | Sets the cloud version to be configured, automatically updates the `DR_CLOUD` parameter in `system.env`. Options are `azure`, `aws` or `local`. Default is `local` |
 | `-a <arch>` | Sets the architecture to be configured. Either `cpu` or `gpu`. Default is `gpu`. |
-
-*TODO: Document how to configure via cloud-init.*
 
 ## Environment Setup
 
