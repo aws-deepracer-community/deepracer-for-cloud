@@ -30,6 +30,18 @@ usage
 esac
 done
 
+# set evaluation specific environment variables
+STACK_NAME="deepracer-eval-$DR_RUN_ID"
+STACK_CONTAINERS=$(docker stack ps $STACK_NAME 2> /dev/null | wc -l)
+if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+then
+  if [[ "$STACK_CONTAINERS" -gt 1 ]];
+  then
+    echo "ERROR: Processes running in stack $STACK_NAME. Stop evaluation with dr-stop-evaluation."  
+    exit 1
+  fi
+fi
+
 # clone if required
 if [ -n "$OPT_CLONE" ]; then
   echo "Cloning model into s3://$DR_LOCAL_S3_BUCKET/${DR_LOCAL_S3_MODEL_PREFIX}-E"
@@ -40,7 +52,6 @@ fi
 
 # set evaluation specific environment variables
 S3_PATH="s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX"
-STACK_NAME="deepracer-eval-$DR_RUN_ID"
 
 export ROBOMAKER_COMMAND="./run.sh run evaluation.launch"
 export DR_CURRENT_PARAMS_FILE=${DR_LOCAL_S3_EVAL_PARAMS_FILE}
