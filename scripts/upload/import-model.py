@@ -50,8 +50,9 @@ while "NextToken" in a:
 
 models = pd.DataFrame.from_dict(model_dict)
 
-if models[models['ModelName']==dr_model_name].size > 0:
-    sys.exit('Model {} already exists.'.format(dr_model_name))
+if models.size > 0:
+    if models[models['ModelName']==dr_model_name].size > 0:
+        sys.exit('Model {} already exists.'.format(dr_model_name))
 
 # Import from S3
 print('Importing from s3://{}/{}'.format(aws_s3_bucket,aws_s3_prefix))
