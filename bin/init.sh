@@ -95,9 +95,9 @@ if [[ "${OPT_CLOUD}" == "aws" ]]; then
     sed -i "s/<LOCAL_PROFILE>/default/g" $INSTALL_DIR/system.env
 elif [[ "${OPT_CLOUD}" == "azure" ]]; then
     AWS_REGION="us-east-1"
-    sed -i "s/<LOCAL_PROFILE>/azure/g" $INSTALL_DIR/system.env
+    sed -i "s/<LOCAL_PROFILE>/local/g" $INSTALL_DIR/system.env
     sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
-    echo "Please run 'aws configure --profile azure' to set the credentials"
+    echo "Please run 'aws configure --profile minio' to set the credentials"
 elif [[ "${OPT_CLOUD}" == "remote" ]]; then
     AWS_REGION="us-east-1"
     sed -i "s/<LOCAL_PROFILE>/minio/g" $INSTALL_DIR/system.env

@@ -108,23 +108,7 @@ For access with IAM user:
 
 ### Azure
 
-In Azure mode the script-set requires the following:
-
-* A storage account with a blob container set up with access keys:
-  * Use `aws configure --profile <myprofile>` to configure this into a specific profile.
-  * `<myprofile>` can be defined by the user, but do not use `default`.
-    * Access Key ID is the Storage Account name.
-    * Secret Access Key is the Access Key for the Storage Account.
-  * The blob container is equivalent to the S3 bucket.
-* A real AWS IAM user configured with `aws configure` to enable upload of models into AWS DeepRacer.
-* Configure `system.env` as follows:
-  * `DR_LOCAL_S3_PROFILE=default`
-  * `DR_LOCAL_S3_BUCKET=<bucketname>`
-  * `DR_UPLOAD_S3_PROFILE=default`
-  * `DR_UPLOAD_S3_BUCKET=<your-aws-deepracer-bucket>`
-* Run `dr-update` for configuration to take effect.
-
-As Azure does not natively support S3 a [minio](https://min.io/product/overview) proxy is set up on port 9000 to allow the containers to communicate and store models.
+Minio has deprecated the gateway feature that exposed an Azure Blob Storage as an S3 bucket. Azure mode now sets up minio in the same way as in local mode.
 
 If you want to use awscli (`aws`) to manually move files then use `aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 ...`, as this will set both `--profile` and `--endpoint-url` parameters to match your configuration.
 
