@@ -3,7 +3,11 @@ version: '3.7'
 services:
   robomaker:
     volumes:
-      - '${DR_ROBOMAKER_MOUNT_SIMAPP_DIR}/sagemaker_rl_agent:/opt/install/sagemaker_rl_agent'
-      - '${DR_ROBOMAKER_MOUNT_SIMAPP_DIR}/deepracer_simulation_environment:/opt/install/deepracer_simulation_environment'
+      - '${DR_ROBOMAKER_MOUNT_SIMAPP_DIR}/meshes:/opt/install/deepracer_simulation_environment/share/deepracer_simulation_environment/meshes'
+      - '${DR_ROBOMAKER_MOUNT_SIMAPP_DIR}/models:/opt/install/deepracer_simulation_environment/share/deepracer_simulation_environment/models'
+      - '${DR_ROBOMAKER_MOUNT_SIMAPP_DIR}/worlds:/opt/install/deepracer_simulation_environment/share/deepracer_simulation_environment/worlds'
+      - '${DR_ROBOMAKER_MOUNT_SIMAPP_DIR}/urdf:/opt/install/deepracer_simulation_environment/share/deepracer_simulation_environment/urdf'
+      - '${DR_ROBOMAKER_MOUNT_SIMAPP_DIR}/track_iconography:/opt/install/deepracer_simulation_environment/share/deepracer_simulation_environment/track_iconography'
+      - '${DR_ROBOMAKER_MOUNT_SIMAPP_DIR}/routes:/opt/install/deepracer_simulation_environment/share/deepracer_simulation_environment/routes'
       - '${DR_DIR}/data/logs:/logs'
       - '${DR_DIR}/data/scripts:/scripts'
