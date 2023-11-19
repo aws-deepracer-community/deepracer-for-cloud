@@ -57,7 +57,45 @@ if [ ! -d /tmp/sagemaker ]; then
   sudo chmod -R g+w /tmp/sagemaker
 fi
 
-#Check if files are available
+# set evaluation specific environment variables
+STACK_NAME="deepracer-$DR_RUN_ID"
+STACK_CONTAINERS=$(docker stack ps $STACK_NAME 2> /dev/null | wc -l)
+if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+then
+  if [[ "$STACK_CONTAINERS" -gt 1 ]];
+  then
+    echo "ERROR: Processes running in stack $STACK_NAME. Stop training with dr-stop-training."  
+    exit 1
+  fi
+fi
+
+# Check if metadata-files are available
+WORK_DIR=${DR_DIR}/tmp/start/
+mkdir -p ${WORK_DIR}
+rm -f ${WORK_DIR}/*
+
+REWARD_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_REWARD_KEY} ${WORK_DIR} --no-progress 2> /dev/null | awk '/reward/ {print $4}'| xargs readlink -f 2> /dev/null)
+METADATA_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_MODEL_METADATA_KEY} ${WORK_DIR} --no-progress 2> /dev/null | awk '/model_metadata.json$/ {print $4}'| xargs readlink -f 2> /dev/null)
+HYPERPARAM_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_HYPERPARAMETERS_KEY} ${WORK_DIR} --no-progress 2> /dev/null | awk '/hyperparameters.json$/ {print $4}'| xargs readlink -f 2> /dev/null)
+
+if [ -n "$METADATA_FILE" ] && [ -n "$REWARD_FILE" ] && [ -n "$HYPERPARAM_FILE" ] ; 
+then
+    echo "Training of model s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX starting."
+    echo "Using configuration files:"
+    echo "   s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_REWARD_KEY}"
+    echo "   s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_MODEL_METADATA_KEY}"
+    echo "   s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_HYPERPARAMETERS_KEY}"    
+else
+    echo "Training aborted. Configuration files were not found."
+    echo "Manually check that the following files exist:"
+    echo "   s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_REWARD_KEY}"
+    echo "   s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_MODEL_METADATA_KEY}"
+    echo "   s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_HYPERPARAMETERS_KEY}"
+    echo "You might have to run dr-upload-custom files."
+    exit 1
+fi
+
+# Check if model path exists.
 S3_PATH="s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX"
 
 S3_FILES=$(aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 ls ${S3_PATH} | wc -l)
@@ -82,9 +120,6 @@ then
 else
   COMPOSE_FILES="$DR_TRAIN_COMPOSE_FILE"
 fi
-
-# set evaluation specific environment variables
-STACK_NAME="deepracer-$DR_RUN_ID"
 
 export DR_CURRENT_PARAMS_FILE=${DR_LOCAL_S3_TRAINING_PARAMS_FILE}
 
@@ -145,7 +180,7 @@ then
   then
     echo "ERROR: No Swarm Nodes labelled for placement of Robomaker. Please add Robomaker node."
     echo "       Example: docker node update --label-add Robomaker=true $(docker node inspect self | jq .[0].ID -r)"
-    exit 0
+    exit 1
   fi
 
   SAGEMAKER_NODES=$(docker node ls --format '{{.ID}}' | xargs docker inspect | jq '.[] | select (.Spec.Labels.Sagemaker == "true") | .ID' | wc -l)
@@ -153,7 +188,7 @@ then
   then
     echo "ERROR: No Swarm Nodes labelled for placement of Sagemaker. Please add Sagemaker node."
     echo "       Example: docker node update --label-add Sagemaker=true $(docker node inspect self | jq .[0].ID -r)"
-    exit 0
+    exit 1
   fi
 
   DISPLAY=$ROBO_DISPLAY docker stack deploy $COMPOSE_FILES $STACK_NAME

@@ -11,7 +11,7 @@ import yaml
 config = {}
 config['AWS_REGION'] = os.environ.get('DR_AWS_APP_REGION', 'us-east-1')
 config['JOB_TYPE'] = 'TRAINING'
-config['KINESIS_VIDEO_STREAM_NAME'] = os.environ.get('DR_KINESIS_STREAM_NAME', 'my-kinesis-stream')
+config['KINESIS_VIDEO_STREAM_NAME'] = os.environ.get('DR_KINESIS_STREAM_NAME', '')
 config['METRICS_S3_BUCKET'] = os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket')
 
 metrics_prefix = os.environ.get('DR_LOCAL_S3_METRICS_PREFIX', None)
@@ -48,6 +48,8 @@ config['ROUND_ROBIN_ADVANCE_DIST'] = os.environ.get('DR_TRAIN_ROUND_ROBIN_ADVANC
 config['START_POSITION_OFFSET'] = os.environ.get('DR_TRAIN_START_POSITION_OFFSET', '0.00')
 config['ENABLE_DOMAIN_RANDOMIZATION'] = os.environ.get('DR_ENABLE_DOMAIN_RANDOMIZATION', 'false')
 config['MIN_EVAL_TRIALS'] = os.environ.get('DR_TRAIN_MIN_EVAL_TRIALS', '5')
+config['CAMERA_MAIN_ENABLE'] = os.environ.get('DR_CAMERA_MAIN_ENABLE', 'True')
+config['CAMERA_SUB_ENABLE'] = os.environ.get('DR_CAMERA_SUB_ENABLE', 'True')
 config['BEST_MODEL_METRIC'] = os.environ.get('DR_TRAIN_BEST_MODEL_METRIC', 'progress')
 
 # Object Avoidance
@@ -151,7 +153,8 @@ if config['MULTI_CONFIG'] == "True" and num_workers > 0:
             config.update({'ROUND_ROBIN_ADVANCE_DIST': os.environ.get('DR_TRAIN_ROUND_ROBIN_ADVANCE_DIST')})
             config.update({'ENABLE_DOMAIN_RANDOMIZATION': os.environ.get('DR_ENABLE_DOMAIN_RANDOMIZATION')})
             config.update({'START_POSITION_OFFSET': os.environ.get('DR_TRAIN_START_POSITION_OFFSET', '0.00')})
-
+            config.update({'REVERSE_DIR': os.environ.get('DR_TRAIN_REVERSE_DIRECTION', False)})
+            
             # Update Object Avoidance parameters
             if config['RACE_TYPE'] == 'OBJECT_AVOIDANCE':
                 config.update({'NUMBER_OF_OBSTACLES': os.environ.get('DR_OA_NUMBER_OF_OBSTACLES')})
