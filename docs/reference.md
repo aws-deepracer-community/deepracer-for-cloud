@@ -67,6 +67,7 @@ The scripts assume that two files `system.env` containing constant configuration
 | `DR_ROBOMAKER_MOUNT_LOGS` | True to get logs mounted to `$DR_DIR/data/logs/robomaker/$DR_LOCAL_S3_MODEL_PREFIX`|
 | `DR_ROBOMAKER_MOUNT_SIMAPP_DIR` | Path to the altered Robomaker bundle, e.g. `/home/ubuntu/deepracer-simapp/bundle`.|
 | `DR_CLOUD_WATCH_ENABLE` | Send log files to AWS CloudWatch.|
+| `DR_CLOUD_WATCH_LOG_STREAM_PREFIX` | Add a prefix to the CloudWatch log stream name.|
 | `DR_DOCKER_STYLE` | Valid Options are `Swarm` and `Compose`.  Use Compose for openGL optimized containers.|
 | `DR_HOST_X` | Uses the host X-windows server, rather than starting one inside of Robomaker. Required for OpenGL images.|
 | `DR_WEBVIEWER_PORT` | Port for the web-viewer proxy which enables the streaming of all robomaker workers at once.|
