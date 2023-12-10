@@ -7,6 +7,7 @@ services:
       options:
         awslogs-group: '/deepracer-for-cloud'
         awslogs-create-group: 'true'
+        awslogs-stream-prefix: "${DR_LOCAL_S3_MODEL_PREFIX}"
         awslogs-region: ${DR_AWS_APP_REGION}
         tag: "{{.Name}}"
   robomaker:
@@ -15,5 +16,6 @@ services:
       options:
         awslogs-group: '/deepracer-for-cloud'
         awslogs-create-group: 'true' 
+        awslogs-stream-prefix: "${DR_LOCAL_S3_MODEL_PREFIX}"
         awslogs-region: ${DR_AWS_APP_REGION}
         tag: "{{.Name}}"
