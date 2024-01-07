@@ -70,7 +70,7 @@ function dr-start-loganalysis {
 
 
 function dr-stop-loganalysis {
-  eval LOG_ANALYSIS_ID=$(docker ps | awk ' /loganalysis/ { print $1 }')
+  eval LOG_ANALYSIS_ID=$(docker ps | awk ' /deepracer-analysis/ { print $1 }')
   if [ -n "$LOG_ANALYSIS_ID" ]; then
     ROBOMAKER_COMMAND="" bash -c "cd $DR_DIR/scripts/log-analysis && ./stop.sh"
   else
@@ -279,7 +279,7 @@ function dr-get-robomaker-stats {
 }
 
 function dr-logs-loganalysis {
-  eval LOG_ANALYSIS_ID=$(docker ps | awk ' /loganalysis/ { print $1 }')
+  eval LOG_ANALYSIS_ID=$(docker ps | awk ' /deepracer-analysis/ { print $1 }')
   if [ -n "$LOG_ANALYSIS_ID" ]; then
     docker logs -f $LOG_ANALYSIS_ID
   else
@@ -289,7 +289,7 @@ function dr-logs-loganalysis {
 }
 
 function dr-url-loganalysis {
-  eval LOG_ANALYSIS_ID=$(docker ps | awk ' /loganalysis/ { print $1 }')
+  eval LOG_ANALYSIS_ID=$(docker ps | awk ' /deepracer-analysis/ { print $1 }')
   if [ -n "$LOG_ANALYSIS_ID" ]; then
     docker exec "$LOG_ANALYSIS_ID" bash -c "jupyter server list"
   else

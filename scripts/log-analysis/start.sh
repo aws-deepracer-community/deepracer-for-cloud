@@ -9,4 +9,4 @@ docker run --rm -d -p "8888:8888" \
 --network sagemaker-local \
  awsdeepracercommunity/deepracer-analysis:$DR_ANALYSIS_IMAGE
 
-docker logs -f loganalysis
+docker logs -f deepracer-analysis
