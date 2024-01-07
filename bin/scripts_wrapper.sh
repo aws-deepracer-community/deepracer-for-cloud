@@ -243,7 +243,13 @@ function dr-find-robomaker {
   esac
   done
 
-  eval ROBOMAKER_ID=$(docker ps | grep "${OPT_PREFIX}-${DR_RUN_ID}_robomaker.${OPT_REPLICA}" | cut -f1 -d\  | head -1)
+  if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
+  then
+    eval ROBOMAKER_ID=$(docker ps | grep "${OPT_PREFIX}-${DR_RUN_ID}_robomaker.${OPT_REPLICA}" | cut -f1 -d\  | head -1)
+  else
+    eval ROBOMAKER_ID=$(docker ps | grep "${OPT_PREFIX}-${DR_RUN_ID}-robomaker-${OPT_REPLICA}" | cut -f1 -d\  | head -1)  
+  fi
+
   if [ -n "$ROBOMAKER_ID" ]; then
     echo $ROBOMAKER_ID
   fi
