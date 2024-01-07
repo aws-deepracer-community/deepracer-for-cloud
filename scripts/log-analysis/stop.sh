@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-docker stop loganalysis
+docker stop deepracer-analysis
