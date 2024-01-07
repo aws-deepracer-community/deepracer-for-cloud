@@ -107,7 +107,7 @@ then
   COMPOSE_FILES="$COMPOSE_FILES -c $DR_DIR/docker/docker-compose-webviewer-swarm.yml"
   docker stack deploy -c $COMPOSE_FILES $STACK_NAME
 else
-  docker compose -f $COMPOSE_FILES -p $STACK_NAME --log-level ERROR up -d 
+  docker compose -f $COMPOSE_FILES -p $STACK_NAME up -d 
 fi
 
 # Starting browser if using local X and having display defined.

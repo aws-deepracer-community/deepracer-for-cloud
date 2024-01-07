@@ -27,5 +27,5 @@ else
     COMPOSE_FILES=$(echo ${DR_TRAIN_COMPOSE_FILE} | cut -f1-2 -d\ )
     export DR_CURRENT_PARAMS_FILE=""
     export ROBOMAKER_COMMAND=""
-    docker compose $COMPOSE_FILES -p $STACK_NAME --log-level ERROR down
+    docker compose $COMPOSE_FILES -p $STACK_NAME down
 fi
