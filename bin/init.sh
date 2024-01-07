@@ -57,7 +57,7 @@ fi
 # Check GPU
 if [[ "${OPT_ARCH}" == "gpu" ]]
 then
-    docker build -t local/gputest - < $INSTALL_DIR/utils/Dockerfile.gpu-detect 
+    docker buildx build -t local/gputest - < $INSTALL_DIR/utils/Dockerfile.gpu-detect 
     GPUS=$(docker run --rm --gpus all local/gputest 2> /dev/null | awk  '/Device: ./' | wc -l )
     if [ $? -ne 0 ] || [ $GPUS -eq 0 ]
     then

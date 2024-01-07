@@ -183,7 +183,7 @@ if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
     then
         docker stack deploy $DR_MINIO_COMPOSE_FILE s3
     else
-        docker-compose $DR_MINIO_COMPOSE_FILE -p s3 --log-level ERROR up -d
+        docker compose $DR_MINIO_COMPOSE_FILE -p s3 --log-level ERROR up -d
     fi
 
 fi
