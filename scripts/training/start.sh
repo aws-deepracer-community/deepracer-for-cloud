@@ -194,7 +194,7 @@ then
   DISPLAY=$ROBO_DISPLAY docker stack deploy $COMPOSE_FILES $STACK_NAME
 
 else
-  DISPLAY=$ROBO_DISPLAY docker-compose $COMPOSE_FILES -p $STACK_NAME --log-level ERROR up -d --scale robomaker=$DR_WORKERS
+  DISPLAY=$ROBO_DISPLAY docker compose $COMPOSE_FILES -p $STACK_NAME up -d --scale robomaker=$DR_WORKERS
 fi
 
 # Viewer

@@ -13,8 +13,8 @@ then
         COMPOSE_SERVICE_NAME=$(echo $CONTAINER_NAME | perl -n -e'/(.*)_(algo(.*))_./; print $2')
         COMPOSE_FILE=$(sudo find /tmp/sagemaker -name docker-compose.yaml -exec grep -l "$RUN_NAME" {} + | grep $CONTAINER_PREFIX)
         if [[ -n $COMPOSE_FILE ]]; then
-            sudo docker-compose -f $COMPOSE_FILE stop $COMPOSE_SERVICE_NAME
-            docker container rm $CONTAINER
+            sudo docker compose -f $COMPOSE_FILE stop $COMPOSE_SERVICE_NAME
+            docker container rm $CONTAINER -v > /dev/null
         fi
     done
 fi
@@ -27,5 +27,5 @@ else
     COMPOSE_FILES=$(echo ${DR_TRAIN_COMPOSE_FILE} | cut -f1-2 -d\ )
     export DR_CURRENT_PARAMS_FILE=""
     export ROBOMAKER_COMMAND=""
-    docker-compose $COMPOSE_FILES -p $STACK_NAME --log-level ERROR down
+    docker compose $COMPOSE_FILES -p $STACK_NAME down
 fi

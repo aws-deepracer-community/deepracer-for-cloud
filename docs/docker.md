@@ -32,7 +32,7 @@ Docker Swarm will automatically put a load-balancer in front of all replicas in 
 
 ## Compose Mode
 
-In Compose mode DRfC creates Services, using `docker-compose`. During operations one can check running stacks through `docker service ls`, and running services through `docker service ps`.
+In Compose mode DRfC creates Services, using `docker compose`. During operations one can check running stacks through `docker service ls`, and running services through `docker service ps`.
 
 ### Key features
 

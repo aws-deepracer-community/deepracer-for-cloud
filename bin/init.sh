@@ -17,14 +17,17 @@ fi
 
 OPT_ARCH="gpu"
 OPT_CLOUD=""
+OPT_STYLE="swarm"
 
-while getopts ":m:c:a:" opt; do
+while getopts ":m:c:a:s:" opt; do
 case $opt in
 a) OPT_ARCH="$OPTARG"
 ;;
 m) OPT_MOUNT="$OPTARG"
 ;; 
 c) OPT_CLOUD="$OPTARG"
+;;
+s) OPT_STYLE="$OPTARG"
 ;;
 \?) echo "Invalid option -$OPTARG" >&2
 exit 1
@@ -57,7 +60,7 @@ fi
 # Check GPU
 if [[ "${OPT_ARCH}" == "gpu" ]]
 then
-    docker build -t local/gputest - < $INSTALL_DIR/utils/Dockerfile.gpu-detect 
+    docker buildx build -t local/gputest - < $INSTALL_DIR/utils/Dockerfile.gpu-detect 
     GPUS=$(docker run --rm --gpus all local/gputest 2> /dev/null | awk  '/Device: ./' | wc -l )
     if [ $? -ne 0 ] || [ $GPUS -eq 0 ]
     then
@@ -163,18 +166,33 @@ docker pull awsdeepracercommunity/deepracer-sagemaker:$SAGEMAKER_VERSION
 
 # create the network sagemaker-local if it doesn't exit
 SAGEMAKER_NW='sagemaker-local'
-docker swarm init 
-SWARM_NODE=$(docker node inspect self | jq .[0].ID -r)
-docker node update --label-add Sagemaker=true $SWARM_NODE > /dev/null 2> /dev/null
-docker node update --label-add Robomaker=true $SWARM_NODE > /dev/null 2> /dev/null
-docker network ls | grep -q $SAGEMAKER_NW
-if [ $? -ne 0 ]
-then
-    docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm
+
+if [[ "${OPT_STYLE}" == "swarm" ]]; then
+
+    docker swarm init
+    SWARM_NODE=$(docker node inspect self | jq .[0].ID -r)
+    docker node update --label-add Sagemaker=true $SWARM_NODE >/dev/null 2>/dev/null
+    docker node update --label-add Robomaker=true $SWARM_NODE >/dev/null 2>/dev/null
+    docker network ls | grep -q $SAGEMAKER_NW
+    if [ $? -ne 0 ]; then
+        docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm
+    else
+        docker network rm $SAGEMAKER_NW
+        docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm --subnet=192.168.2.0/24
+    fi
+
+elif [[ "${OPT_STYLE}" == "compose" ]]; then
+
+    docker network ls | grep -q $SAGEMAKER_NW
+    if [ $? -ne 0 ]; then
+        docker network create $SAGEMAKER_NW
+    fi
+
 else
-    docker network rm $SAGEMAKER_NW
-    docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm --subnet=192.168.2.0/24
+    echo "Unknown docker style ${OPT_STYLE}. Exiting."
+    exit 1
 fi
+sed -i "s/<DOCKER_STYLE>/${OPT_STYLE}/g" $INSTALL_DIR/system.env
 
 # ensure our variables are set on startup - not for local setup.
 if [[ "${OPT_CLOUD}" != "local" ]]; then

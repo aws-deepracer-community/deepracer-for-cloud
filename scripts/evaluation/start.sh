@@ -97,7 +97,7 @@ if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
 then
   DISPLAY=$ROBO_DISPLAY docker stack deploy $COMPOSE_FILES $STACK_NAME
 else
-  DISPLAY=$ROBO_DISPLAY docker-compose $COMPOSE_FILES --log-level ERROR -p $STACK_NAME up -d
+  DISPLAY=$ROBO_DISPLAY docker compose $COMPOSE_FILES -p $STACK_NAME up -d
 fi
 
 # Request to be quiet. Quitting here.

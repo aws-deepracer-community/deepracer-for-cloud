@@ -8,5 +8,5 @@ if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]];
 then
     docker stack rm $STACK_NAME
 else
-    docker-compose -f $COMPOSE_FILES -p $STACK_NAME --log-level ERROR down
+    docker compose -f $COMPOSE_FILES -p $STACK_NAME down
 fi

@@ -76,7 +76,7 @@ sudo apt-get install -y --no-install-recommends awscli python3-boto3
 ## Installing Docker
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository    "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-sudo apt-get update && sudo apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io
+sudo apt-get update && sudo apt-get install -y --no-install-recommends docker-ce docker-ce-cli docker-buildx-plugin docker-compose-plugin containerd.io 
 
 if [[ "${ARCH}" == "gpu" ]];
 then
@@ -99,10 +99,6 @@ sudo systemctl restart docker
 
 ## Ensure user can run docker
 sudo usermod -a -G docker $(id -un)
-
-## Installing Docker Compose
-sudo curl -L https://github.com/docker/compose/releases/download/1.29.2/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
 
 ## Reboot to load driver -- continue install if in cloud-init
 CLOUD_INIT=$(pstree -s $BASHPID | awk /cloud-init/ | wc -l)
