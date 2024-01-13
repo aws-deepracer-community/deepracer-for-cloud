@@ -4,7 +4,7 @@
 
 # Install additional packages
 sudo apt-get install xinit xserver-xorg-legacy x11-xserver-utils x11-utils \
-                    menu mesa-utils xterm mwm x11vnc pkg-config screen -y --no-install-recommends
+        menu mesa-utils xterm mwm x11vnc pkg-config screen -y --no-install-recommends
 
 # Configure
 sudo sed -i -e "s/console/anybody/" /etc/X11/Xwrapper.config
@@ -13,7 +13,7 @@ sudo nvidia-xconfig --busid=$BUS_ID -o $DR_DIR/tmp/xorg.conf
 
 touch ~/.Xauthority
 
-sudo tee -a $DR_DIR/tmp/xorg.conf << EOF
+sudo tee -a $DR_DIR/tmp/xorg.conf <<EOF
 
 Section "DRI"
         Mode 0666

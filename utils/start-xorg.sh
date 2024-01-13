@@ -4,16 +4,16 @@ screen -r DeepracerXorg -X stuff $'sudo xinit /usr/bin/mwm -display $DR_DISPLAY 
 
 sleep 1
 
-if [[ "${DR_GUI_ENABLE,,}" == "true" ]]; then   
+if [[ "${DR_GUI_ENABLE,,}" == "true" ]]; then
     xrandr -s 1400x900
-    x11vnc -bg -forever -no6 -nopw -rfbport 5901 -rfbportv6 -1 -loop -display WAIT$DR_DISPLAY & 
+    x11vnc -bg -forever -no6 -nopw -rfbport 5901 -rfbportv6 -1 -loop -display WAIT$DR_DISPLAY &
     sleep 1
 fi
 
 xauth generate $DR_DISPLAY
 
-if timeout 1s xset -display $DR_DISPLAY q &>/dev/null; then 
-    echo "X Server started on display $DR_DISPLAY" 
+if timeout 1s xset -display $DR_DISPLAY q &>/dev/null; then
+    echo "X Server started on display $DR_DISPLAY"
 else
     echo "Server failed to start on display $DR_DISPLAY"
 fi
