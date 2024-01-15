@@ -1,16 +1,16 @@
 {
-    "batch_size": 64,
+    "batch_size": 512,
     "beta_entropy": 0.01,
-    "discount_factor": 0.99,
+    "discount_factor": 0.98,
     "e_greedy_value": 0.05,
     "epsilon_steps": 10000,
     "exploration_type": "categorical",
     "loss_type": "huber",
-    "lr": 0.0003,
-    "num_episodes_between_training": 20,
-    "num_epochs": 5,
+    "lr": 0.00001,
+    "num_episodes_between_training": 100,
+    "num_epochs": 10,
+    "sac_alpha": 0.5,
     "stack_size": 1,
     "term_cond_avg_score": 350.0,
-    "term_cond_max_episodes": 1000,
-    "sac_alpha": 0.2
-  }
+    "term_cond_max_episodes": 10000
+}

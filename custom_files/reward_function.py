@@ -1,27 +1,25 @@
 import time
 import math
 import numpy
-
-LOCAL_TRAINING = True
-if LOCAL_TRAINING:
-    import rospy
+import rospy
 
 
-max_speed = 5
+max_speed = 4
 segment_angle_threshold = 5
-min_speed = 0.5
+min_speed = 1.75
 curve_angle_threshold = 50
 curve_distance_ratio_threshold = 1 / 8
-abs_max_steering_angle = 20
+abs_max_steering_angle = 30
 INF = float('inf')
 NINF = -INF
+
 
 def get_nan(numerator):
     return INF if numerator >= 0 else NINF
 
+
 class Point:
-    x: float
-    y: float
+    __slots__ = 'x', 'y'
 
     def __init__(self, x, y):
         self.x = x
@@ -29,15 +27,11 @@ class Point:
 
 
 class LineSegment:
+    __slots__ = 'start', 'end'
+
     def __init__(self, start, end):
         self.start = start
         self.end = end
-
-    @classmethod
-    def from_points(cls, x1, y1, x2, y2):
-        start = Point(x1, y1)
-        end = Point(x2, y2)
-        return cls(start, end)
 
     @property
     def slope(self):
@@ -49,11 +43,16 @@ class LineSegment:
         radians = math.atan2(self.end.y - self.start.y, self.end.x - self.start.x)
         return math.degrees(radians)
 
+    @property
+    def length(self):
+        return math.sqrt((self.end.x - self.start.x) ** 2 + (self.end.y - self.start.y) ** 2)
 
-class Waypoint:
+
+class Waypoint(Point):
+    __slots__ = 'x', 'y', 'index', 'next_waypoint', 'prev_waypoint'
+
     def __init__(self, x, y, index, prev_waypoint):
-        self.x = x
-        self.y = y
+        super().__init__(x, y)
         self.index = index
         self.next_waypoint = None
         self.prev_waypoint = prev_waypoint
@@ -61,11 +60,13 @@ class Waypoint:
     def set_prev_waypoint(self, waypoint):
         self.prev_waypoint = waypoint
 
+
     def set_next_waypoint(self, waypoint):
         self.next_waypoint = waypoint
 
 
 class TrackWaypoints:
+    __slots__ = 'waypoints', 'waypoints_map'
 
     def __init__(self):
         self.waypoints = []
@@ -76,21 +77,23 @@ class TrackWaypoints:
             prev_waypoint = self.waypoints[-1] if self.waypoints else None
             waypoint = Waypoint(wp[0], wp[1], i, prev_waypoint)
 
-            if self.waypoints:
-                self.waypoints[-1].set_next_waypoint(waypoint)
+            if prev_waypoint:
+                prev_waypoint.set_next_waypoint(waypoint)
 
             self.waypoints.append(waypoint)
             self.waypoints_map[i] = waypoint
-        self.waypoints[-1].set_next_waypoint(self.waypoints[0])
-        self.waypoints[0].set_prev_waypoint(self.waypoints[-1])
+        first_waypoint = self.waypoints[0]
+        last_waypoint = self.waypoints[-1]
+        last_waypoint.set_next_waypoint(first_waypoint)
+        first_waypoint.set_prev_waypoint(last_waypoint)
 
 
-class LinearWaypointSegment:
+class LinearWaypointSegment(LineSegment):
+    __slots__ = 'start', 'end', 'waypoints', 'waypoint_indices', 'prev_segment', 'next_segment', 'slope'
 
     def __init__(self, start, end, prev_segment):
-        self.start = start
-        self.end = end
-        self.waypoints = [start, end]
+        super().__init__(start, end)
+        self.waypoints = (start, end)
         self.waypoint_indices = {start.index, end.index}
         self.prev_segment = prev_segment
         self.next_segment = None
@@ -100,7 +103,7 @@ class LinearWaypointSegment:
     def add_waypoint(self, waypoint):
         self.end = waypoint
         self.waypoint_indices.add(waypoint.index)
-        self.waypoints.append(waypoint)
+        self.waypoints = (*self.waypoints, waypoint)
 
     def set_next_segment(self, segment):
         self.next_segment = segment
@@ -109,32 +112,24 @@ class LinearWaypointSegment:
         self.prev_segment = segment
 
 
-    @property
-    def angle(self):
-        radians = math.atan2(self.end.y - self.start.y, self.end.x - self.start.x)
-        return math.degrees(radians)
-
-    @property
-    def length(self):
-        return math.sqrt((self.end.x - self.start.x) ** 2 + (self.end.y - self.start.y) ** 2)
-
-
 # noinspection DuplicatedCode
 class TrackSegments:
+    __slots__ = 'segments'
+
     def __init__(self):
-        self.segments: list[LinearWaypointSegment] = []
+        self.segments = []
 
     def add_waypoint_segment(self, start, end):
         radians = math.atan2(end.y - start.y, end.x - start.x)
         angle = math.degrees(radians)
         prev_segment = self.segments[-1] if self.segments else None
 
-        if self.segments and abs(self.segments[-1].angle - angle) < segment_angle_threshold:
-            self.segments[-1].add_waypoint(end)
+        if prev_segment and abs(prev_segment.angle - angle) < segment_angle_threshold:
+            prev_segment.add_waypoint(end)
         else:
             segment = LinearWaypointSegment(start, end, prev_segment)
-            if self.segments:
-                self.segments[-1].set_next_segment(segment)
+            if prev_segment:
+                prev_segment.set_next_segment(segment)
             self.segments.append(segment)
 
     def create_segments(self, waypoints):
@@ -143,8 +138,10 @@ class TrackSegments:
             end = waypoints[i + 1]
             self.add_waypoint_segment(start, end)
         self.add_waypoint_segment(waypoints[-1], waypoints[0])
-        self.segments[-1].set_next_segment(self.segments[0])
-        self.segments[0].set_prev_segment(self.segments[-1])
+        first_segment = self.segments[0]
+        last_segment = self.segments[-1]
+        last_segment.set_next_segment(first_segment)
+        first_segment.set_prev_segment(last_segment)
 
     def upcoming_curve_factor(self, cawpi, waypoints, heading):
         segment = self.get_closest_segment_ahead(cawpi)
@@ -152,10 +149,9 @@ class TrackSegments:
         next_segment_start = next_segment.start
         next_segment_distance = math.sqrt((next_segment_start.x - waypoints[cawpi][0]) ** 2 + (next_segment_start.y - waypoints[cawpi][1]) ** 2)
 
-        max_curve_distance_factor = segment.length / (segment.length + next_segment.length)
         curve_distance_factor = next_segment_distance / (segment.length + next_segment.length)
 
-        curve_distance_ratio = curve_distance_factor / max_curve_distance_factor
+        curve_distance_ratio = curve_distance_factor
 
         max_angle_diff = 90
         angle_diff = min(abs(next_segment.next_segment.angle - heading), max_angle_diff)
@@ -184,6 +180,8 @@ def get_slope_intercept(x1, y1, m):
 
 
 class LinearFunction:
+    __slots__ = 'slope', 'intercept', 'A', 'B', 'C', 'ref_point'
+
     # noinspection PyUnusedFunction
     def __init__(self, slope, intercept, ref_point=None):
         self.slope = slope
@@ -206,11 +204,7 @@ class LinearFunction:
         slope = (y2 - y1) / (x2 - x1) if x2 != x1 else get_nan(y2 - y1)
         intercept = y1 - slope * x1
         return cls(slope, intercept, Point(x1, y1))
-    
-    @classmethod
-    def from_point_slope(cls, x1, y1, m):
-        intercept = y1 - m * x1
-        return cls(m, intercept, Point(x1, y1))
+
 
     @classmethod
     def get_perp_func(cls, x1, y1, slope):
@@ -227,7 +221,6 @@ class RunState:
         self._set_future_inputs()
         self.prev_run_state = prev_run_state
         self._set_prev_inputs()
-
 
     def set_next_state(self, next_state):
         self.next_state = next_state
@@ -286,7 +279,7 @@ class RunState:
 
     @property
     def progress_reward(self):
-        return self.progress_percentage
+        return self.progress_percentage / self.max_progress_percentage
 
     @property
     def steering_reward(self):
@@ -322,8 +315,8 @@ class RunState:
         max_heading_error = 90
         next_track_wp = track_waypoints.waypoints_map[self.closest_ahead_waypoint_index]
         next_next_track_wp = next_track_wp.next_waypoint
-        next_segment = LinearFunction.from_points(next_track_wp.x, next_track_wp.y, next_next_track_wp.x, next_next_track_wp.y)
-        perp_waypoint_func = LinearFunction.get_perp_func(next_next_track_wp.x, next_next_track_wp.y, next_segment.slope)
+        next_segment = LinearFunction.from_points(self.x, self.y, next_track_wp.x, next_track_wp.y)
+        perp_waypoint_func = LinearFunction.get_perp_func(next_track_wp.x, next_track_wp.y, next_segment.slope)
         target_point = perp_waypoint_func.get_closest_point_on_line(self.x, self.y)
         start_point = Point(self.x, self.y)
         end_point = Point(target_point.x, target_point.y)
@@ -336,7 +329,7 @@ class RunState:
     @property
     def speed_reward(self):
         # noinspection PyAttributeOutsideInit
-        self.target_speed = min_speed + (max_speed - min_speed) * self.curve_factor
+        self.target_speed = min_speed + (max_speed - min_speed) * self.waypoint_heading_reward
         reward = math.exp(-abs(self.speed - self.target_speed) / self.target_speed)
         # noinspection PyChainedComparisons
         if self.speed == self.target_speed:
@@ -380,34 +373,15 @@ class RunState:
         return track_segments.upcoming_curve_factor(self.closest_ahead_waypoint_index, self.waypoints, self.heading360)
 
 
-class Simulation:
+class Timer:
+    __slots__ = 'track_time', 'time', 'total_frames', 'fps', 'rtf'
 
     def __init__(self):
-        self.sim_state_initialized = False
-        self.run_state = None
         self.track_time = True
         TIME_WINDOW = 10
         self.time = numpy.zeros([TIME_WINDOW, 2])
         self.total_frames = 0
-
-    def set_sim_state(self, waypoints):
-        track_waypoints.create_waypoints(waypoints)
-        track_segments.create_segments(track_waypoints.waypoints)
-        self.sim_state_initialized = True
-
-    def add_run_state(self, params):
-        steps = params['steps']
-        if LOCAL_TRAINING:
-            self.record_time(steps)
-            self.rtf, self.fps, frames = self.get_time()
-            self.total_frames += frames
-            print("TIME: s: {}, rtf: {}, fps:{}, frames: {}".format(int(steps), round(self.rtf, 2), round(self.fps, 2), frames))
-            run_state = RunState(params, self.run_state, self.fps)
-        else:
-            run_state = RunState(params, self.run_state, 15)
-
-        self.run_state = run_state
-        print(self.run_state.reward_data)
+        self.fps = 15
 
     def get_time(self):
         wall_time_incr = numpy.max(self.time[:, 0]) - numpy.min(self.time[:, 0])
@@ -423,6 +397,32 @@ class Simulation:
         index = int(steps) % self.time.shape[0]
         self.time[index, 0] = time.time()
         self.time[index, 1] = rospy.get_time()
+        self.rtf, self.fps, frames = self.get_time()
+        self.total_frames += frames
+        print("TIME: s: {}, rtf: {}, fps:{}, frames: {}".format(int(steps), round(self.rtf, 2), round(self.fps, 2), frames))
+
+
+timer = Timer()
+
+
+class Simulation:
+    __slots__ = 'sim_state_initialized', 'run_state'
+
+    def __init__(self):
+        self.sim_state_initialized = False
+        self.run_state = None
+
+    def set_sim_state(self, waypoints):
+        track_waypoints.create_waypoints(waypoints)
+        track_segments.create_segments(track_waypoints.waypoints)
+        self.sim_state_initialized = True
+
+    def add_run_state(self, params):
+        steps = params['steps']
+        timer.record_time(steps)
+        run_state = RunState(params, self.run_state, timer.fps)
+        self.run_state = run_state
+        print(self.run_state.reward_data)
 
 
 sim = Simulation()

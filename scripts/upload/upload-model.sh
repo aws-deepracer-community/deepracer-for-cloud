@@ -204,7 +204,10 @@ fi
 
 # echo "" > ${WORK_DIR}model/.ready
 cd ${WORK_DIR}
-echo ${CHECKPOINT_JSON} >${WORK_DIR}model/deepracer_checkpoints.json
+
+echo ${CHECKPOINT_JSON} > ${WORK_DIR}model/deepracer_checkpoints.json
+echo "aws ${UPLOAD_PROFILE} s3 sync ${WORK_DIR}model/ s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/model/ ${OPT_DRYRUN} ${OPT_WIPE}"
+
 aws ${UPLOAD_PROFILE} s3 sync ${WORK_DIR}model/ s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/model/ ${OPT_DRYRUN} ${OPT_WIPE}
 aws ${UPLOAD_PROFILE} s3 cp ${REWARD_FILE} ${TARGET_REWARD_FILE_S3_KEY} ${OPT_DRYRUN}
 aws ${UPLOAD_PROFILE} s3 cp ${METRICS_FILE} ${TARGET_METRICS_FILE_S3_KEY} ${OPT_DRYRUN}
