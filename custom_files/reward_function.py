@@ -26,27 +26,6 @@ class Point:
         self.y = y
 
 
-class LineSegment:
-    __slots__ = 'start', 'end'
-
-    def __init__(self, start, end):
-        self.start = start
-        self.end = end
-
-    @property
-    def slope(self):
-        numerator = (self.end.y - self.start.y)
-        return numerator / (self.end.x - self.start.x) if self.end.x != self.start.x else get_nan(numerator)
-
-    @property
-    def angle(self):
-        radians = math.atan2(self.end.y - self.start.y, self.end.x - self.start.x)
-        return math.degrees(radians)
-
-    @property
-    def length(self):
-        return math.sqrt((self.end.x - self.start.x) ** 2 + (self.end.y - self.start.y) ** 2)
-
 
 class Waypoint(Point):
     __slots__ = 'x', 'y', 'index', 'next_waypoint', 'prev_waypoint'
@@ -86,6 +65,20 @@ class TrackWaypoints:
         last_waypoint = self.waypoints[-1]
         last_waypoint.set_next_waypoint(first_waypoint)
         first_waypoint.set_prev_waypoint(last_waypoint)
+
+
+class LineSegment:
+    __slots__ = 'start', 'end', 'slope', 'angle', 'length'
+
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+        numerator = (self.end.y - self.start.y)
+        self.slope = numerator / (self.end.x - self.start.x) if self.end.x != self.start.x else get_nan(numerator)
+        radians = math.atan2(self.end.y - self.start.y, self.end.x - self.start.x)
+        self.angle = math.degrees(radians)
+        self.length = math.sqrt((self.end.x - self.start.x) ** 2 + (self.end.y - self.start.y) ** 2)
+
 
 
 class LinearWaypointSegment(LineSegment):
@@ -237,16 +230,12 @@ class RunState:
         self.speed_ratio = self.speed / max_speed
         self.heading360 = self.heading if self.heading >= 0 else 360 + self.heading
         self.abs_steering_angle = abs(self.steering_angle)
-        self.x_velocity = self.speed * math.cos(math.radians(self.heading360))
-        self.y_velocity = self.speed * math.sin(math.radians(self.heading360))
-        self.next_x = self.x + self.x_velocity / self.fps
-        self.next_y = self.y + self.y_velocity / self.fps
         self.closest_behind_waypoint_index = self.closest_waypoints[0]
         self.closest_ahead_waypoint_index = self.closest_waypoints[1]
         self.half_track_width = self.track_width / 2
         self.quarter_track_width = self.half_track_width / 2
-        self.max_distance_traveled = self.steps * max_speed / self.fps
-        self.max_progress_percentage = self.max_distance_traveled / self.track_length
+        max_distance_traveled = self.steps * max_speed / self.fps
+        self.max_progress_percentage = max_distance_traveled / self.track_length
         self.progress_percentage = self.progress / 100
 
     def _set_future_inputs(self):

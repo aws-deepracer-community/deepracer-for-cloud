@@ -1,29 +1,26 @@
 {
-    "action_space": [
-        {
-            "steering_angle": -30,
-            "speed": 0.6
-        },
-        {
-            "steering_angle": -15,
-            "speed": 0.6
-        },
-        {
-            "steering_angle": 0,
-            "speed": 0.6
-        },
-        {
-            "steering_angle": 15,
-            "speed": 0.6
-        },
-        {
-            "steering_angle": 30,
-            "speed": 0.6
-        }
-    ],
-    "sensor": ["FRONT_FACING_CAMERA"],
-    "neural_network": "DEEP_CONVOLUTIONAL_NETWORK_SHALLOW",
-    "training_algorithm": "clipped_ppo", 
-    "action_space_type": "discrete",
-    "version": "5"
+  "action_space": {
+    "steering_angle": {
+      "high": 30.0,
+      "low": -30.0
+    },
+    "speed": {
+      "high": 4.0,
+      "low": 1.5
+    }
+  },
+  "sensor": [
+    "FRONT_FACING_CAMERA"
+  ],
+  "neural_network": "DEEP_CONVOLUTIONAL_NETWORK_SHALLOW",
+  "version": "5",
+  "training_algorithm": "clipped_ppo",
+  "action_space_type": "continuous",
+  "preprocess_type": "GREY_SCALE",
+  "regional_parameters": [
+    0,
+    0,
+    0,
+    0
+  ]
 }

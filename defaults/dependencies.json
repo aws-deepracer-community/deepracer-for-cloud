@@ -1,5 +1,5 @@
 {
-    "master_version": "5.1.0",
+    "master_version": "5.1.1",
     "containers": {
         "rl_coach": "5.1.2",
         "robomaker": "5.1.2",

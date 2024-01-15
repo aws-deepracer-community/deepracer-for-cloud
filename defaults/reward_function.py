@@ -3,6 +3,7 @@ import math
 import numpy
 import rospy
 
+
 max_speed = 4
 segment_angle_threshold = 5
 min_speed = 1.75
@@ -19,40 +20,18 @@ def get_nan(numerator):
 
 class Point:
     __slots__ = 'x', 'y'
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
 
 
-class LineSegment:
-    __slots__ = 'start', 'end', 'slope', 'angle'
 
-    def __init__(self, start, end):
-        self.start = start
-        self.end = end
-
-    @classmethod
-    def from_points(cls, x1, y1, x2, y2):
-        start = Point(x1, y1)
-        end = Point(x2, y2)
-        return cls(start, end)
-
-    @property
-    def slope(self):
-        numerator = (self.end.y - self.start.y)
-        return numerator / (self.end.x - self.start.x) if self.end.x != self.start.x else get_nan(numerator)
-
-    @property
-    def angle(self):
-        radians = math.atan2(self.end.y - self.start.y, self.end.x - self.start.x)
-        return math.degrees(radians)
-
-
-class Waypoint:
+class Waypoint(Point):
+    __slots__ = 'x', 'y', 'index', 'next_waypoint', 'prev_waypoint'
 
     def __init__(self, x, y, index, prev_waypoint):
-        self.x = x
-        self.y = y
+        super().__init__(x, y)
         self.index = index
         self.next_waypoint = None
         self.prev_waypoint = prev_waypoint
@@ -60,11 +39,13 @@ class Waypoint:
     def set_prev_waypoint(self, waypoint):
         self.prev_waypoint = waypoint
 
+
     def set_next_waypoint(self, waypoint):
         self.next_waypoint = waypoint
 
 
 class TrackWaypoints:
+    __slots__ = 'waypoints', 'waypoints_map'
 
     def __init__(self):
         self.waypoints = []
@@ -86,12 +67,26 @@ class TrackWaypoints:
         first_waypoint.set_prev_waypoint(last_waypoint)
 
 
-class LinearWaypointSegment:
+class LineSegment:
+    __slots__ = 'start', 'end', 'slope', 'angle', 'length'
 
-    def __init__(self, start, end, prev_segment):
+    def __init__(self, start, end):
         self.start = start
         self.end = end
-        self.waypoints = [start, end]
+        numerator = (self.end.y - self.start.y)
+        self.slope = numerator / (self.end.x - self.start.x) if self.end.x != self.start.x else get_nan(numerator)
+        radians = math.atan2(self.end.y - self.start.y, self.end.x - self.start.x)
+        self.angle = math.degrees(radians)
+        self.length = math.sqrt((self.end.x - self.start.x) ** 2 + (self.end.y - self.start.y) ** 2)
+
+
+
+class LinearWaypointSegment(LineSegment):
+    __slots__ = 'start', 'end', 'waypoints', 'waypoint_indices', 'prev_segment', 'next_segment', 'slope'
+
+    def __init__(self, start, end, prev_segment):
+        super().__init__(start, end)
+        self.waypoints = (start, end)
         self.waypoint_indices = {start.index, end.index}
         self.prev_segment = prev_segment
         self.next_segment = None
@@ -101,7 +96,7 @@ class LinearWaypointSegment:
     def add_waypoint(self, waypoint):
         self.end = waypoint
         self.waypoint_indices.add(waypoint.index)
-        self.waypoints.append(waypoint)
+        self.waypoints = (*self.waypoints, waypoint)
 
     def set_next_segment(self, segment):
         self.next_segment = segment
@@ -109,18 +104,10 @@ class LinearWaypointSegment:
     def set_prev_segment(self, segment):
         self.prev_segment = segment
 
-    @property
-    def angle(self):
-        radians = math.atan2(self.end.y - self.start.y, self.end.x - self.start.x)
-        return math.degrees(radians)
-
-    @property
-    def length(self):
-        return math.sqrt((self.end.x - self.start.x) ** 2 + (self.end.y - self.start.y) ** 2)
-
 
 # noinspection DuplicatedCode
 class TrackSegments:
+    __slots__ = 'segments'
 
     def __init__(self):
         self.segments = []
@@ -186,6 +173,7 @@ def get_slope_intercept(x1, y1, m):
 
 
 class LinearFunction:
+    __slots__ = 'slope', 'intercept', 'A', 'B', 'C', 'ref_point'
 
     # noinspection PyUnusedFunction
     def __init__(self, slope, intercept, ref_point=None):
@@ -210,10 +198,6 @@ class LinearFunction:
         intercept = y1 - slope * x1
         return cls(slope, intercept, Point(x1, y1))
 
-    @classmethod
-    def from_point_slope(cls, x1, y1, m):
-        intercept = y1 - m * x1
-        return cls(m, intercept, Point(x1, y1))
 
     @classmethod
     def get_perp_func(cls, x1, y1, slope):
@@ -246,16 +230,12 @@ class RunState:
         self.speed_ratio = self.speed / max_speed
         self.heading360 = self.heading if self.heading >= 0 else 360 + self.heading
         self.abs_steering_angle = abs(self.steering_angle)
-        self.x_velocity = self.speed * math.cos(math.radians(self.heading360))
-        self.y_velocity = self.speed * math.sin(math.radians(self.heading360))
-        self.next_x = self.x + self.x_velocity / self.fps
-        self.next_y = self.y + self.y_velocity / self.fps
         self.closest_behind_waypoint_index = self.closest_waypoints[0]
         self.closest_ahead_waypoint_index = self.closest_waypoints[1]
         self.half_track_width = self.track_width / 2
         self.quarter_track_width = self.half_track_width / 2
-        self.max_distance_traveled = self.steps * max_speed / self.fps
-        self.max_progress_percentage = self.max_distance_traveled / self.track_length
+        max_distance_traveled = self.steps * max_speed / self.fps
+        self.max_progress_percentage = max_distance_traveled / self.track_length
         self.progress_percentage = self.progress / 100
 
     def _set_future_inputs(self):
@@ -288,7 +268,7 @@ class RunState:
 
     @property
     def progress_reward(self):
-        return self.progress_percentage
+        return self.progress_percentage / self.max_progress_percentage
 
     @property
     def steering_reward(self):
@@ -324,8 +304,8 @@ class RunState:
         max_heading_error = 90
         next_track_wp = track_waypoints.waypoints_map[self.closest_ahead_waypoint_index]
         next_next_track_wp = next_track_wp.next_waypoint
-        next_segment = LinearFunction.from_points(next_track_wp.x, next_track_wp.y, next_next_track_wp.x, next_next_track_wp.y)
-        perp_waypoint_func = LinearFunction.get_perp_func(next_next_track_wp.x, next_next_track_wp.y, next_segment.slope)
+        next_segment = LinearFunction.from_points(self.x, self.y, next_track_wp.x, next_track_wp.y)
+        perp_waypoint_func = LinearFunction.get_perp_func(next_track_wp.x, next_track_wp.y, next_segment.slope)
         target_point = perp_waypoint_func.get_closest_point_on_line(self.x, self.y)
         start_point = Point(self.x, self.y)
         end_point = Point(target_point.x, target_point.y)
@@ -338,7 +318,7 @@ class RunState:
     @property
     def speed_reward(self):
         # noinspection PyAttributeOutsideInit
-        self.target_speed = min_speed + (max_speed - min_speed) * self.curve_factor
+        self.target_speed = min_speed + (max_speed - min_speed) * self.waypoint_heading_reward
         reward = math.exp(-abs(self.speed - self.target_speed) / self.target_speed)
         # noinspection PyChainedComparisons
         if self.speed == self.target_speed:
@@ -381,7 +361,10 @@ class RunState:
     def curve_factor(self):
         return track_segments.upcoming_curve_factor(self.closest_ahead_waypoint_index, self.waypoints, self.heading360)
 
+
 class Timer:
+    __slots__ = 'track_time', 'time', 'total_frames', 'fps', 'rtf'
+
     def __init__(self):
         self.track_time = True
         TIME_WINDOW = 10
@@ -412,11 +395,11 @@ timer = Timer()
 
 
 class Simulation:
+    __slots__ = 'sim_state_initialized', 'run_state'
 
     def __init__(self):
         self.sim_state_initialized = False
         self.run_state = None
-
 
     def set_sim_state(self, waypoints):
         track_waypoints.create_waypoints(waypoints)
@@ -429,8 +412,6 @@ class Simulation:
         run_state = RunState(params, self.run_state, timer.fps)
         self.run_state = run_state
         print(self.run_state.reward_data)
-
-
 
 
 sim = Simulation()

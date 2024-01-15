@@ -86,14 +86,7 @@ sudo chmod -R g+w /tmp/sagemaker
 mkdir -p $(eval echo "~${USER}")/.aws $INSTALL_DIR/docker/volumes/
 ln -sf $(eval echo "~${USER}")/.aws $INSTALL_DIR/docker/volumes/
 
-# copy rewardfunctions
-mkdir -p $INSTALL_DIR/custom_files
-cp $INSTALL_DIR/defaults/hyperparameters.json $INSTALL_DIR/custom_files/
-cp $INSTALL_DIR/defaults/model_metadata.json $INSTALL_DIR/custom_files/
-cp $INSTALL_DIR/defaults/reward_function.py $INSTALL_DIR/custom_files/
 
-cp $INSTALL_DIR/defaults/template-system.env $INSTALL_DIR/system.env
-cp $INSTALL_DIR/defaults/template-run.env $INSTALL_DIR/run.env
 if [[ "${OPT_CLOUD}" == "aws" ]]; then
     AWS_EC2_AVAIL_ZONE=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
     AWS_REGION="$(echo \"$AWS_EC2_AVAIL_ZONE\" | sed 's/[a-z]$//')"
