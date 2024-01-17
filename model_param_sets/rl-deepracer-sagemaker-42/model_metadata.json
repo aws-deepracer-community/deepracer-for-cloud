@@ -1,7 +1,7 @@
 {
   "action_space": {
     "steering_angle": {
-      "high": 10.0,
+      "high": 20.0,
       "low": -20.0
     },
     "speed": {
@@ -14,6 +14,13 @@
   ],
   "neural_network": "DEEP_CONVOLUTIONAL_NETWORK_SHALLOW",
   "version": "5",
-  "training_algorithm": "sac",
-  "action_space_type": "continuous"
+  "training_algorithm": "clipped_ppo",
+  "action_space_type": "continuous",
+  "preprocess_type": "GREY_SCALE",
+  "regional_parameters": [
+    0,
+    0,
+    0,
+    0
+  ]
 }

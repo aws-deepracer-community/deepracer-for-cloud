@@ -5,14 +5,12 @@ import sys
 import time
 
 
-MAX_SPEED = 4.0
-ABS_MAX_STEERING_ANGLE = 20
-MIN_SPEED = 1.0
-
-
+max_speed = 5
 segment_angle_threshold = 5
+min_speed = 0.5
 curve_angle_threshold = 50
 curve_distance_ratio_threshold = 1 / 8
+abs_max_steering_angle = 20
 max_heading_error = 90
 waypoint_lookahead_distance = 1
 
@@ -66,6 +64,9 @@ class LinearWaypointSegment(LineSegment):
 
     def __init__(self, start, end, prev_segment):
         super().__init__(start, end)
+        self.start = start
+        self.end = end
+        self.waypoints = [start, end]
         self.waypoint_indices = {start.index, end.index}
         self.prev_segment = prev_segment
         self.next_segment = None
@@ -74,6 +75,7 @@ class LinearWaypointSegment(LineSegment):
     def add_waypoint(self, waypoint):
         self.end = waypoint
         self.waypoint_indices.add(waypoint.index)
+        self.waypoints.append(waypoint)
 
     def set_next_segment(self, segment):
         self.next_segment = segment
@@ -226,7 +228,7 @@ class RunState:
     def _set_derived_inputs(self, fps):
         self.fps = fps
         self.progress_val = (self.progress / 100)
-        self.speed_ratio = self.speed / MAX_SPEED
+        self.speed_ratio = self.speed / max_speed
         self.heading360 = self.heading if self.heading >= 0 else 360 + self.heading
         self.abs_steering_angle = abs(self.steering_angle)
         self.x_velocity = self.speed * math.cos(math.radians(self.heading360))
@@ -237,7 +239,7 @@ class RunState:
         self.closest_ahead_waypoint_index = self.closest_waypoints[1]
         self.half_track_width = self.track_width / 2
         self.quarter_track_width = self.half_track_width / 2
-        self.max_distance_traveled = self.steps * MAX_SPEED / self.fps
+        self.max_distance_traveled = self.steps * max_speed / self.fps
         self.max_progress_percentage = self.max_distance_traveled / self.track_length
         self.progress_percentage = self.progress / 100
 
@@ -277,7 +279,7 @@ class RunState:
     def steering_reward(self):
         segment = track_segments.get_closest_segment_ahead(self.closest_ahead_waypoint_index)
         pre_target_steering = self.heading360 - segment.angle
-        self.target_steering_angle = min(ABS_MAX_STEERING_ANGLE, pre_target_steering) if pre_target_steering > 0 else max(-ABS_MAX_STEERING_ANGLE, pre_target_steering)
+        self.target_steering_angle = min(abs_max_steering_angle, pre_target_steering) if pre_target_steering > 0 else max(-abs_max_steering_angle, pre_target_steering)
         abs_steering_diff = min(abs(self.target_steering_angle - self.steering_angle), 90)
         abs_target_steering_reward = math.cos(math.radians(self.target_steering_angle))
         on_target_steering_reward = math.cos(math.radians(abs_steering_diff))
@@ -327,20 +329,14 @@ class RunState:
     def speed_reward(self):
         # noinspection PyAttributeOutsideInit
         curve_param = self.curve_factor
-        self.target_speed = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * curve_param
+        self.target_speed = min_speed + (max_speed - min_speed) * curve_param
         reward = math.exp(-abs(self.speed - self.target_speed) / self.target_speed)
         # noinspection PyChainedComparisons
         if self.speed == self.target_speed:
             return reward
-        elif self.prev_speed and self.prev_speed < self.speed and self.target_speed > self.speed:
-            min_prev_speed = max(self.prev_speed, MIN_SPEED)
-            max_speed_factor = (MAX_SPEED / min_prev_speed)
-            prev_speed_factor = (self.speed / min_prev_speed)
-            speed_factor = 1 + prev_speed_factor / max_speed_factor
-            return reward * speed_factor / 2
-        elif self.prev_speed and self.prev_speed > self.speed and self.target_speed < self.speed:
-            min_prev_speed = max(self.prev_speed, MIN_SPEED)
-            max_speed_factor = (MAX_SPEED / min_prev_speed)
+        elif self.prev_speed and self.prev_speed < self.speed and self.target_speed > self.speed and self.curve_factor >= 1:
+            min_prev_speed = max(self.prev_speed, min_speed)
+            max_speed_factor = (max_speed / min_prev_speed)
             prev_speed_factor = (self.speed / min_prev_speed)
             speed_factor = 1 + prev_speed_factor / max_speed_factor
             return reward * speed_factor / 2

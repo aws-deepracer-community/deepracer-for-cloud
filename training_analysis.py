@@ -35,5 +35,6 @@ except:
 
 au.analyze_training_progress(simulation_agg, title='Training progress')
 track_name = 'caecer_loop'
+tu = TrackIO()
 track: Track = tu.load_track(track_name)
 pu.plot_track(df, track)

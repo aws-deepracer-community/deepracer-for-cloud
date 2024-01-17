@@ -1,21 +1,17 @@
 import math
 import numpy
 import rospy
-import sys
 import time
 
 
-MAX_SPEED = 4.0
-ABS_MAX_STEERING_ANGLE = 20
-MIN_SPEED = 1.0
-
-
+max_speed = 4
 segment_angle_threshold = 5
-curve_angle_threshold = 50
-curve_distance_ratio_threshold = 1 / 8
-max_heading_error = 90
+min_speed = 1
 waypoint_lookahead_distance = 1
 
+curve_angle_threshold = 50
+curve_distance_ratio_threshold = 1 / 8
+abs_max_steering_angle = 20
 INF = float('inf')
 NINF = -INF
 
@@ -32,6 +28,7 @@ class Point:
         self.y = y
 
 
+
 class Waypoint(Point):
     __slots__ = 'x', 'y', 'index', 'next_waypoint', 'prev_waypoint'
 
@@ -44,42 +41,9 @@ class Waypoint(Point):
     def set_prev_waypoint(self, waypoint):
         self.prev_waypoint = waypoint
 
+
     def set_next_waypoint(self, waypoint):
         self.next_waypoint = waypoint
-
-
-class LineSegment:
-    __slots__ = 'start', 'end', 'slope', 'angle', 'length'
-
-    def __init__(self, start, end):
-        self.start = start
-        self.end = end
-        numerator = (self.end.y - self.start.y)
-        self.slope = numerator / (self.end.x - self.start.x) if self.end.x != self.start.x else get_nan(numerator)
-        radians = math.atan2(self.end.y - self.start.y, self.end.x - self.start.x)
-        self.angle = math.degrees(radians)
-        self.length = math.sqrt((self.end.x - self.start.x) ** 2 + (self.end.y - self.start.y) ** 2)
-
-
-class LinearWaypointSegment(LineSegment):
-    __slots__ = 'start', 'end', 'waypoints', 'waypoint_indices', 'prev_segment', 'next_segment'
-
-    def __init__(self, start, end, prev_segment):
-        super().__init__(start, end)
-        self.waypoint_indices = {start.index, end.index}
-        self.prev_segment = prev_segment
-        self.next_segment = None
-
-
-    def add_waypoint(self, waypoint):
-        self.end = waypoint
-        self.waypoint_indices.add(waypoint.index)
-
-    def set_next_segment(self, segment):
-        self.next_segment = segment
-
-    def set_prev_segment(self, segment):
-        self.prev_segment = segment
 
 
 class TrackWaypoints:
@@ -104,6 +68,45 @@ class TrackWaypoints:
         last_waypoint.set_next_waypoint(first_waypoint)
         first_waypoint.set_prev_waypoint(last_waypoint)
 
+
+class LineSegment:
+    __slots__ = 'start', 'end', 'slope', 'angle', 'length'
+
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+        numerator = (self.end.y - self.start.y)
+        self.slope = numerator / (self.end.x - self.start.x) if self.end.x != self.start.x else get_nan(numerator)
+        radians = math.atan2(self.end.y - self.start.y, self.end.x - self.start.x)
+        self.angle = math.degrees(radians)
+        self.length = math.sqrt((self.end.x - self.start.x) ** 2 + (self.end.y - self.start.y) ** 2)
+
+
+
+class LinearWaypointSegment(LineSegment):
+    __slots__ = 'start', 'end', 'waypoints', 'waypoint_indices', 'prev_segment', 'next_segment', 'slope'
+
+    def __init__(self, start, end, prev_segment):
+        super().__init__(start, end)
+        self.waypoints = (start, end)
+        self.waypoint_indices = {start.index, end.index}
+        self.prev_segment = prev_segment
+        self.next_segment = None
+        slope_numerator = (end.y - start.y)
+        self.slope = slope_numerator / (end.x - start.x) if end.x != start.x else get_nan(slope_numerator)
+
+    def add_waypoint(self, waypoint):
+        self.end = waypoint
+        self.waypoint_indices.add(waypoint.index)
+        self.waypoints = (*self.waypoints, waypoint)
+
+    def set_next_segment(self, segment):
+        self.next_segment = segment
+
+    def set_prev_segment(self, segment):
+        self.prev_segment = segment
+
+
 # noinspection DuplicatedCode
 class TrackSegments:
     __slots__ = 'segments'
@@ -120,7 +123,7 @@ class TrackSegments:
             prev_segment.add_waypoint(end)
         else:
             segment = LinearWaypointSegment(start, end, prev_segment)
-            if self.segments:
+            if prev_segment:
                 prev_segment.set_next_segment(segment)
             self.segments.append(segment)
 
@@ -141,10 +144,9 @@ class TrackSegments:
         next_segment_start = next_segment.start
         next_segment_distance = math.sqrt((next_segment_start.x - waypoints[cawpi][0]) ** 2 + (next_segment_start.y - waypoints[cawpi][1]) ** 2)
 
-        max_curve_distance_factor = segment.length / (segment.length + next_segment.length)
         curve_distance_factor = next_segment_distance / (segment.length + next_segment.length)
 
-        curve_distance_ratio = curve_distance_factor / max_curve_distance_factor
+        curve_distance_ratio = curve_distance_factor
 
         max_angle_diff = 90
         angle_diff = min(abs(next_segment.next_segment.angle - heading), max_angle_diff)
@@ -207,6 +209,7 @@ class LinearFunction:
 
 
 class RunState:
+
     def __init__(self, params, prev_run_state, fps):
         self._set_raw_inputs(params)
         self._set_derived_inputs(fps)
@@ -226,19 +229,15 @@ class RunState:
     def _set_derived_inputs(self, fps):
         self.fps = fps
         self.progress_val = (self.progress / 100)
-        self.speed_ratio = self.speed / MAX_SPEED
+        self.speed_ratio = self.speed / max_speed
         self.heading360 = self.heading if self.heading >= 0 else 360 + self.heading
         self.abs_steering_angle = abs(self.steering_angle)
-        self.x_velocity = self.speed * math.cos(math.radians(self.heading360))
-        self.y_velocity = self.speed * math.sin(math.radians(self.heading360))
-        self.next_x = self.x + self.x_velocity / self.fps
-        self.next_y = self.y + self.y_velocity / self.fps
         self.closest_behind_waypoint_index = self.closest_waypoints[0]
         self.closest_ahead_waypoint_index = self.closest_waypoints[1]
         self.half_track_width = self.track_width / 2
         self.quarter_track_width = self.half_track_width / 2
-        self.max_distance_traveled = self.steps * MAX_SPEED / self.fps
-        self.max_progress_percentage = self.max_distance_traveled / self.track_length
+        max_distance_traveled = self.steps * max_speed / self.fps
+        self.max_progress_percentage = max_distance_traveled / self.track_length
         self.progress_percentage = self.progress / 100
 
     def _set_future_inputs(self):
@@ -271,13 +270,13 @@ class RunState:
 
     @property
     def progress_reward(self):
-        return self.progress_percentage
+        return self.progress_percentage / self.max_progress_percentage
 
     @property
     def steering_reward(self):
         segment = track_segments.get_closest_segment_ahead(self.closest_ahead_waypoint_index)
         pre_target_steering = self.heading360 - segment.angle
-        self.target_steering_angle = min(ABS_MAX_STEERING_ANGLE, pre_target_steering) if pre_target_steering > 0 else max(-ABS_MAX_STEERING_ANGLE, pre_target_steering)
+        self.target_steering_angle = min(abs_max_steering_angle, pre_target_steering) if pre_target_steering > 0 else max(-abs_max_steering_angle, pre_target_steering)
         abs_steering_diff = min(abs(self.target_steering_angle - self.steering_angle), 90)
         abs_target_steering_reward = math.cos(math.radians(self.target_steering_angle))
         on_target_steering_reward = math.cos(math.radians(abs_steering_diff))
@@ -304,6 +303,7 @@ class RunState:
         Reward for heading towards the next waypoint
         Reward is based on the heading error between the car and the current waypoint segment
         '''
+        max_heading_error = 90
         next_wp = track_waypoints.waypoints_map[self.closest_ahead_waypoint_index]
         start_x, start_y = self.x, self.y
         end_x, end_y = next_wp.x, next_wp.y
@@ -312,7 +312,9 @@ class RunState:
             next_wp = next_wp.next_waypoint
             end_x, end_y = next_wp.x, next_wp.y
 
+
         segment = LinearFunction.from_points(start_x, start_y, end_x, end_y)
+
         perp_waypoint_func = LinearFunction.get_perp_func(end_x, end_y, segment.slope)
         target_point = perp_waypoint_func.get_closest_point_on_line(self.x, self.y)
         start_point = Point(self.x, self.y)
@@ -323,24 +325,21 @@ class RunState:
         heading_factor = math.cos(math.radians(heading_error))
         return heading_factor
 
+    # noinspection PyAttributeOutsideInit
     @property
     def speed_reward(self):
-        # noinspection PyAttributeOutsideInit
         curve_param = self.curve_factor
-        self.target_speed = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * curve_param
+        self.target_speed = min_speed + (max_speed - min_speed) * curve_param
+        # Don't accelerate so fast that the car loses control and spins out
+        if self.prev_speed and self.target_speed > self.prev_speed + 1:
+            self.target_speed = self.prev_speed + 1
         reward = math.exp(-abs(self.speed - self.target_speed) / self.target_speed)
         # noinspection PyChainedComparisons
         if self.speed == self.target_speed:
             return reward
-        elif self.prev_speed and self.prev_speed < self.speed and self.target_speed > self.speed:
-            min_prev_speed = max(self.prev_speed, MIN_SPEED)
-            max_speed_factor = (MAX_SPEED / min_prev_speed)
-            prev_speed_factor = (self.speed / min_prev_speed)
-            speed_factor = 1 + prev_speed_factor / max_speed_factor
-            return reward * speed_factor / 2
-        elif self.prev_speed and self.prev_speed > self.speed and self.target_speed < self.speed:
-            min_prev_speed = max(self.prev_speed, MIN_SPEED)
-            max_speed_factor = (MAX_SPEED / min_prev_speed)
+        elif self.prev_speed and self.prev_speed < self.speed and self.target_speed > self.speed and self.curve_factor >= 1:
+            min_prev_speed = max(self.prev_speed, min_speed)
+            max_speed_factor = (max_speed / min_prev_speed)
             prev_speed_factor = (self.speed / min_prev_speed)
             speed_factor = 1 + prev_speed_factor / max_speed_factor
             return reward * speed_factor / 2
@@ -406,37 +405,28 @@ class Timer:
         print("TIME: s: {}, rtf: {}, fps:{}, frames: {}".format(int(steps), round(self.rtf, 2), round(self.fps, 2), frames))
 
 
+timer = Timer()
 
 
 class Simulation:
-    __slots__ = 'sim_state_initialized', 'run_state', 'timer'
+    __slots__ = 'sim_state_initialized', 'run_state'
 
     def __init__(self):
         self.sim_state_initialized = False
         self.run_state = None
-        self.timer = Timer()
 
+    def set_sim_state(self, waypoints):
+        track_waypoints.create_waypoints(waypoints)
+        track_segments.create_segments(track_waypoints.waypoints)
+        self.sim_state_initialized = True
 
     def add_run_state(self, params):
-        if not self.sim_state_initialized:
-            track_waypoints.create_waypoints(params['waypoints'])
-            track_segments.create_segments(track_waypoints.waypoints)
-            self.sim_state_initialized = True
-
         steps = params['steps']
-        self.timer.record_time(steps)
-        run_state = RunState(params, self.run_state, self.timer.fps)
+        timer.record_time(steps)
+        run_state = RunState(params, self.run_state, timer.fps)
         self.run_state = run_state
         print(self.run_state.reward_data)
-        size_data = {
-            'sim': sys.getsizeof(self),
-            'run_state': sys.getsizeof(run_state),
-            'params': sys.getsizeof(params),
-            'track_waypoints': sys.getsizeof(track_waypoints),
-            'track_segments': sys.getsizeof(track_segments),
-            'timer': sys.getsizeof(self.timer),
-        }
-        print(size_data)
+
 
 sim = Simulation()
 
@@ -446,5 +436,8 @@ def reward_function(params):
     '''
     Example of penalize steering, which helps mitigate zig-zag behaviors
     '''
+    if not sim.sim_state_initialized:
+        sim.set_sim_state(params['waypoints'])
+
     sim.add_run_state(params)
     return sim.run_state.reward
