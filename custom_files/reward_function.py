@@ -6,10 +6,12 @@ import rospy
 
 max_speed = 4
 segment_angle_threshold = 5
-min_speed = 1.75
+min_speed = 1
+waypoint_lookahead_distance = 1
+
 curve_angle_threshold = 50
 curve_distance_ratio_threshold = 1 / 8
-abs_max_steering_angle = 30
+abs_max_steering_angle = 20
 INF = float('inf')
 NINF = -INF
 
@@ -302,10 +304,18 @@ class RunState:
         Reward is based on the heading error between the car and the current waypoint segment
         '''
         max_heading_error = 90
-        next_track_wp = track_waypoints.waypoints_map[self.closest_ahead_waypoint_index]
-        next_next_track_wp = next_track_wp.next_waypoint
-        next_segment = LinearFunction.from_points(self.x, self.y, next_track_wp.x, next_track_wp.y)
-        perp_waypoint_func = LinearFunction.get_perp_func(next_track_wp.x, next_track_wp.y, next_segment.slope)
+        next_wp = track_waypoints.waypoints_map[self.closest_ahead_waypoint_index]
+        start_x, start_y = self.x, self.y
+        end_x, end_y = next_wp.x, next_wp.y
+        for i in range(waypoint_lookahead_distance):
+            start_x, start_y = next_wp.x, next_wp.y
+            next_wp = next_wp.next_waypoint
+            end_x, end_y = next_wp.x, next_wp.y
+
+
+        segment = LinearFunction.from_points(start_x, start_y, end_x, end_y)
+
+        perp_waypoint_func = LinearFunction.get_perp_func(end_x, end_y, segment.slope)
         target_point = perp_waypoint_func.get_closest_point_on_line(self.x, self.y)
         start_point = Point(self.x, self.y)
         end_point = Point(target_point.x, target_point.y)
@@ -315,10 +325,14 @@ class RunState:
         heading_factor = math.cos(math.radians(heading_error))
         return heading_factor
 
+    # noinspection PyAttributeOutsideInit
     @property
     def speed_reward(self):
-        # noinspection PyAttributeOutsideInit
-        self.target_speed = min_speed + (max_speed - min_speed) * self.waypoint_heading_reward
+        curve_param = self.curve_factor
+        self.target_speed = min_speed + (max_speed - min_speed) * curve_param
+        # Don't accelerate so fast that the car loses control and spins out
+        if self.prev_speed and self.target_speed > self.prev_speed + 1:
+            self.target_speed = self.prev_speed + 1
         reward = math.exp(-abs(self.speed - self.target_speed) / self.target_speed)
         # noinspection PyChainedComparisons
         if self.speed == self.target_speed:
