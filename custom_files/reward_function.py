@@ -7,7 +7,7 @@ import time
 
 MAX_SPEED = 4.0
 ABS_MAX_STEERING_ANGLE = 20
-MIN_SPEED = 1.0
+MIN_SPEED = 1.4
 
 
 segment_angle_threshold = 5
@@ -140,7 +140,7 @@ class TrackSegments:
         next_segment = segment.next_segment
         next_segment_start = next_segment.start
         next_segment_distance = math.sqrt((next_segment_start.x - waypoints[cawpi][0]) ** 2 + (next_segment_start.y - waypoints[cawpi][1]) ** 2)
-
+        # mcdf, cdf = segment.length / track_width, next_segment_distance / track_width
         max_curve_distance_factor = segment.length / (segment.length + next_segment.length)
         curve_distance_factor = next_segment_distance / (segment.length + next_segment.length)
 
@@ -220,6 +220,8 @@ class RunState:
     def _set_prev_inputs(self):
         if self.prev_run_state:
             self.prev_speed = self.prev_run_state.speed
+            self.prev_steering_angle = self.prev_run_state.steering_angle
+            self.prev_heading360 = self.prev_run_state.heading360
         else:
             self.prev_speed = None
 
@@ -326,24 +328,26 @@ class RunState:
     @property
     def speed_reward(self):
         # noinspection PyAttributeOutsideInit
-        curve_param = self.curve_factor
+        curve_param = self.curve_factor * self.steering_reward
         self.target_speed = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * curve_param
         reward = math.exp(-abs(self.speed - self.target_speed) / self.target_speed)
         # noinspection PyChainedComparisons
         if self.speed == self.target_speed:
             return reward
-        elif self.prev_speed and self.prev_speed < self.speed and self.target_speed > self.speed:
-            min_prev_speed = max(self.prev_speed, MIN_SPEED)
-            max_speed_factor = (MAX_SPEED / min_prev_speed)
-            prev_speed_factor = (self.speed / min_prev_speed)
-            speed_factor = 1 + prev_speed_factor / max_speed_factor
-            return reward * speed_factor / 2
-        elif self.prev_speed and self.prev_speed > self.speed and self.target_speed < self.speed:
-            min_prev_speed = max(self.prev_speed, MIN_SPEED)
-            max_speed_factor = (MAX_SPEED / min_prev_speed)
-            prev_speed_factor = (self.speed / min_prev_speed)
-            speed_factor = 1 + prev_speed_factor / max_speed_factor
-            return reward * speed_factor / 2
+        elif self.prev_speed:
+            speed_diff_factor = abs(self.speed - self.target_speed) / self.target_speed
+            if self.target_speed > self.speed:
+                if self.prev_speed < self.speed:
+                    speed_factor = 1 + speed_diff_factor
+                else:
+                    speed_factor = 1 - speed_diff_factor
+                return reward * speed_factor / 2
+            elif self.target_speed < self.speed:
+                if self.prev_speed > self.speed:
+                    speed_factor = 1 + speed_diff_factor
+                else:
+                    speed_factor = 1 - speed_diff_factor
+                return reward * speed_factor / 2
         else:
             return reward / 2
 
