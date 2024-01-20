@@ -14,6 +14,6 @@
   ],
   "neural_network": "DEEP_CONVOLUTIONAL_NETWORK_SHALLOW",
   "version": "5",
-  "training_algorithm": "sac",
+  "training_algorithm": "clipped_ppo",
   "action_space_type": "continuous"
 }
