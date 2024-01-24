@@ -30,7 +30,7 @@ DRfC supports a wide set of features to ensure that you can focus on creating th
 	* Optional integration with AWS CloudWatch.
 	* Optional exposure of Robomaker internal log-files.
 * Technology
-	* Supports both Docker Swarm (used for connecting multiple nodes together) and Docker Compose (used to support OpenGL)
+	* Supports both Docker Swarm (used for connecting multiple nodes together) and Docker Compose
 
 ## Documentation
 
