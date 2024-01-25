@@ -25,7 +25,7 @@ screen -r DeepracerXorg -X stuff $'sudo xinit /usr/bin/mwm -display $DR_DISPLAY 
 sleep 1
 
 if [[ "${DR_GUI_ENABLE,,}" == "true" ]]; then
-    xrandr -s 1400x900
+    xrandr -s 1400x900 -d $DR_DISPLAY
     x11vnc -bg -forever -no6 -nopw -rfbport 5901 -rfbportv6 -1 -loop -display WAIT$DR_DISPLAY &
     sleep 1
 fi
