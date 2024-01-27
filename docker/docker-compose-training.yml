@@ -19,6 +19,7 @@ services:
       - HYPERPARAMETER_FILE_S3_KEY=${DR_LOCAL_S3_HYPERPARAMETERS_KEY}
       - MODELMETADATA_FILE_S3_KEY=${DR_LOCAL_S3_MODEL_METADATA_KEY}
       - CUDA_VISIBLE_DEVICES=${DR_SAGEMAKER_CUDA_DEVICES:-}
+      - MAX_MEMORY_STEPS=${DR_TRAIN_MAX_STEPS_PER_ITERATION:-}
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "/tmp/sagemaker:/tmp/sagemaker"
