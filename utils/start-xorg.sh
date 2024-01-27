@@ -26,16 +26,13 @@ if [ -z "$DR_DISPLAY" ]; then
 fi
 
 # Ensure that we are able to sudo without password later.
-sudo touch $DR_DIR/tmp/xorg.log
-
-screen -dmS DeepracerXorg
-screen -r DeepracerXorg -X stuff $'sudo xinit /usr/bin/mwm -display $DR_DISPLAY -- /usr/lib/xorg/Xorg $DR_DISPLAY -config $DR_DIR/tmp/xorg.conf > $DR_DIR/tmp/xorg.log 2>&1 &\n'
+# screen -dmS DeepracerXorg 
+sudo screen -d -m bash -c "xinit /usr/bin/mwm -display $DR_DISPLAY -- /usr/lib/xorg/Xorg $DR_DISPLAY -config $DR_DIR/tmp/xorg.conf > $DR_DIR/tmp/xorg.log 2>&1"
 
 # Screen detaches; let it have some time to start X.
 sleep 1
 
 if [[ "${DR_GUI_ENABLE,,}" == "true" ]]; then
-    xrandr -s 1400x900 -d $DR_DISPLAY
     x11vnc -bg -forever -no6 -nopw -rfbport 5901 -rfbportv6 -1 -loop -display WAIT$DR_DISPLAY &
     sleep 1
 fi
