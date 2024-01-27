@@ -26,8 +26,7 @@ if [ -z "$DR_DISPLAY" ]; then
 fi
 
 # Ensure that we are able to sudo without password later.
-# screen -dmS DeepracerXorg 
-sudo screen -d -m bash -c "xinit /usr/bin/mwm -display $DR_DISPLAY -- /usr/lib/xorg/Xorg $DR_DISPLAY -config $DR_DIR/tmp/xorg.conf > $DR_DIR/tmp/xorg.log 2>&1"
+sudo screen -d -S DeepracerXorg -m bash -c "xinit /usr/bin/mwm -display $DR_DISPLAY -- /usr/lib/xorg/Xorg $DR_DISPLAY -config $DR_DIR/tmp/xorg.conf > $DR_DIR/tmp/xorg.log 2>&1"
 
 # Screen detaches; let it have some time to start X.
 sleep 1
