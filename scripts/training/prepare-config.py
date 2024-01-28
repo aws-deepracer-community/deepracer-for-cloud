@@ -113,7 +113,7 @@ s3_client.copy(copy_source, Bucket=s3_bucket, Key=reward_function_key)
 config['MULTI_CONFIG'] = os.environ.get('DR_TRAIN_MULTI_CONFIG', 'False')
 num_workers = int(config['NUM_WORKERS'])
 
-if config['MULTI_CONFIG'] == "True" and num_workers > 0:
+if config['MULTI_CONFIG'] == "True" and num_workers > 1:
     
     multi_config = {}
     multi_config['multi_config'] = [None] * num_workers
