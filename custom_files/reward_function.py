@@ -8,13 +8,14 @@ import rospy
 
 MAX_SPEED = 4.0
 ABS_MAX_STEERING_ANGLE = 20
-MIN_SPEED = 1.4
+MIN_SPEED = 1.5
 
 segment_angle_threshold = 5
-curve_angle_threshold = 60
-curve_distance_ratio_threshold = 1 / 8
+curve_angle_threshold = 70
+curve_distance_ratio_threshold = 1
 max_heading_error = 90
 waypoint_lookahead_distance = 1
+lookahead_track_width_factor = 1
 
 INF = float('inf')
 NINF = -INF
@@ -135,33 +136,12 @@ class TrackSegments:
         last_segment.set_next_segment(first_segment)
         first_segment.set_prev_segment(last_segment)
 
-    def upcoming_curve_factor(self, cawpi, waypoints, heading):
-        segment = self.get_closest_segment_ahead(cawpi)
-        next_segment = segment.next_segment
-        next_segment_start = next_segment.start
-        next_segment_distance = math.sqrt((next_segment_start.x - waypoints[cawpi][0]) ** 2 + (next_segment_start.y - waypoints[cawpi][1]) ** 2)
 
-        max_curve_distance_factor = segment.length / (segment.length + next_segment.length)
-        curve_distance_factor = next_segment_distance / (segment.length + next_segment.length)
-
-        curve_distance_ratio = curve_distance_factor / max_curve_distance_factor
-
-        max_angle_diff = 90
-        angle_diff = min(abs(next_segment.next_segment.angle - heading), max_angle_diff)
-        angle_diff_radians = math.radians(angle_diff)
-        curve_factor = math.cos(angle_diff_radians)
-        if curve_distance_ratio < curve_distance_ratio_threshold and angle_diff < curve_angle_threshold:
-            return curve_factor
-        else:
-            return 1
-
-    def get_closest_segment_ahead(self, closest_ahead_waypoint_index):
-        closest_segment = None
+    def get_closest_segment(self, closest_ahead_waypoint_index):
         for segment in self.segments:
             if closest_ahead_waypoint_index in segment.waypoint_indices:
-                closest_segment = segment
-                break
-        return closest_segment
+                return segment
+        raise Exception('No segment found for closest waypoint index: {}'.format(closest_ahead_waypoint_index))
 
 
 track_segments = TrackSegments()
@@ -251,7 +231,7 @@ class RunState:
 
     @property
     def reward(self):
-        reward = self.speed_reward * self.progress_reward * (self.center_line_reward + self.waypoint_heading_reward + self.steering_reward) / 3
+        reward = self.speed_ratio * self.progress_reward * (self.center_line_reward + self.waypoint_heading_reward + self.steering_reward) / 3
         if self.all_wheels_on_track and not self.is_crashed and not self.is_offtrack and not self.is_reversed:
             return reward
         else:
@@ -277,11 +257,11 @@ class RunState:
 
     @property
     def steering_reward(self):
-        segment = track_segments.get_closest_segment_ahead(self.closest_ahead_waypoint_index)
+        segment = track_segments.get_closest_segment(self.closest_ahead_waypoint_index)
         pre_target_steering = self.heading360 - segment.angle
         self.target_steering_angle = min(ABS_MAX_STEERING_ANGLE, pre_target_steering) if pre_target_steering > 0 else max(-ABS_MAX_STEERING_ANGLE, pre_target_steering)
         abs_steering_diff = min(abs(self.target_steering_angle - self.steering_angle), 90)
-        abs_target_steering_reward = math.cos(math.radians(self.target_steering_angle))
+        abs_target_steering_reward = math.cos(math.radians(self.steering_angle) * self.curve_factor)
         on_target_steering_reward = math.cos(math.radians(abs_steering_diff))
         # We want to reward for both being on target and for requiring a small steering angle
         steering_reward = abs_target_steering_reward * on_target_steering_reward
@@ -378,7 +358,27 @@ class RunState:
 
     @property
     def curve_factor(self):
-        return track_segments.upcoming_curve_factor(self.closest_ahead_waypoint_index, self.waypoints, self.heading360)
+        segment = track_segments.get_closest_segment(self.closest_ahead_waypoint_index)
+        next_segment = segment.next_segment
+
+
+        lookahead_segment = next_segment
+        lookahead_length = next_segment.length
+        while lookahead_length < self.track_width * lookahead_track_width_factor:
+            lookahead_segment = lookahead_segment.next_segment
+            lookahead_length += lookahead_segment.length
+        lookahead_start = lookahead_segment.start
+        lookahead_distance = math.sqrt((lookahead_start.x - self.x) ** 2 + (lookahead_start.y - self.y) ** 2)
+        curve_distance_ratio = lookahead_distance / self.track_width
+
+        max_angle_diff = 90
+        angle_diff = min(abs(lookahead_segment.angle - self.heading360), max_angle_diff)
+        angle_diff_radians = math.radians(angle_diff)
+        curve_factor = math.cos(angle_diff_radians)
+        if curve_distance_ratio < curve_distance_ratio_threshold and angle_diff > curve_angle_threshold:
+            return curve_factor
+        else:
+            return 1
 
 
 class Timer:
