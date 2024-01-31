@@ -10,7 +10,7 @@ services:
   robomaker:
     deploy:
       restart_policy:
-        condition: none
+        condition: on-failure
       replicas: ${DR_WORKERS}
       placement:
         constraints: [node.labels.Robomaker == true ]
