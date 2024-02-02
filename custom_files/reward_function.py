@@ -444,18 +444,24 @@ class RunState:
             return 1
 
     @property
-    def curve_distance_factor(self):
+    def curve_lookahead_segment(self):
         segment = track_segments.get_closest_segment(self.closest_ahead_waypoint_index)
         next_segment = segment.next_segment
-
+        dist_to_next_segment = math.sqrt((next_segment.start.x - self.x) ** 2 + (next_segment.start.y - self.y) ** 2)
         lookahead_segment = next_segment
-        lookahead_length = next_segment.length
-        while lookahead_length < self.track_width * lookahead_track_width_factor:
+        lookahead_length = next_segment.length + dist_to_next_segment
+        while lookahead_length < self.track_width * lookahead_track_width_factor * 2:
             lookahead_segment = lookahead_segment.next_segment
             lookahead_length += lookahead_segment.length
-        lookahead_start = lookahead_segment.start
-        lookahead_distance = math.sqrt((lookahead_start.x - self.x) ** 2 + (lookahead_start.y - self.y) ** 2)
-        curve_distance_ratio = lookahead_distance / self.track_width
+        return lookahead_segment
+
+    @property
+    def next_segment_start_distance_ratio(self):
+        segment = track_segments.get_closest_segment(self.closest_ahead_waypoint_index)
+        next_segment = segment.next_segment
+        next_segment_start = next_segment.start
+        next_segment_distance = math.sqrt((next_segment_start.x - self.x) ** 2 + (next_segment_start.y - self.y) ** 2)
+        return next_segment_distance / self.track_width
 
         max_angle_diff = 90
         angle_diff = min(abs(lookahead_segment.angle - self.heading360), max_angle_diff)
