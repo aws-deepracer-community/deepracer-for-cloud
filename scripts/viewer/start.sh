@@ -22,7 +22,7 @@ function ctrl_c() {
 TOPIC="/racecar/deepracer/kvs_stream"
 WIDTH=480
 HEIGHT=360
-QUALITY=75
+QUALITY=100
 BROWSER="firefox --new-tab"
 PORT=$DR_WEBVIEWER_PORT
 
