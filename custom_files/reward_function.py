@@ -194,16 +194,18 @@ class LookaheadData:
     __slots__ = 'segments', 'init_segment', 'total_distance', 'abs_total_angle_changes', 'total_angle_changes'
 
     def __init__(self, init_segment: LineSegment, init_angle_diff):
+        self.segments = []
         self.init_segment = init_segment
         self.total_distance = init_segment.length
         self.total_angle_changes = init_angle_diff
         self.abs_total_angle_changes = abs(init_angle_diff)
 
-        self.segments = []
 
     def add_segment(self, segment):
         self.segments.append(segment)
         self.total_distance += segment.length
+        angle_diff = segment.angle - segment.prev_segment.angle
+        self.total_angle_changes += angle_diff
         self.abs_total_angle_changes += abs(segment.angle - segment.prev_segment.angle)
 
 
@@ -266,7 +268,8 @@ class RunState:
         return {
             'reward': self.reward,
             'progress': self.progress_percentage,
-            #'next_curve_factor': self.next_segment_curve_factor,
+            'next_curve_factor': self.next_segment_curve_factor,
+            'target_speed_data': self.target_speed,
             'curve_factor': self.curve_factor,
             'waypoint_heading_reward': self.waypoint_heading_reward,
             'steering_reward': self.steering_reward,
@@ -318,26 +321,27 @@ class RunState:
         Reward is exponentially based on distance from center line with max reward at quarter track width
         and minimum reward at half track width
         '''
-        '''
-        todo set value as multiplier bonus
+
         if self.next_segment_semidistant and self.large_curve_ahead:
             if self.curve_lookahead_data.total_angle_changes < 0:
                 if self.is_left_of_center:
-                    return 0
+                    turn_side_bonus = 0.9
                 else:
-                    return 1
+                    turn_side_bonus = 1.1
             else:
                 if self.is_left_of_center:
-                    return 1
+                    turn_side_bonus = 1.1
                 else:
-                    return 0
-        '''
+                    turn_side_bonus = 0.9
+        else:
+            turn_side_bonus = 1
+
         min_distance_factor = self.quarter_track_width / self.half_track_width
         max_distance_factor = self.half_track_width / self.half_track_width
         distance_factor = self.distance_from_center / self.half_track_width
         mod_distance_factor = max(min(max_distance_factor, distance_factor), min_distance_factor) * self.curve_factor
         sqrt_factor = min_distance_factor - mod_distance_factor
-        return math.sqrt(1 - (sqrt_factor - .5) ** 2)
+        return math.sqrt(1 - (sqrt_factor - .5) ** 2) * turn_side_bonus / 1.1
 
     @property
     def target_point(self):
@@ -401,6 +405,7 @@ class RunState:
 
     @property
     def curve_factor(self):
+        return self.next_segment_curve_factor
         segment = track_segments.get_closest_segment(self.closest_ahead_waypoint_index)
         next_segment = segment.next_segment
 
@@ -427,13 +432,13 @@ class RunState:
         segment = track_segments.get_closest_segment(self.closest_ahead_waypoint_index)
         next_segment = segment.next_segment
         init_segment = LineSegment(self.location, next_segment.start)
-
         lookahead_data = LookaheadData(init_segment, init_segment.angle - self.heading360)
         lookahead_segment = next_segment
         lookahead_data.add_segment(lookahead_segment)
-
         while lookahead_data.total_distance < self.track_width * LOOKAHEAD_TRACK_WIDTH_RATIO:
-            lookahead_data.add_segment(lookahead_segment.next_segment)
+            lookahead_segment = lookahead_segment.next_segment
+            lookahead_data.add_segment(lookahead_segment)
+
         return lookahead_data
 
 
