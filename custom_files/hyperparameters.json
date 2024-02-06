@@ -8,7 +8,7 @@
   "loss_type": "huber",
   "lr": 0.001,
   "num_episodes_between_training": 12,
-  "num_epochs": 10,
+  "num_epochs": 5,
   "sac_alpha": 0.2,
   "stack_size": 1,
   "term_cond_avg_score": 350.0,
