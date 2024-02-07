@@ -1,16 +1,20 @@
 # TODO SIMPLE CHECKS TO RETURN MIN_REWARD. CAN ALSO DO PREV CHECKS TO RETURN MIN_REWARD
+
 import math
 import sys
 import time
 
 import numpy
 import rospy
+from shapely import LinearRing, LineString, Point
 
 
+LineString()
+LinearRing()
 MIN_REWARD = 1e-5
 MAX_SPEED = 5.0
 ABS_MAX_STEERING_ANGLE = 30
-MIN_SPEED = 1.5
+MIN_SPEED = 1.9
 FPS = 15
 PREV_DISCOUNT_FACTOR = 0.1
 PREV_DISCOUNT_DIVISOR = 1 + PREV_DISCOUNT_FACTOR
@@ -33,15 +37,16 @@ def get_nan(numerator):
     return INF if numerator >= 0 else NINF
 
 
-class Point:
+class TrackPoint(Point):
     __slots__ = 'x', 'y'
 
     def __init__(self, x, y):
+        super().__init__([x, y])
         self.x = x
         self.y = y
 
 
-class Waypoint(Point):
+class Waypoint(TrackPoint):
     __slots__ = 'x', 'y', 'index', 'next_waypoint', 'prev_waypoint'
 
     def __init__(self, x, y, index, prev_waypoint):
@@ -57,10 +62,11 @@ class Waypoint(Point):
         self.next_waypoint = waypoint
 
 
-class LineSegment:
+class LineSegment(LineString):
     __slots__ = 'start', 'end', 'slope', 'angle', 'length'
 
     def __init__(self, start, end):
+        super().__init__([start, end])
         self.start = start
         self.end = end
         numerator = (self.end.y - self.start.y)
@@ -89,6 +95,9 @@ class LinearWaypointSegment(LineSegment):
     def set_prev_segment(self, segment):
         self.prev_segment = segment
 
+class TrackLinearRing(LinearRing):
+    def __init__(self, points):
+        super().__init__(points)
 
 class TrackWaypoints:
     __slots__ = 'waypoints', 'waypoints_map'
@@ -152,8 +161,8 @@ class TrackSegments:
         raise Exception('No segment found for closest waypoint index: {}'.format(closest_ahead_waypoint_index))
 
 
-track_segments = TrackSegments()
-track_waypoints = TrackWaypoints()
+track_segments = None
+track_waypoints = None
 
 
 
@@ -171,23 +180,23 @@ class LinearFunction:
 
     def get_closest_point_on_line(self, x, y):
         if not math.isfinite(self.slope) or not math.isfinite(self.A) or not math.isfinite(self.C) or not math.isfinite(self.intercept):
-            return Point(self.ref_point.x, y)
+            return TrackPoint(self.ref_point.x, y)
         else:
             x = (self.B * (self.B * x - self.A * y) - self.A * self.C) / (self.A ** 2 + self.B ** 2)
             y = (self.A * (-self.B * x + self.A * y) - self.B * self.C) / (self.A ** 2 + self.B ** 2)
-            return Point(x, y)
+            return TrackPoint(x, y)
 
     @classmethod
     def from_points(cls, x1, y1, x2, y2):
         slope = (y2 - y1) / (x2 - x1) if x2 != x1 else get_nan(y2 - y1)
         intercept = y1 - slope * x1
-        return cls(slope, intercept, Point(x1, y1))
+        return cls(slope, intercept, TrackPoint(x1, y1))
 
     @classmethod
     def get_perp_func(cls, x1, y1, slope):
         perp_slope = -1 / slope if slope != 0 else -slope
         perp_intercept = y1 - perp_slope * x1
-        return cls(perp_slope, perp_intercept, Point(x1, y1))
+        return cls(perp_slope, perp_intercept, TrackPoint(x1, y1))
 
 
 class LookaheadData:
@@ -246,14 +255,11 @@ class RunState:
 
     @property
     def additive_reward(self):
-        return sum(self.additive_factors) / len(self.additive_factors)
+        return math.fsum(self.additive_factors) / len(self.additive_factors)
 
     @property
     def multiplicative_reward(self):
-        mf = 1
-        for factor in self.multiplicative_factors:
-            mf *= factor
-        return mf
+        return math.prod(self.multiplicative_factors)
 
     @property
     def reward(self):
@@ -359,8 +365,8 @@ class RunState:
 
     @property
     def target_line(self):
-        start_point = Point(self.x, self.y)
-        end_point = Point(self.target_point.x, self.target_point.y)
+        start_point = TrackPoint(self.x, self.y)
+        end_point = TrackPoint(self.target_point.x, self.target_point.y)
         return LineSegment(start_point, end_point)
 
     @property
@@ -381,7 +387,7 @@ class RunState:
     @property
     def next_speed_reward(self):
         speed_diff_factor = abs(self.speed - self.target_speed) / MAX_SPEED_DIFF
-        reward = math.exp(-speed_diff_factor)
+        reward = math.sqrt(1 - speed_diff_factor ** 2)
         # noinspection PyChainedComparisons
         if self.speed == self.target_speed:
             return reward
@@ -524,7 +530,7 @@ class RunState:
         self.max_distance_traveled = self.steps * MAX_SPEED / FPS
         self.max_progress_percentage = self.max_distance_traveled / self.track_length
         self.progress_percentage = self.progress / 100
-        self.location = Point(self.x, self.y)
+        self.location = TrackPoint(self.x, self.y)
 
     def _set_future_inputs(self):
         self.next_x = self.x + self.x_velocity / FPS
@@ -571,6 +577,8 @@ class Simulation:
 
     def add_run_state(self, params):
         if not self.sim_state_initialized:
+            track_waypoints = TrackWaypoints()
+            track_segments = TrackSegments()
             track_waypoints.create_waypoints(params['waypoints'])
             track_segments.create_segments(track_waypoints.waypoints)
             self.sim_state_initialized = True
@@ -592,7 +600,11 @@ class Simulation:
             'track_segments': sys.getsizeof(track_segments),
             'timer': sys.getsizeof(self.timer),
         }
-        print(size_data)
+        '''
+        {'sim': 72, 'run_state': 56, 'params': 1184, 'track_waypoints': 56, 'track_segments': 48, 'timer': 80}
+
+        '''
+
 
 
 sim = Simulation()
