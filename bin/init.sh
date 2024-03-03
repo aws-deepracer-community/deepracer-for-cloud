@@ -47,12 +47,12 @@ if [[ -z "$OPT_CLOUD" ]]; then
 fi
 
 # Find CPU Level
-CPU_LEVEL="cpu-avx"
+CPU_LEVEL="cpu"
 
 if [[ -f /proc/cpuinfo ]] && [[ "$(cat /proc/cpuinfo | grep avx2 | wc -l)" > 0 ]]; then
-    CPU_LEVEL="cpu-avx2"
+    CPU_LEVEL="cpu"
 elif [[ "$(type sysctl 2>/dev/null)" ]] && [[ "$(sysctl -n hw.optional.avx2_0)" == 1 ]]; then
-    CPU_LEVEL="cpu-avx2"
+    CPU_LEVEL="cpu"
 fi
 
 # Check if Intel (to ensure MKN)
@@ -68,7 +68,7 @@ if [[ "${OPT_ARCH}" == "gpu" ]]; then
     GPUS=$(docker run --rm --gpus all local/gputest 2>/dev/null | awk '/Device: ./' | wc -l)
     if [ $? -ne 0 ] || [ $GPUS -eq 0 ]; then
         echo "No GPU detected in docker. Using CPU".
-        OPT_ARCH="cpu-avx"
+        OPT_ARCH="cpu"
     fi
 fi
 
