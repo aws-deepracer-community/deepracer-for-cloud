@@ -32,8 +32,6 @@ config['TRAINING_JOB_ARN'] = 'arn:Dummy'
 
 # Car and training 
 config['BODY_SHELL_TYPE'] = os.environ.get('DR_CAR_BODY_SHELL_TYPE', 'deepracer')
-if config['BODY_SHELL_TYPE'] == 'deepracer':
-    config['CAR_COLOR'] = os.environ.get('DR_CAR_COLOR', 'Red')
 config['CAR_COLOR'] = os.environ.get('DR_CAR_COLOR', 'Red')
 config['CAR_NAME'] = os.environ.get('DR_CAR_NAME', 'MyCar')
 config['RACE_TYPE'] = os.environ.get('DR_RACE_TYPE', 'TIME_TRIAL')
