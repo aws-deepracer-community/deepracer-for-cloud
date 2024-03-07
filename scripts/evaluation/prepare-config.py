@@ -62,8 +62,7 @@ config['EVAL_CHECKPOINT'] = os.environ.get('DR_EVAL_CHECKPOINT', 'last')
 # Car and training 
 body_shell_type = os.environ.get('DR_CAR_BODY_SHELL_TYPE', 'deepracer')
 config['BODY_SHELL_TYPE'].append(body_shell_type)
-if body_shell_type == 'deepracer':
-    config['CAR_COLOR'].append(os.environ.get('DR_CAR_COLOR', 'Red'))
+config['CAR_COLOR'].append(os.environ.get('DR_CAR_COLOR', 'Red'))
 config['DISPLAY_NAME'].append(os.environ.get('DR_DISPLAY_NAME', 'racer1'))
 config['RACER_NAME'].append(os.environ.get('DR_RACER_NAME', 'racer1'))
 
