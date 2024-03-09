@@ -46,7 +46,7 @@ config['SIMTRACE_S3_PREFIX'].append(
 config['METRICS_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
 metrics_prefix = os.environ.get('DR_LOCAL_S3_METRICS_PREFIX', None)
 if metrics_prefix is not None:
-    config['METRICS_S3_OBJECT_KEY'].append('{}/EvaluationMetrics-{}.json'.format(metrics_prefix, eval_time))
+    config['METRICS_S3_OBJECT_KEY'].append('{}/evaluation/evaluation-{}.json'.format(metrics_prefix, eval_time))
 else:
     config['METRICS_S3_OBJECT_KEY'].append('DeepRacer-Metrics/EvaluationMetrics-{}.json'.format(eval_time))
     
@@ -62,8 +62,7 @@ config['EVAL_CHECKPOINT'] = os.environ.get('DR_EVAL_CHECKPOINT', 'last')
 # Car and training 
 body_shell_type = os.environ.get('DR_CAR_BODY_SHELL_TYPE', 'deepracer')
 config['BODY_SHELL_TYPE'].append(body_shell_type)
-if body_shell_type == 'deepracer':
-    config['CAR_COLOR'].append(os.environ.get('DR_CAR_COLOR', 'Red'))
+config['CAR_COLOR'].append(os.environ.get('DR_CAR_COLOR', 'Red'))
 config['DISPLAY_NAME'].append(os.environ.get('DR_DISPLAY_NAME', 'racer1'))
 config['RACER_NAME'].append(os.environ.get('DR_RACER_NAME', 'racer1'))
 

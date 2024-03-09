@@ -30,4 +30,5 @@ services:
       - RTF_OVERRIDE=${DR_EVAL_RTF:-}
       - ROS_MASTER_URI=http://localhost:11311/
       - ROS_IP=127.0.0.1
+      - GAZEBO_ARGS=${DR_GAZEBO_ARGS:-}
     init: true
