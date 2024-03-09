@@ -79,13 +79,17 @@ if [[ -n "${OPT_PREFIX}" ]]; then
   SOURCE_S3_MODEL_PREFIX=${OPT_PREFIX}
   SOURCE_S3_REWARD=${OPT_PREFIX}/reward_function.py
   SOURCE_S3_METRICS=${OPT_PREFIX}/metrics
+  TARGET_S3_PREFIX=${OPT_PREFIX}
+  if [[ -n ${OPT_IMPORT} ]]; then
+    OPT_IMPORT="${TARGET_S3_PREFIX}"
+  fi
 else
   SOURCE_S3_MODEL_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
   SOURCE_S3_REWARD=${DR_LOCAL_S3_REWARD_KEY}
   SOURCE_S3_METRICS=${DR_LOCAL_S3_METRICS_PREFIX}  
+  TARGET_S3_PREFIX=${DR_UPLOAD_S3_PREFIX}
 fi
 
-TARGET_S3_PREFIX=${DR_UPLOAD_S3_PREFIX}
 
 if [[ -z "${OPT_LOCAL}" ]]; then
   TARGET_S3_BUCKET=${DR_UPLOAD_S3_BUCKET}
@@ -95,7 +99,7 @@ else
     echo "Combination of -i and -L is not permitted."
     exit 1
   fi
-  if [[ "${DR_UPLOAD_S3_PREFIX}" = "${SOURCE_S3_MODEL_PREFIX}" ]]; then
+  if [[ "${TARGET_S3_PREFIX}" = "${SOURCE_S3_MODEL_PREFIX}" ]]; then
     echo "Target equals source. Exiting."
     exit 1
   fi
@@ -104,12 +108,12 @@ else
   UPLOAD_PROFILE=${DR_LOCAL_PROFILE_ENDPOINT_URL}
 fi
 
-if [[ -z "${DR_UPLOAD_S3_BUCKET}" ]]; then
+if [[ -z "${TARGET_S3_BUCKET}" ]]; then
   echo "No upload bucket defined. Exiting."
   exit 1
 fi
 
-if [[ -z "${DR_UPLOAD_S3_PREFIX}" ]]; then
+if [[ -z "${TARGET_S3_PREFIX}" ]]; then
   echo "No upload prefix defined. Exiting."
   exit 1
 fi
@@ -214,6 +218,6 @@ aws ${UPLOAD_PROFILE} s3 cp ${HYPERPARAM_FILE} ${TARGET_HYPERPARAM_FILE_S3_KEY} 
 aws ${UPLOAD_PROFILE} s3 cp ${METADATA_FILE} s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/ ${OPT_DRYRUN}
 
 # After upload trigger the import
-if [[ -n "${OPT_IMPORT}" ]]; then
+if [[ -n "${OPT_IMPORT}" && -z "${OPT_DRYRUN}" ]]; then
   $DR_DIR/scripts/upload/import-model.py "${DR_UPLOAD_S3_PROFILE}" "${DR_UPLOAD_S3_ROLE}" "${TARGET_S3_BUCKET}" "${TARGET_S3_PREFIX}" "${OPT_IMPORT}"
 fi
