@@ -95,8 +95,8 @@ cp $INSTALL_DIR/defaults/reward_function.py $INSTALL_DIR/custom_files/
 cp $INSTALL_DIR/defaults/template-system.env $INSTALL_DIR/system.env
 cp $INSTALL_DIR/defaults/template-run.env $INSTALL_DIR/run.env
 if [[ "${OPT_CLOUD}" == "aws" ]]; then
-    AWS_EC2_AVAIL_ZONE=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
-    AWS_REGION="$(echo \"$AWS_EC2_AVAIL_ZONE\" | sed 's/[a-z]$//')"
+    AWS_EC2_AVAIL_ZONE=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
+    AWS_REGION="$(echo $AWS_EC2_AVAIL_ZONE | sed 's/[a-z]$//')"
     sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
     sed -i "s/<LOCAL_PROFILE>/default/g" $INSTALL_DIR/system.env
 elif [[ "${OPT_CLOUD}" == "remote" ]]; then
