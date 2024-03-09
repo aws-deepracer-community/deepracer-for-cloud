@@ -82,7 +82,7 @@ else
 fi
 SOURCE_S3_CONFIG=${DR_LOCAL_S3_CUSTOM_FILES_PREFIX}
 SOURCE_S3_REWARD=${DR_LOCAL_S3_REWARD_KEY}
-SOURCE_S3_METRICS="${DR_LOCAL_S3_METRICS_PREFIX}/TrainingMetrics.json"
+SOURCE_S3_METRICS=${DR_LOCAL_S3_METRICS_PREFIX}
 
 TARGET_S3_PREFIX=${DR_UPLOAD_S3_PREFIX}
 
@@ -120,7 +120,7 @@ mkdir -p ${WORK_DIR} && rm -rf ${WORK_DIR} && mkdir -p ${WORK_DIR}model ${WORK_D
 TARGET_PARAMS_FILE_S3_KEY="s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/training_params.yaml"
 TARGET_REWARD_FILE_S3_KEY="s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/reward_function.py"
 TARGET_HYPERPARAM_FILE_S3_KEY="s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/ip/hyperparameters.json"
-TARGET_METRICS_FILE_S3_KEY="s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/TrainingMetrics.json"
+TARGET_METRICS_FILE_S3_KEY="s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/metrics/"
 
 # Check if metadata-files are available
 REWARD_IN_ROOT=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 ls s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/reward_function.py 2>/dev/null | wc -l)
@@ -133,7 +133,7 @@ fi
 
 METADATA_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/model/model_metadata.json ${WORK_DIR} --no-progress | awk '/model_metadata.json$/ {print $4}' | xargs readlink -f 2>/dev/null)
 HYPERPARAM_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/ip/hyperparameters.json ${WORK_DIR} --no-progress | awk '/hyperparameters.json$/ {print $4}' | xargs readlink -f 2>/dev/null)
-METRICS_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_METRICS} ${WORK_DIR} --no-progress | awk '/metric/ {print $4}' | xargs readlink -f 2>/dev/null)
+METRICS_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_METRICS} ${WORK_DIR}/metrics --no-progress | awk '/metric/ {print $4}' | xargs readlink -f 2>/dev/null)
 
 if [ -n "$METADATA_FILE" ] && [ -n "$REWARD_FILE" ] && [ -n "$HYPERPARAM_FILE" ] && [ -n "$METRICS_FILE" ]; then
   echo "All meta-data files found. Looking for checkpoint."
@@ -207,7 +207,7 @@ cd ${WORK_DIR}
 echo ${CHECKPOINT_JSON} >${WORK_DIR}model/deepracer_checkpoints.json
 aws ${UPLOAD_PROFILE} s3 sync ${WORK_DIR}model/ s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/model/ ${OPT_DRYRUN} ${OPT_WIPE}
 aws ${UPLOAD_PROFILE} s3 cp ${REWARD_FILE} ${TARGET_REWARD_FILE_S3_KEY} ${OPT_DRYRUN}
-aws ${UPLOAD_PROFILE} s3 cp ${METRICS_FILE} ${TARGET_METRICS_FILE_S3_KEY} ${OPT_DRYRUN}
+aws ${UPLOAD_PROFILE} s3 sync ${WORK_DIR}/metrics/ ${TARGET_METRICS_FILE_S3_KEY} ${OPT_DRYRUN}
 aws ${UPLOAD_PROFILE} s3 cp ${PARAMS_FILE} ${TARGET_PARAMS_FILE_S3_KEY} ${OPT_DRYRUN}
 aws ${UPLOAD_PROFILE} s3 cp ${HYPERPARAM_FILE} ${TARGET_HYPERPARAM_FILE_S3_KEY} ${OPT_DRYRUN}
 
