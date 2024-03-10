@@ -207,7 +207,7 @@ if config['MULTI_CONFIG'] == "True" and num_workers > 1:
 
             #upload additional training params files
             yaml_key = os.path.normpath(os.path.join(s3_prefix, s3_yaml_name_temp))
-            local_yaml_path = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'tmp', 'training-params-' + train_time + '-' + i + '.yaml'))
+            local_yaml_path = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'tmp', 'training-params-' + train_time + '-' + str(i) + '.yaml'))
             with open(local_yaml_path, 'w') as yaml_file:
                 yaml.dump(config, yaml_file, default_flow_style=False, default_style='\'', explicit_start=True)
             s3_client.upload_file(Bucket=s3_bucket, Key=yaml_key, Filename=local_yaml_path)
