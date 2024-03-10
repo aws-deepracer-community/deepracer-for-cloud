@@ -19,7 +19,7 @@ config['METRICS_S3_BUCKET'] = os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket')
 
 metrics_prefix = os.environ.get('DR_LOCAL_S3_METRICS_PREFIX', None)
 if metrics_prefix is not None:
-    config['METRICS_S3_OBJECT_KEY'] = '{}/training/training-{}.json'.format(metrics_prefix, train_time)
+    config['METRICS_S3_OBJECT_KEY'] = '{}/TrainingMetrics.json'.format(metrics_prefix)
 else:
     config['METRICS_S3_OBJECT_KEY'] = 'DeepRacer-Metrics/TrainingMetrics-{}.json'.format(train_time)
 
