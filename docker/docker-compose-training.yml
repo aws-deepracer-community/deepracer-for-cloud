@@ -42,5 +42,6 @@ services:
       - MULTI_CONFIG
       - RTF_OVERRIDE=${DR_TRAIN_RTF:-}      
       - ROS_MASTER_URI=http://localhost:11311/
-      - ROS_HOSTNAME=localhost
+      - ROS_IP=127.0.0.1
+      - GAZEBO_ARGS=${DR_GAZEBO_ARGS:-}
     init: true

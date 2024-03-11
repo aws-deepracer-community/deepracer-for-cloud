@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+from datetime import datetime
 import boto3
 import sys
 import os 
@@ -7,6 +8,8 @@ import time
 import json
 import io
 import yaml
+
+train_time = datetime.now().strftime('%Y%m%d%H%M%S')
 
 config = {}
 config['AWS_REGION'] = os.environ.get('DR_AWS_APP_REGION', 'us-east-1')
@@ -18,7 +21,7 @@ metrics_prefix = os.environ.get('DR_LOCAL_S3_METRICS_PREFIX', None)
 if metrics_prefix is not None:
     config['METRICS_S3_OBJECT_KEY'] = '{}/TrainingMetrics.json'.format(metrics_prefix)
 else:
-    config['METRICS_S3_OBJECT_KEY'] = 'DeepRacer-Metrics/TrainingMetrics-{}.json'.format(str(round(time.time())))
+    config['METRICS_S3_OBJECT_KEY'] = 'DeepRacer-Metrics/TrainingMetrics-{}.json'.format(train_time)
 
 config['MODEL_METADATA_FILE_S3_KEY'] = os.environ.get('DR_LOCAL_S3_MODEL_METADATA_KEY', 'custom_files/model_metadata.json') 
 config['REWARD_FILE_S3_KEY'] = os.environ.get('DR_LOCAL_S3_REWARD_KEY', 'custom_files/reward_function.py')
@@ -32,8 +35,6 @@ config['TRAINING_JOB_ARN'] = 'arn:Dummy'
 
 # Car and training 
 config['BODY_SHELL_TYPE'] = os.environ.get('DR_CAR_BODY_SHELL_TYPE', 'deepracer')
-if config['BODY_SHELL_TYPE'] == 'deepracer':
-    config['CAR_COLOR'] = os.environ.get('DR_CAR_COLOR', 'Red')
 config['CAR_COLOR'] = os.environ.get('DR_CAR_COLOR', 'Red')
 config['CAR_NAME'] = os.environ.get('DR_CAR_NAME', 'MyCar')
 config['RACE_TYPE'] = os.environ.get('DR_RACE_TYPE', 'TIME_TRIAL')
@@ -96,7 +97,7 @@ session = boto3.session.Session(profile_name=s3_profile)
 s3_client = session.client('s3', region_name=s3_region, endpoint_url=s3_endpoint_url)
 
 yaml_key = os.path.normpath(os.path.join(s3_prefix, s3_yaml_name))
-local_yaml_path = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'tmp', 'training-params-' + str(round(time.time())) + '.yaml'))
+local_yaml_path = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'tmp', 'training-params-' + train_time + '.yaml'))
 
 with open(local_yaml_path, 'w') as yaml_file:
     yaml.dump(config, yaml_file, default_flow_style=False, default_style='\'', explicit_start=True)
@@ -206,7 +207,7 @@ if config['MULTI_CONFIG'] == "True" and num_workers > 1:
 
             #upload additional training params files
             yaml_key = os.path.normpath(os.path.join(s3_prefix, s3_yaml_name_temp))
-            local_yaml_path = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'tmp', 'training-params-' + str(round(time.time())) + '.yaml'))
+            local_yaml_path = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'tmp', 'training-params-' + train_time + '-' + str(i) + '.yaml'))
             with open(local_yaml_path, 'w') as yaml_file:
                 yaml.dump(config, yaml_file, default_flow_style=False, default_style='\'', explicit_start=True)
             s3_client.upload_file(Bucket=s3_bucket, Key=yaml_key, Filename=local_yaml_path)
