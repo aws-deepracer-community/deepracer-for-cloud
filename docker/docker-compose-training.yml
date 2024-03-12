@@ -9,6 +9,7 @@ services:
   rl_coach:
     image: awsdeepracercommunity/deepracer-rlcoach:${DR_COACH_IMAGE}
     environment:
+      - AWS_REGION=${DR_AWS_APP_REGION}
       - SAGEMAKER_IMAGE=${DR_SAGEMAKER_IMAGE}
       - PRETRAINED=${DR_LOCAL_S3_PRETRAINED}
       - PRETRAINED_S3_PREFIX=${DR_LOCAL_S3_PRETRAINED_PREFIX}
