@@ -93,7 +93,7 @@ fi
 
 # Check if we will use Docker Swarm or Docker Compose
 if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
-  DISPLAY=$ROBO_DISPLAY docker stack deploy $COMPOSE_FILES $STACK_NAME
+  DISPLAY=$ROBO_DISPLAY docker stack deploy -d $COMPOSE_FILES $STACK_NAME
 else
   DISPLAY=$ROBO_DISPLAY docker compose $COMPOSE_FILES -p $STACK_NAME up -d
 fi
