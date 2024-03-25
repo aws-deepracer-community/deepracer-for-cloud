@@ -311,3 +311,11 @@ function dr-update-viewer {
   $DR_DIR/scripts/viewer/stop.sh "$@"
   $DR_DIR/scripts/viewer/start.sh "$@"
 }
+
+function dr-start-influxdb {
+  $DR_DIR/scripts/influx/start.sh "$@"
+}
+
+function dr-stop-influxdb {
+  $DR_DIR/scripts/influx/stop.sh "$@"
+}
