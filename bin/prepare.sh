@@ -9,10 +9,11 @@ function ctrl_c() {
     exit 1
 }
 
+export DEBIAN_FRONTEND=noninteractive
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 ## Patch system
-sudo apt update && sudo apt-mark hold grub-pc && sudo DEBIAN_FRONTEND=noninteractive apt -y -o \
+sudo apt update && sudo apt-mark hold grub-pc && sudo apt -y -o \
     DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" -qq --force-yes upgrade &&
     sudo apt install --no-install-recommends -y jq awscli python3-boto3
 source $DIR/detect.sh
