@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 trap ctrl_c INT
 
 function ctrl_c() {
@@ -39,16 +41,16 @@ fi
 ## Adding Nvidia Drivers
 if [[ "${ARCH}" == "gpu" && -z "${IS_WSL2}" ]]; then
     case $distribution in
-        ubuntu2004)
-            sudo apt install -y nvidia-driver-470-server --no-install-recommends -o Dpkg::Options::="--force-overwrite"
-            ;;
-        ubuntu2204)
-            sudo apt install -y nvidia-driver-535-server --no-install-recommends -o Dpkg::Options::="--force-overwrite"
-            ;;
-        *)
-            echo "Unsupported distribution: $distribution"
-            exit 1
-            ;;
+    ubuntu2004)
+        sudo apt install -y nvidia-driver-525-server --no-install-recommends -o Dpkg::Options::="--force-overwrite"
+        ;;
+    ubuntu2204)
+        sudo apt install -y nvidia-driver-535-server --no-install-recommends -o Dpkg::Options::="--force-overwrite"
+        ;;
+    *)
+        echo "Unsupported distribution: $distribution"
+        exit 1
+        ;;
     esac
 fi
 
@@ -57,8 +59,10 @@ sudo apt install -y --no-install-recommends docker.io docker-buildx docker-compo
 
 ## Install Nvidia Docker Container
 if [[ "${ARCH}" == "gpu" ]]; then
-    curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/nvidia-docker.gpg
-    curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+    curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg &&
+        curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list |
+        sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' |
+            sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
 
     sudo apt update && sudo apt install -y --no-install-recommends nvidia-docker2 nvidia-container-runtime
     if [ -f "/etc/docker/daemon.json" ]; then
