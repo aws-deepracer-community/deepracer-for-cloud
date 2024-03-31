@@ -12,6 +12,22 @@ function ctrl_c() {
 export DEBIAN_FRONTEND=noninteractive
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
+## Check distribution
+distribution=$(
+    . /etc/os-release
+    echo $ID$VERSION_ID | sed 's/\.//'
+)
+
+## Check if WSL2
+if grep -q Microsoft /proc/version && grep -q "WSL2" /proc/version; then
+    IS_WSL2="yes"
+fi
+
+## Remove needsreboot in Ubuntu 22.04
+if [[ "${distribution}" == "ubuntu2204" && -z "${IS_WSL2}" ]]; then
+    sudo apt remove -y needrestart
+fi
+
 ## Patch system
 sudo apt update && sudo apt-mark hold grub-pc && sudo apt -y -o \
     DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" -qq --force-yes upgrade &&
@@ -26,17 +42,6 @@ if [ $? -ne 0 ] || [ $GPUS -eq 0 ]; then
     echo "No NVIDIA GPU detected. Will not install drivers."
 else
     ARCH="gpu"
-fi
-
-## Check distribution
-distribution=$(
-    . /etc/os-release
-    echo $ID$VERSION_ID | sed 's/\.//'
-)
-
-## Check if WSL2
-if grep -q Microsoft /proc/version && grep -q "WSL2" /proc/version; then
-    IS_WSL2="yes"
 fi
 
 ## Adding Nvidia Drivers
