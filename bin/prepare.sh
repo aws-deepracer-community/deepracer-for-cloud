@@ -101,12 +101,14 @@ sudo usermod -a -G docker $(id -un)
 ## Reboot to load driver -- continue install if in cloud-init
 CLOUD_INIT=$(pstree -s $BASHPID | awk /cloud-init/ | wc -l)
 
-if [[ "$CLOUD_INIT" -ne 0 ]]; then
+if [[ "${CLOUD_INIT}" -ne 0 ]]; then
     echo "Rebooting in 5 seconds. Will continue with install."
     cd $DIR
     ./runonce.sh "./init.sh -c ${CLOUD_NAME} -a ${ARCH}"
     sleep 5s
     sudo shutdown -r +1
+elif [[ -n "${IS_WSL2}" || "${ARCH}" == "cpu" ]]; then
+    echo "First stage done. Log out, then log back in and run init.sh -c ${CLOUD_NAME} -a ${ARCH}"
 else
     echo "First stage done. Please reboot and run init.sh -c ${CLOUD_NAME} -a ${ARCH}"
 fi
