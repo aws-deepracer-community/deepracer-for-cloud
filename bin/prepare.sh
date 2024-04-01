@@ -19,7 +19,7 @@ distribution=$(
 )
 
 ## Check if WSL2
-if grep -q Microsoft /proc/version && grep -q "WSL2" /proc/version; then
+if grep -qi Microsoft /proc/version && grep -q "WSL2" /proc/version; then
     IS_WSL2="yes"
 fi
 
