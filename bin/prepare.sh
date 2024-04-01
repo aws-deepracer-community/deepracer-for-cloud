@@ -36,7 +36,14 @@ source $DIR/detect.sh
 echo "Detected cloud type ${CLOUD_NAME}"
 
 ## Do I have a GPU
-GPUS=$(lspci | awk '/NVIDIA/ && ( /VGA/ || /3D controller/ ) ' | wc -l)
+GPUS=0
+if [[ -z "${IS_WSL2}" ]]; then
+    GPUS=$(lspci | awk '/NVIDIA/ && ( /VGA/ || /3D controller/ ) ' | wc -l)
+else
+    if [[ -f /usr/lib/wsl/lib/nvidia-smi ]]; then
+        GPUS=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
+    fi
+fi
 if [ $? -ne 0 ] || [ $GPUS -eq 0 ]; then
     ARCH="cpu"
     echo "No NVIDIA GPU detected. Will not install drivers."
