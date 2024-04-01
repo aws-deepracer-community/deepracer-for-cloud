@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
-
 trap ctrl_c INT
 
 function ctrl_c() {
