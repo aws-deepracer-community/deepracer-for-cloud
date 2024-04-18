@@ -30,6 +30,21 @@ function dr-update-env {
     return 1
   fi
 
+  if [[ ! -z DR_EXPERIMENT_NAME ]]; then
+    if [[ -f "$DIR/experiments/$DR_EXPERIMENT_NAME/run.env" ]]; then
+      LINES=$(grep -v '^#' $DIR/experiments/$DR_EXPERIMENT_NAME/run.env)
+      for l in $LINES; do
+        env_var=$(echo $l | cut -f1 -d\=)
+        env_val=$(echo $l | cut -f2 -d\=)
+        eval "export $env_var=$env_val"
+      done
+    else
+      echo "File $DIR/experiments/$DR_EXPERIMENT_NAME/run.env does not exist."
+      return 1
+    fi
+  fi
+
+
   if [[ -z "${DR_RUN_ID}" ]]; then
     export DR_RUN_ID=0
   fi

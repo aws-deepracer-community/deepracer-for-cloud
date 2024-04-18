@@ -3,7 +3,10 @@
 function dr-upload-custom-files {
   eval CUSTOM_TARGET=$(echo s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_CUSTOM_FILES_PREFIX/)
   echo "Uploading files to $CUSTOM_TARGET"
-  aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync $DR_DIR/custom_files/ $CUSTOM_TARGET
+  if [[ -z DR_EXPERIMENT_NAME ]]; then
+    aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync $DR_DIR/custom_files/ $CUSTOM_TARGET
+  else
+    aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync $DR_DIR/experiments/$DR_EXPERIMENT_NAME/custom_files/ $CUSTOM_TARGET
 }
 
 function dr-upload-model {
