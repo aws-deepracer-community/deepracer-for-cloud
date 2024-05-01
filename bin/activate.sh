@@ -18,6 +18,10 @@ function dr-update-env {
     return 1
   fi
 
+  if [[ ! -z $DR_EXPERIMENT_NAME ]]; then
+    export DR_CONFIG="$DIR/experiments/$DR_EXPERIMENT_NAME/run.env"
+  fi
+
   if [[ -f "$DR_CONFIG" ]]; then
     LINES=$(grep -v '^#' $DR_CONFIG)
     for l in $LINES; do
@@ -26,7 +30,7 @@ function dr-update-env {
       eval "export $env_var=$env_val"
     done
   else
-    echo "File run.env does not exist."
+    echo "File ${DR_CONFIG} does not exist."
     return 1
   fi
 
@@ -65,11 +69,18 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 DIR="$(dirname $SCRIPT_DIR)"
 export DR_DIR=$DIR
 
+EXPERIMENT_FLAG="$( grep DR_EXPERIMENT_NAME $DIR/system.env )"
+
 if [[ -f "$1" ]]; then
   export DR_CONFIG=$(readlink -f $1)
   dr-update-env
 elif [[ -f "$DIR/run.env" ]]; then
   export DR_CONFIG="$DIR/run.env"
+  dr-update-env
+elif [[ ! -z $EXPERIMENT_FLAG ]];
+then
+  EXPERIMENT_NAME=$(echo $EXPERIMENT_FLAG | cut -f2 -d\=)
+  eval "export DR_CONFIG=$DIR/experiments/$EXPERIMENT_NAME/run.env"
   dr-update-env
 else
   echo "No configuration file."
