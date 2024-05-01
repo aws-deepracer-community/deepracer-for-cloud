@@ -10,7 +10,7 @@ services:
   telegraf:
     image: telegraf:1.18-alpine
     volumes:
-    - ./influx/telegraf/etc/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    - ./metrics/telegraf/etc/telegraf.conf:/etc/telegraf/telegraf.conf:ro
     depends_on:
       - influxdb
     links:
@@ -21,7 +21,7 @@ services:
 
   influxdb:
     image: influxdb:1.8-alpine
-    env_file: ./influx/configuration.env
+    env_file: ./metrics/configuration.env
     ports:
       - '127.0.0.1:8886:8086'
     volumes:
@@ -31,14 +31,14 @@ services:
     image: grafana/grafana:10.4.2
     depends_on:
       - influxdb
-    env_file: ./influx/configuration.env
+    env_file: ./metrics/configuration.env
     links:
       - influxdb
     ports:
       - '3000:3000'
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./influx/grafana/provisioning/:/etc/grafana/provisioning/
+      - ./metrics/grafana/provisioning/:/etc/grafana/provisioning/
 
 volumes:
   grafana_data: {}
