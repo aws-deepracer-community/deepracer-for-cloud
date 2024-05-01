@@ -25,7 +25,6 @@ services:
     ports:
       - '127.0.0.1:8886:8086'
     volumes:
-      # - ./:/imports
       - influxdb_data:/var/lib/influxdb
 
   grafana:
@@ -40,7 +39,6 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./influx/grafana/provisioning/:/etc/grafana/provisioning/
-      - ./influx/grafana/dashboards/:/var/lib/grafana/dashboards/
 
 volumes:
   grafana_data: {}
