@@ -77,8 +77,7 @@ if [[ -f "$1" ]]; then
 elif [[ -f "$DIR/run.env" ]]; then
   export DR_CONFIG="$DIR/run.env"
   dr-update-env
-elif [[ ! -z $EXPERIMENT_FLAG ]];
-then
+elif [[ ! -z $EXPERIMENT_FLAG ]]; then
   EXPERIMENT_NAME=$(echo $EXPERIMENT_FLAG | cut -f2 -d\=)
   eval "export DR_CONFIG=$DIR/experiments/$EXPERIMENT_NAME/run.env"
   dr-update-env
