@@ -148,7 +148,7 @@
             }
           ],
           "hide": false,
-          "measurement": "training_episodes",
+          "measurement": "dr_training_episodes",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -202,7 +202,7 @@
             }
           ],
           "hide": false,
-          "measurement": "training_episodes",
+          "measurement": "dr_training_episodes",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "B",
@@ -256,7 +256,7 @@
             }
           ],
           "hide": false,
-          "measurement": "training_episodes",
+          "measurement": "dr_training_episodes",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "C",
@@ -441,7 +441,7 @@
             }
           ],
           "hide": false,
-          "measurement": "training_episodes",
+          "measurement": "dr_training_episodes",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -495,7 +495,7 @@
             }
           ],
           "hide": false,
-          "measurement": "training_episodes",
+          "measurement": "dr_training_episodes",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "B",
@@ -549,7 +549,7 @@
             }
           ],
           "hide": false,
-          "measurement": "training_episodes",
+          "measurement": "dr_training_episodes",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "C",
@@ -609,7 +609,7 @@
             }
           ],
           "hide": false,
-          "measurement": "training_episodes",
+          "measurement": "dr_training_episodes",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "D",
@@ -811,7 +811,7 @@
             }
           ],
           "hide": false,
-          "measurement": "training_episodes",
+          "measurement": "dr_training_episodes",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "A",
@@ -871,7 +871,7 @@
             }
           ],
           "hide": false,
-          "measurement": "training_episodes",
+          "measurement": "dr_training_episodes",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "B",
@@ -931,7 +931,7 @@
             }
           ],
           "hide": false,
-          "measurement": "training_episodes",
+          "measurement": "dr_training_episodes",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "C",
@@ -997,7 +997,7 @@
             }
           ],
           "hide": false,
-          "measurement": "training_episodes",
+          "measurement": "dr_training_episodes",
           "orderByTime": "ASC",
           "policy": "default",
           "refId": "D",
