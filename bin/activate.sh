@@ -34,7 +34,7 @@ function dr-update-env {
     return 1
   fi
 
-  if [[ ! -z DR_EXPERIMENT_NAME ]]; then
+  if [[ ! -z $DR_EXPERIMENT_NAME ]]; then
     if [[ -f "$DIR/experiments/$DR_EXPERIMENT_NAME/run.env" ]]; then
       LINES=$(grep -v '^#' $DIR/experiments/$DR_EXPERIMENT_NAME/run.env)
       for l in $LINES; do
