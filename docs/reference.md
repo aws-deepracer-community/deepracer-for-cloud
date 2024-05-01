@@ -73,6 +73,8 @@ The scripts assume that two files `system.env` containing constant configuration
 | `DR_HOST_X` | Uses the host X-windows server, rather than starting one inside of Robomaker. Required for OpenGL images.|
 | `DR_WEBVIEWER_PORT` | Port for the web-viewer proxy which enables the streaming of all robomaker workers at once.|
 | `CUDA_VISIBLE_DEVICES` | Used in multi-GPU configurations. See additional documentation for more information about this feature.|
+| `DR_TELEGRAF_HOST` | The hostname to send real-time metrics to. Uncommenting this will enable real-time metrics collection using Telegraf. The telegraf/influxdb/grafana compose stack must already be running (use `dr-start-metrics`) for this to work, and it should usually be set to `telegraf` to send metrics to the telegraf container.
+| `DR_TELEGRAF_PORT` | Defines the UDP port to send real-time metrics to. Should usually remain set as 8092.  
 
 ## Commands
 

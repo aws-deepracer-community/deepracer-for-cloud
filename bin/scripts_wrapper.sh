@@ -311,3 +311,11 @@ function dr-update-viewer {
   $DR_DIR/scripts/viewer/stop.sh "$@"
   $DR_DIR/scripts/viewer/start.sh "$@"
 }
+
+function dr-start-metrics {
+  $DR_DIR/scripts/metrics/start.sh "$@"
+}
+
+function dr-stop-metrics {
+  $DR_DIR/scripts/metrics/stop.sh "$@"
+}
