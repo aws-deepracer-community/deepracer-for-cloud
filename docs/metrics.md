@@ -32,7 +32,7 @@ A template dashboard is provided to show how to access basic deepracer metrics. 
 
 After connecting to the Grafana Web UI with a browser use the menu to browse to the Dashboards section. 
 
-The template dashboard called `DeepRacer Training template` should be visible. 
+The template dashboard called `DeepRacer Training template` should be visible, showing graphs of reward, progress, and completed lap times. 
 
 As this is an automatically provisioned dashboard you are not able to save changes to it, however you can copy it by clicking on the small cog icon to enter the dashboard settings page, and then clicking `Save as` to make an editable copy. 
 
