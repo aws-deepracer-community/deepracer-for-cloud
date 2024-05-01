@@ -69,7 +69,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 DIR="$(dirname $SCRIPT_DIR)"
 export DR_DIR=$DIR
 
-EXPERIMENT_FLAG="$( grep DR_EXPERIMENT_NAME $DIR/system.env )"
+EXPERIMENT_FLAG="$( grep DR_EXPERIMENT_NAME $DIR/system.env | grep -v \#)"
 
 if [[ -f "$1" ]]; then
   export DR_CONFIG=$(readlink -f $1)
