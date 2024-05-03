@@ -63,6 +63,10 @@ function dr-update-env {
     export DR_ROBOMAKER_GUI_PORT="5901-5920"
   fi
 
+  # Setting the default region to ensure that things work also in the
+  # non default regions.
+  export AWS_DEFAULT_REGION=${DR_AWS_APP_REGION}
+
 }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
