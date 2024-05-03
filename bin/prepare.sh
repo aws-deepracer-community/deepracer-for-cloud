@@ -55,7 +55,7 @@ fi
 if [[ "${ARCH}" == "gpu" && -z "${IS_WSL2}" ]]; then
     case $distribution in
     ubuntu2004)
-        sudo apt install -y nvidia-driver-550 --no-install-recommends -o Dpkg::Options::="--force-overwrite"
+        sudo apt install -y nvidia-driver-525-server --no-install-recommends -o Dpkg::Options::="--force-overwrite"
         ;;
     ubuntu2204)
         sudo apt install -y nvidia-driver-550 --no-install-recommends -o Dpkg::Options::="--force-overwrite"
