@@ -12,7 +12,7 @@ fi
 
 # Deepracer environment variables must be set.
 if [ -z "$DR_DIR" ]; then
-    echo "ERROR: DR_DIR not set. Run 'source bin/activate.sh' before start-xorg.sh."
+    echo "ERROR: DR_DIR not set. Run 'source bin/activate.sh' before setup-xorg.sh."
     exit 1
 fi
 
