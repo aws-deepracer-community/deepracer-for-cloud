@@ -190,6 +190,7 @@ if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
   DISPLAY=$ROBO_DISPLAY docker stack deploy $COMPOSE_FILES $STACK_NAME
 
 else
+  COMPOSE_FILES=$(echo "$COMPOSE_FILES" | sed 's/\(\s\|^\)-c\(\s\|$\)/ -f /g')
   DISPLAY=$ROBO_DISPLAY docker compose $COMPOSE_FILES -p $STACK_NAME up -d --scale robomaker=$DR_WORKERS
 fi
 
