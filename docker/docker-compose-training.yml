@@ -21,6 +21,8 @@ services:
       - MODELMETADATA_FILE_S3_KEY=${DR_LOCAL_S3_MODEL_METADATA_KEY}
       - CUDA_VISIBLE_DEVICES=${DR_SAGEMAKER_CUDA_DEVICES:-}
       - MAX_MEMORY_STEPS=${DR_TRAIN_MAX_STEPS_PER_ITERATION:-}
+      - AWS_METADATA_SERVICE_TIMEOUT=3
+      - AWS_METADATA_SERVICE_NUM_ATTEMPTS=5
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "/tmp/sagemaker:/tmp/sagemaker"
@@ -47,4 +49,6 @@ services:
       - GAZEBO_ARGS=${DR_GAZEBO_ARGS:-}
       - TELEGRAF_HOST=${DR_TELEGRAF_HOST:-}
       - TELEGRAF_PORT=${DR_TELEGRAF_PORT:-}
+      - AWS_METADATA_SERVICE_TIMEOUT=3
+      - AWS_METADATA_SERVICE_NUM_ATTEMPTS=5
     init: true
