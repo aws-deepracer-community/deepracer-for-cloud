@@ -58,7 +58,7 @@ if [[ "${ARCH}" == "gpu" && -z "${IS_WSL2}" ]]; then
         sudo apt install -y nvidia-driver-525-server --no-install-recommends -o Dpkg::Options::="--force-overwrite"
         ;;
     ubuntu2204)
-        sudo apt install -y nvidia-driver-535-server --no-install-recommends -o Dpkg::Options::="--force-overwrite"
+        sudo apt install -y nvidia-driver-550 --no-install-recommends -o Dpkg::Options::="--force-overwrite"
         ;;
     *)
         echo "Unsupported distribution: $distribution"
