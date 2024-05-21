@@ -7,7 +7,9 @@ networks:
 
 services:
   rl_coach:
-    image: awsdeepracercommunity/deepracer-rlcoach:${DR_COACH_IMAGE}
+    image: awsdeepracercommunity/deepracer-simapp:${DR_COACH_IMAGE}
+    command: ["python3 /opt/code/ml/rl_coach/start.py"]
+    working_dir: "/opt/ml/code/"
     environment:
       - AWS_REGION=${DR_AWS_APP_REGION}
       - SAGEMAKER_IMAGE=${DR_SAGEMAKER_IMAGE}
@@ -25,7 +27,7 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "/tmp/sagemaker:/tmp/sagemaker"
   robomaker:
-    image: awsdeepracercommunity/deepracer-robomaker:${DR_ROBOMAKER_IMAGE}
+    image: awsdeepracercommunity/deepracer-simapp:${DR_ROBOMAKER_IMAGE}
     command: ["${ROBOMAKER_COMMAND}"]
     ports:
       - "${DR_ROBOMAKER_TRAIN_PORT}:8080"
