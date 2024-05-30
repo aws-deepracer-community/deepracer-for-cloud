@@ -180,24 +180,18 @@ if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
 fi
 
 ## Version check
+if [[ -z "$DR_SIMAPP_SOURCE" ]]; then
+  echo "ERROR: Variable DR_SIMAPP_SOURCE not defined."
+fi
+if [[ -z "$DR_SIMAPP_VERSION" ]]; then
+  echo "ERROR: Variable DR_SIMAPP_VERSION not defined."
+fi
 DEPENDENCY_VERSION=$(jq -r '.master_version  | select (.!=null)' $DIR/defaults/dependencies.json)
 
-SAGEMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-sagemaker:$DR_SAGEMAKER_IMAGE 2>/dev/null | jq -r .[].Config.Labels.version)
-if [ -z "$SAGEMAKER_VER" ]; then SAGEMAKER_VER=$DR_SAGEMAKER_IMAGE; fi
-if ! verlte $DEPENDENCY_VERSION $SAGEMAKER_VER; then
-  echo "WARNING: Incompatible version of Deepracer Sagemaker. Expected >$DEPENDENCY_VERSION. Got $SAGEMAKER_VER."
-fi
-
-ROBOMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-robomaker:$DR_ROBOMAKER_IMAGE 2>/dev/null | jq -r .[].Config.Labels.version)
-if [ -z "$ROBOMAKER_VER" ]; then ROBOMAKER_VER=$DR_ROBOMAKER_IMAGE; fi
-if ! verlte $DEPENDENCY_VERSION $ROBOMAKER_VER; then
-  echo "WARNING: Incompatible version of Deepracer Robomaker. Expected >$DEPENDENCY_VERSION. Got $ROBOMAKER_VER."
-fi
-
-COACH_VER=$(docker inspect awsdeepracercommunity/deepracer-rlcoach:$DR_COACH_IMAGE 2>/dev/null | jq -r .[].Config.Labels.version)
-if [ -z "$COACH_VER" ]; then COACH_VER=$DR_COACH_IMAGE; fi
-if ! verlte $DEPENDENCY_VERSION $COACH_VER; then
-  echo "WARNING: Incompatible version of Deepracer-for-Cloud Coach. Expected >$DEPENDENCY_VERSION. Got $COACH_VER."
+SIMAPP_VER=$(docker inspect ${DR_SIMAPP_SOURCE}:${DR_SIMAPP_VERSION} 2>/dev/null | jq -r .[].Config.Labels.version)
+if [ -z "$SIMAPP_VER" ]; then SIMAPP_VER=$SIMAPP_VERSION; fi
+if ! verlte $DEPENDENCY_VERSION $SIMAPP_VER; then
+  echo "WARNING: Incompatible version of Deepracer Sagemaker. Expected >$DEPENDENCY_VERSION. Got $SIMAPP_VER."
 fi
 
 ## Create a dr-local-aws command
