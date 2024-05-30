@@ -11,6 +11,7 @@ services:
     command: ["python3 /opt/code/ml/rl_coach/start.py"]
     working_dir: "/opt/ml/code/"
     environment:
+      - RUN_ID=${DR_RUN_ID}
       - AWS_REGION=${DR_AWS_APP_REGION}
       - SAGEMAKER_IMAGE=${DR_SAGEMAKER_IMAGE}
       - PRETRAINED=${DR_LOCAL_S3_PRETRAINED}
