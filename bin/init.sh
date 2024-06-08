@@ -170,7 +170,31 @@ SAGEMAKER_NW='sagemaker-local'
 
 if [[ "${OPT_STYLE}" == "swarm" ]]; then
 
+    docker node ls >/dev/null 2>/dev/null
+    if [ $? -ne 0 ]; then
+        echo "Swarm exists. Exiting."
+        exit 1
+    fi
+
     docker swarm init
+    if [ $? -ne 0 ]; then
+
+        DEFAULT_IFACE=$(ip route | grep default | awk '{print $5}')
+        DEFAULT_IP=$(ip addr show $DEFAULT_IFACE | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+
+        if [ -z "$DEFAULT_IP" ]; then
+            echo "Could not determine default IP address. Exiting."
+            exit 1
+        fi
+
+        echo "Error when creating swarm, trying again with advertise address $DEFAULT_IP."
+        docker swarm init --advertise-addr $DEFAULT_IP
+        if [ $? -ne 0 ]; then
+            echo "Cound not create swarm. Exiting."
+            exit 1
+        fi
+    fi
+
     SWARM_NODE=$(docker node inspect self | jq .[0].ID -r)
     docker node update --label-add Sagemaker=true $SWARM_NODE >/dev/null 2>/dev/null
     docker node update --label-add Robomaker=true $SWARM_NODE >/dev/null 2>/dev/null
