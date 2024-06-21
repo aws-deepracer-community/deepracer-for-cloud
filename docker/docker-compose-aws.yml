@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+  rl_coach:
+    environment:
+      - AWS_METADATA_SERVICE_TIMEOUT=3
+      - AWS_METADATA_SERVICE_NUM_ATTEMPTS=5
+  robomaker:
+    environment:
+      - AWS_METADATA_SERVICE_TIMEOUT=3
+      - AWS_METADATA_SERVICE_NUM_ATTEMPTS=5
