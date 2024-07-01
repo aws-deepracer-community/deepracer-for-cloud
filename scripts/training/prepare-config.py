@@ -52,6 +52,7 @@ config['MIN_EVAL_TRIALS'] = os.environ.get('DR_TRAIN_MIN_EVAL_TRIALS', '5')
 config['CAMERA_MAIN_ENABLE'] = os.environ.get('DR_CAMERA_MAIN_ENABLE', 'True')
 config['CAMERA_SUB_ENABLE'] = os.environ.get('DR_CAMERA_SUB_ENABLE', 'True')
 config['BEST_MODEL_METRIC'] = os.environ.get('DR_TRAIN_BEST_MODEL_METRIC', 'progress')
+config['ENABLE_EXTRA_KVS_OVERLAY'] = os.environ.get('DR_ENABLE_EXTRA_KVS_OVERLAY', 'False')
 
 # Object Avoidance
 if config['RACE_TYPE'] == 'OBJECT_AVOIDANCE':
@@ -158,6 +159,8 @@ if config['MULTI_CONFIG'] == "True" and num_workers > 1:
             config.update({'REVERSE_DIR': os.environ.get('DR_TRAIN_REVERSE_DIRECTION', False)})
             config.update({'CAMERA_MAIN_ENABLE': os.environ.get('DR_CAMERA_MAIN_ENABLE', 'True')})
             config.update({'CAMERA_SUB_ENABLE': os.environ.get('DR_CAMERA_SUB_ENABLE', 'True')})  
+            config.update({'ENABLE_EXTRA_KVS_OVERLAY': os.environ.get('DR_ENABLE_EXTRA_KVS_OVERLAY', 'False')})
+
             
             # Update Object Avoidance parameters
             if config['RACE_TYPE'] == 'OBJECT_AVOIDANCE':
