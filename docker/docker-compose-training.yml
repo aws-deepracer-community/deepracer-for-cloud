@@ -29,7 +29,7 @@ services:
       - "/tmp/sagemaker:/tmp/sagemaker"
   robomaker:
     image: ${DR_SIMAPP_SOURCE}:${DR_SIMAPP_VERSION}
-    command: ["${ROBOMAKER_COMMAND}"]
+    command: ["${ROBOMAKER_COMMAND:-}"]
     ports:
       - "${DR_ROBOMAKER_TRAIN_PORT}:8080"
       - "${DR_ROBOMAKER_GUI_PORT}:5900"
