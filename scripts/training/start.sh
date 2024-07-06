@@ -160,14 +160,14 @@ if [[ "${DR_HOST_X,,}" == "true" ]]; then
 
   if ! DISPLAY=$ROBO_DISPLAY timeout 1s xset q &>/dev/null; then
     echo "No X Server running on display $ROBO_DISPLAY. Exiting"
-    exit 0
+    exit 1
   fi
 
   if [[ -z "$XAUTHORITY" ]]; then
     export XAUTHORITY=~/.Xauthority
     if [[ ! -f "$XAUTHORITY" ]]; then
       echo "No XAUTHORITY defined. .Xauthority does not exist. Stopping."
-      exit 0
+      exit 1
     fi
   fi
 
