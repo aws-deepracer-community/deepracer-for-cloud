@@ -89,6 +89,8 @@ if [ -n "$METADATA_FILE" ] && [ -n "$REWARD_FILE" ] && [ -n "$HYPERPARAM_FILE" ]
   echo "   s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_REWARD_KEY}"
   echo "   s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_MODEL_METADATA_KEY}"
   echo "   s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_HYPERPARAMETERS_KEY}"
+  echo "Using image ${DR_SIMAPP_SOURCE}:${DR_SIMAPP_VERSION}"
+  echo ""
 else
   echo "Training aborted. Configuration files were not found."
   echo "Manually check that the following files exist:"
@@ -141,10 +143,10 @@ if [ "$DR_WORKERS" -gt 1 ]; then
   else
     echo "Creating Robomaker configuration in $S3_PATH/$DR_LOCAL_S3_TRAINING_PARAMS_FILE"
   fi
-  export ROBOMAKER_COMMAND="./run.sh multi distributed_training.launch"
+  export ROBOMAKER_COMMAND="/opt/simapp/run.sh multi distributed_training.launch"
 
 else
-  export ROBOMAKER_COMMAND="./run.sh run distributed_training.launch"
+  export ROBOMAKER_COMMAND="/opt/simapp/run.sh run distributed_training.launch"
   echo "Creating Robomaker configuration in $S3_PATH/$DR_LOCAL_S3_TRAINING_PARAMS_FILE"
 fi
 

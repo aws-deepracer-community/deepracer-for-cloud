@@ -142,28 +142,9 @@ for arg in "$@"; do
 done
 
 # Download docker images. Change to build statements if locally built images are desired.
-COACH_VERSION=$(jq -r '.containers.rl_coach | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
-sed -i "s/<COACH_TAG>/$COACH_VERSION/g" $INSTALL_DIR/system.env
-
-ROBOMAKER_VERSION=$(jq -r '.containers.robomaker  | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
-if [ -n $ROBOMAKER_VERSION ]; then
-    ROBOMAKER_VERSION=$ROBOMAKER_VERSION-$CPU_LEVEL
-else
-    ROBOMAKER_VERSION=$CPU_LEVEL
-fi
-sed -i "s/<ROBO_TAG>/$ROBOMAKER_VERSION/g" $INSTALL_DIR/system.env
-
-SAGEMAKER_VERSION=$(jq -r '.containers.sagemaker  | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
-if [ -n $SAGEMAKER_VERSION ]; then
-    SAGEMAKER_VERSION=$SAGEMAKER_VERSION-$SAGEMAKER_TAG
-else
-    SAGEMAKER_VERSION=$SAGEMAKER_TAG
-fi
-sed -i "s/<SAGE_TAG>/$SAGEMAKER_VERSION/g" $INSTALL_DIR/system.env
-
-docker pull awsdeepracercommunity/deepracer-rlcoach:$COACH_VERSION
-docker pull awsdeepracercommunity/deepracer-robomaker:$ROBOMAKER_VERSION
-docker pull awsdeepracercommunity/deepracer-sagemaker:$SAGEMAKER_VERSION
+SIMAPP_VERSION=$(jq -r '.containers.simapp | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
+sed -i "s/<SIMAPP_VERSION_TAG>/$SIMAPP_VERSION/g" $INSTALL_DIR/system.env
+docker pull awsdeepracercommunity/deepracer-simapp:$SIMAPP_VERSION
 
 # create the network sagemaker-local if it doesn't exit
 SAGEMAKER_NW='sagemaker-local'

@@ -44,6 +44,10 @@ if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
   fi
 fi
 
+echo "Evaluation of model s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX starting."
+echo "Using image ${DR_SIMAPP_SOURCE}:${DR_SIMAPP_VERSION}"
+echo ""
+
 # clone if required
 if [ -n "$OPT_CLONE" ]; then
   echo "Cloning model into s3://$DR_LOCAL_S3_BUCKET/${DR_LOCAL_S3_MODEL_PREFIX}-E"
