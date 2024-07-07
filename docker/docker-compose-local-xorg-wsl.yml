@@ -4,7 +4,6 @@ services:
   robomaker:
     environment:
       - DISPLAY
-      - XDG_RUNTIME_DIR
       - USE_EXTERNAL_X=${DR_HOST_X}
       - QT_X11_NO_MITSHM=1
       - LD_LIBRARY_PATH=/usr/lib/wsl/lib
