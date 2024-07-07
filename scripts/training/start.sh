@@ -58,6 +58,11 @@ while getopts ":whqsavr:" opt; do
   esac
 done
 
+## Check if WSL2
+if grep -qi Microsoft /proc/version && grep -q "WSL2" /proc/version; then
+    IS_WSL2="yes"
+fi
+
 # Ensure Sagemaker's folder is there
 if [ ! -d /tmp/sagemaker ]; then
   sudo mkdir -p /tmp/sagemaker
@@ -163,7 +168,7 @@ if [[ "${DR_HOST_X,,}" == "true" ]]; then
     exit 1
   fi
 
-  if [[ -z "$XAUTHORITY" ]]; then
+  if [[ -z "$XAUTHORITY" && "$IS_WSL2" != "yes" ]]; then
     export XAUTHORITY=~/.Xauthority
     if [[ ! -f "$XAUTHORITY" ]]; then
       echo "No XAUTHORITY defined. .Xauthority does not exist. Stopping."
