@@ -46,7 +46,7 @@ function dr-increment-training {
 }
 
 function dr-stop-training {
-  ROBOMAKER_COMMAND="" bash -c "cd $DR_DIR/scripts/training && ./stop.sh"
+  bash -c "cd $DR_DIR/scripts/training && ./stop.sh"
 }
 
 function dr-start-evaluation {
@@ -55,7 +55,7 @@ function dr-start-evaluation {
 }
 
 function dr-stop-evaluation {
-  ROBOMAKER_COMMAND="" bash -c "cd $DR_DIR/scripts/evaluation && ./stop.sh"
+  bash -c "cd $DR_DIR/scripts/evaluation && ./stop.sh"
 }
 
 function dr-start-tournament {
@@ -63,13 +63,13 @@ function dr-start-tournament {
 }
 
 function dr-start-loganalysis {
-  ROBOMAKER_COMMAND="" bash -c "cd $DR_DIR/scripts/log-analysis && ./start.sh"
+  bash -c "cd $DR_DIR/scripts/log-analysis && ./start.sh"
 }
 
 function dr-stop-loganalysis {
   eval LOG_ANALYSIS_ID=$(docker ps | awk ' /deepracer-analysis/ { print $1 }')
   if [ -n "$LOG_ANALYSIS_ID" ]; then
-    ROBOMAKER_COMMAND="" bash -c "cd $DR_DIR/scripts/log-analysis && ./stop.sh"
+    bash -c "cd $DR_DIR/scripts/log-analysis && ./stop.sh"
   else
     echo "Log-analysis is not running."
   fi

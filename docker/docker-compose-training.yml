@@ -26,12 +26,13 @@ services:
       - MAX_MEMORY_STEPS=${DR_TRAIN_MAX_STEPS_PER_ITERATION:-}
       - TELEGRAF_HOST=${DR_TELEGRAF_HOST:-}
       - TELEGRAF_PORT=${DR_TELEGRAF_PORT:-}
+
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "/tmp/sagemaker:/tmp/sagemaker"
   robomaker:
     image: ${DR_SIMAPP_SOURCE}:${DR_SIMAPP_VERSION}
-    command: ["${ROBOMAKER_COMMAND}"]
+    command: ["${ROBOMAKER_COMMAND:-}"]
     ports:
       - "${DR_ROBOMAKER_TRAIN_PORT}:8080"
       - "${DR_ROBOMAKER_GUI_PORT}:5900"

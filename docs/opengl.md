@@ -41,7 +41,6 @@ This also applies for a desktop computer where you are not logged in. In this ca
 * Setup an X-server on the host. `utils/setup-xorg.sh` is a basic installation script.
 * Configure DRfC using the following settings in `system.env`:
     * `DR_HOST_X=True`; uses the local X server rather than starting one within the docker container.
-    * `DR_ROBOMAKER_IMAGE`; choose the tag for an OpenGL enabled image - e.g. `cpu-gl-avx` for an image where Tensorflow will use CPU or `gpu-gl` for an image where also Tensorflow will use the GPU.
     * `DR_DISPLAY`; the X display that the headless X server will start on. (Default is `:99`, avoid using `:0` or `:1` as it may conflict with other X servers.)
 
 Start up the X server with `utils/start-xorg.sh`. 
@@ -49,3 +48,15 @@ Start up the X server with `utils/start-xorg.sh`.
 If `DR_GUI_ENABLE=True` then a VNC server will be started on port 5900 so that you can connect and interact with the Gazebo UI.
 
 Check that OpenGL is working by looking for `gzserver` in `nvidia-smi`.
+
+## WSL2 on Windows 11
+
+OpenGL is also supported in WSL2 on Windows 11. By default an Xwayland server is started in Ubuntu 22.04.
+
+To enable OpenGL acceleration perform the following steps:
+* Install x11-server-utils with `sudo apt install x11-server-utils`.
+* Configure DRfC using the following settings in `system.env`:
+    * `DR_HOST_X=True`; uses the local X server rather than starting one within the docker container.
+    * `DR_DISPLAY=:0`; the Xwayland starts on :0 by default.
+
+If you want to interact with the Gazebo UI, set `DR_DOCKER_STYLE=compose` and `DR_GUI_ENABLE=True` in `system.env`.

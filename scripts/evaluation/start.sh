@@ -34,6 +34,11 @@ while getopts ":qc" opt; do
   esac
 done
 
+## Check if WSL2
+if grep -qi Microsoft /proc/version && grep -q "WSL2" /proc/version; then
+    IS_WSL2="yes"
+fi
+
 # set evaluation specific environment variables
 STACK_NAME="deepracer-eval-$DR_RUN_ID"
 STACK_CONTAINERS=$(docker stack ps $STACK_NAME 2>/dev/null | wc -l)
@@ -83,14 +88,14 @@ if [[ "${DR_HOST_X,,}" == "true" ]]; then
 
   if ! DISPLAY=$ROBO_DISPLAY timeout 1s xset q &>/dev/null; then
     echo "No X Server running on display $ROBO_DISPLAY. Exiting"
-    exit 0
+    exit 1
   fi
 
-  if [[ -z "$XAUTHORITY" ]]; then
+  if [[ -z "$XAUTHORITY" && "$IS_WSL2" != "yes" ]]; then
     export XAUTHORITY=~/.Xauthority
     if [[ ! -f "$XAUTHORITY" ]]; then
       echo "No XAUTHORITY defined. .Xauthority does not exist. Stopping."
-      exit 0
+      exit 1
     fi
   fi
 fi
