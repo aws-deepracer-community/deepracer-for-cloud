@@ -26,6 +26,7 @@ services:
       - MAX_MEMORY_STEPS=${DR_TRAIN_MAX_STEPS_PER_ITERATION:-}
       - TELEGRAF_HOST=${DR_TELEGRAF_HOST:-}
       - TELEGRAF_PORT=${DR_TELEGRAF_PORT:-}
+      
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "/tmp/sagemaker:/tmp/sagemaker"
