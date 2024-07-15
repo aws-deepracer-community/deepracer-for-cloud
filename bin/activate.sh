@@ -70,6 +70,11 @@ if [[ "$(type service 2>/dev/null)" ]]; then
   service docker status >/dev/null || sudo service docker start
 fi
 
+## Check if WSL2
+if grep -qi Microsoft /proc/version && grep -q "WSL2" /proc/version; then
+    IS_WSL2="yes"
+fi
+
 # Check if we will use Docker Swarm or Docker Compose
 # If not defined then use Swarm
 if [[ -z "${DR_DOCKER_STYLE}" ]]; then
@@ -130,10 +135,25 @@ else
   DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml"
 fi
 
-# Prevent docker swarms to restart
+# Add host X support for Linux and WSL2
 if [[ "${DR_HOST_X,,}" == "true" ]]; then
-  DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
-  DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
+  if [[ "$IS_WSL2" == "yes" ]]; then
+  
+    # Check if package x11-server-utils is installed
+    if ! command -v xset &> /dev/null; then
+      echo "WARNING: Package x11-server-utils is not installed. Please install it to enable X11 support."
+    fi
+  
+    if [[ "${DR_DOCKER_STYLE,,}" == "swarm" && "${DR_USE_GUI,,}" == "true" ]]; then
+      echo "WARNING: Cannot use GUI in Swarm mode. Please switch to Compose mode."
+    fi
+
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg-wsl.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg-wsl.yml"
+  else
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
+  fi
 fi
 
 # Prevent docker swarms to restart
