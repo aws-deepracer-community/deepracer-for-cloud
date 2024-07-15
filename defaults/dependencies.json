@@ -1,6 +1,6 @@
 {
     "master_version": "5.3",
     "containers": {
-        "simapp": "5.3.0"
+        "simapp": "5.3.0-rc0"
     }
 }
