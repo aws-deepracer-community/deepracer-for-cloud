@@ -142,35 +142,40 @@ for arg in "$@"; do
 done
 
 # Download docker images. Change to build statements if locally built images are desired.
-COACH_VERSION=$(jq -r '.containers.rl_coach | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
-sed -i "s/<COACH_TAG>/$COACH_VERSION/g" $INSTALL_DIR/system.env
-
-ROBOMAKER_VERSION=$(jq -r '.containers.robomaker  | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
-if [ -n $ROBOMAKER_VERSION ]; then
-    ROBOMAKER_VERSION=$ROBOMAKER_VERSION-$CPU_LEVEL
-else
-    ROBOMAKER_VERSION=$CPU_LEVEL
-fi
-sed -i "s/<ROBO_TAG>/$ROBOMAKER_VERSION/g" $INSTALL_DIR/system.env
-
-SAGEMAKER_VERSION=$(jq -r '.containers.sagemaker  | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
-if [ -n $SAGEMAKER_VERSION ]; then
-    SAGEMAKER_VERSION=$SAGEMAKER_VERSION-$SAGEMAKER_TAG
-else
-    SAGEMAKER_VERSION=$SAGEMAKER_TAG
-fi
-sed -i "s/<SAGE_TAG>/$SAGEMAKER_VERSION/g" $INSTALL_DIR/system.env
-
-docker pull awsdeepracercommunity/deepracer-rlcoach:$COACH_VERSION
-docker pull awsdeepracercommunity/deepracer-robomaker:$ROBOMAKER_VERSION
-docker pull awsdeepracercommunity/deepracer-sagemaker:$SAGEMAKER_VERSION
+SIMAPP_VERSION=$(jq -r '.containers.simapp | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
+sed -i "s/<SIMAPP_VERSION_TAG>/$SIMAPP_VERSION-$SAGEMAKER_TAG/g" $INSTALL_DIR/system.env
+docker pull awsdeepracercommunity/deepracer-simapp:$SIMAPP_VERSION-$SAGEMAKER_TAG
 
 # create the network sagemaker-local if it doesn't exit
 SAGEMAKER_NW='sagemaker-local'
 
 if [[ "${OPT_STYLE}" == "swarm" ]]; then
 
+    docker node ls >/dev/null 2>/dev/null
+    if [ $? -eq 0 ]; then
+        echo "Swarm exists. Exiting."
+        exit 1
+    fi
+
     docker swarm init
+    if [ $? -ne 0 ]; then
+
+        DEFAULT_IFACE=$(ip route | grep default | awk '{print $5}')
+        DEFAULT_IP=$(ip addr show $DEFAULT_IFACE | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+
+        if [ -z "$DEFAULT_IP" ]; then
+            echo "Could not determine default IP address. Exiting."
+            exit 1
+        fi
+
+        echo "Error when creating swarm, trying again with advertise address $DEFAULT_IP."
+        docker swarm init --advertise-addr $DEFAULT_IP
+        if [ $? -ne 0 ]; then
+            echo "Cound not create swarm. Exiting."
+            exit 1
+        fi
+    fi
+
     SWARM_NODE=$(docker node inspect self | jq .[0].ID -r)
     docker node update --label-add Sagemaker=true $SWARM_NODE >/dev/null 2>/dev/null
     docker node update --label-add Robomaker=true $SWARM_NODE >/dev/null 2>/dev/null

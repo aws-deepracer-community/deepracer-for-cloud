@@ -46,7 +46,7 @@ function dr-increment-training {
 }
 
 function dr-stop-training {
-  ROBOMAKER_COMMAND="" bash -c "cd $DR_DIR/scripts/training && ./stop.sh"
+  bash -c "cd $DR_DIR/scripts/training && ./stop.sh"
 }
 
 function dr-start-evaluation {
@@ -55,7 +55,7 @@ function dr-start-evaluation {
 }
 
 function dr-stop-evaluation {
-  ROBOMAKER_COMMAND="" bash -c "cd $DR_DIR/scripts/evaluation && ./stop.sh"
+  bash -c "cd $DR_DIR/scripts/evaluation && ./stop.sh"
 }
 
 function dr-start-tournament {
@@ -63,13 +63,13 @@ function dr-start-tournament {
 }
 
 function dr-start-loganalysis {
-  ROBOMAKER_COMMAND="" bash -c "cd $DR_DIR/scripts/log-analysis && ./start.sh"
+  bash -c "cd $DR_DIR/scripts/log-analysis && ./start.sh"
 }
 
 function dr-stop-loganalysis {
   eval LOG_ANALYSIS_ID=$(docker ps | awk ' /deepracer-analysis/ { print $1 }')
   if [ -n "$LOG_ANALYSIS_ID" ]; then
-    ROBOMAKER_COMMAND="" bash -c "cd $DR_DIR/scripts/log-analysis && ./stop.sh"
+    bash -c "cd $DR_DIR/scripts/log-analysis && ./stop.sh"
   else
     echo "Log-analysis is not running."
   fi
@@ -138,19 +138,23 @@ function dr-find-sagemaker {
   STACK_NAME="deepracer-$DR_RUN_ID"
   RUN_NAME=${DR_LOCAL_S3_MODEL_PREFIX}
 
-  SAGEMAKER_CONTAINERS=$(docker ps | awk ' /sagemaker/ { print $1 } ' | xargs)
+  SAGEMAKER_CONTAINERS=$(docker ps | awk ' /simapp/ { print $1 } ' | xargs)
 
-  if [[ -n $SAGEMAKER_CONTAINERS ]]; then
-    for CONTAINER in $SAGEMAKER_CONTAINERS; do
-      CONTAINER_NAME=$(docker ps --format '{{.Names}}' --filter id=$CONTAINER)
-      CONTAINER_PREFIX=$(echo $CONTAINER_NAME | perl -n -e'/(.*)_(algo(.*))_./; print $1')
-      COMPOSE_SERVICE_NAME=$(echo $CONTAINER_NAME | perl -n -e'/(.*)_(algo(.*))_./; print $2')
-      COMPOSE_FILE=$(sudo find /tmp/sagemaker -name docker-compose.yaml -exec grep -l "$RUN_NAME" {} + | grep $CONTAINER_PREFIX)
-      if [[ -n $COMPOSE_FILE ]]; then
-        echo $CONTAINER
-        return
-      fi
-    done
+  if [[ -n "$SAGEMAKER_CONTAINERS" ]]; then
+      for CONTAINER in $SAGEMAKER_CONTAINERS; do
+          CONTAINER_NAME=$(docker ps --format '{{.Names}}' --filter id=$CONTAINER)
+          CONTAINER_PREFIX=$(echo $CONTAINER_NAME | perl -n -e'/(.*)-(algo-(.)-(.*))/; print $1')
+          COMPOSE_SERVICE_NAME=$(echo $CONTAINER_NAME | perl -n -e'/(.*)-(algo-(.)-(.*))/; print $2')
+
+          if [[ -n "$COMPOSE_SERVICE_NAME" ]]; then
+              COMPOSE_FILES=$(sudo find /tmp/sagemaker -name docker-compose.yaml -exec grep -l "$COMPOSE_SERVICE_NAME" {} +)
+              for COMPOSE_FILE in $COMPOSE_FILES; do
+                  if sudo grep -q "RUN_ID=${DR_RUN_ID}" $COMPOSE_FILE && sudo grep -q "${RUN_NAME}" $COMPOSE_FILE; then
+                      echo $CONTAINER
+                  fi
+              done
+          fi
+      done
   fi
 
 }

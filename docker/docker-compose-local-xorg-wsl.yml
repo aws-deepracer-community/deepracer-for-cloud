@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+  robomaker:
+    environment:
+      - DISPLAY
+      - USE_EXTERNAL_X=${DR_HOST_X}
+      - QT_X11_NO_MITSHM=1
+      - LD_LIBRARY_PATH=/usr/lib/wsl/lib
+    volumes:
+      - '/tmp/.X11-unix/:/tmp/.X11-unix'
+      - '/mnt/wslg:/mnt/wslg'
+      - '/usr/lib/wsl:/usr/lib/wsl'
+    devices:
+      - /dev/dxg

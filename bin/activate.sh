@@ -70,6 +70,11 @@ if [[ "$(type service 2>/dev/null)" ]]; then
   service docker status >/dev/null || sudo service docker start
 fi
 
+## Check if WSL2
+if grep -qi Microsoft /proc/version && grep -q "WSL2" /proc/version; then
+    IS_WSL2="yes"
+fi
+
 # Check if we will use Docker Swarm or Docker Compose
 # If not defined then use Swarm
 if [[ -z "${DR_DOCKER_STYLE}" ]]; then
@@ -130,10 +135,25 @@ else
   DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml"
 fi
 
-# Prevent docker swarms to restart
+# Add host X support for Linux and WSL2
 if [[ "${DR_HOST_X,,}" == "true" ]]; then
-  DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
-  DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
+  if [[ "$IS_WSL2" == "yes" ]]; then
+  
+    # Check if package x11-server-utils is installed
+    if ! command -v xset &> /dev/null; then
+      echo "WARNING: Package x11-server-utils is not installed. Please install it to enable X11 support."
+    fi
+  
+    if [[ "${DR_DOCKER_STYLE,,}" == "swarm" && "${DR_USE_GUI,,}" == "true" ]]; then
+      echo "WARNING: Cannot use GUI in Swarm mode. Please switch to Compose mode."
+    fi
+
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg-wsl.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg-wsl.yml"
+  else
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
+  fi
 fi
 
 # Prevent docker swarms to restart
@@ -184,24 +204,25 @@ if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
 fi
 
 ## Version check
+if [[ -z "$DR_SIMAPP_SOURCE" || -z "$DR_SIMAPP_VERSION" ]]; then
+  DEFAULT_SIMAPP_VERSION=$(jq -r '.containers.simapp | select (.!=null)' $DIR/defaults/dependencies.json)
+  echo "ERROR: Variable DR_SIMAPP_SOURCE or DR_SIMAPP_VERSION not defined."
+  echo ""
+  echo "As of version 5.3 the variables DR_SIMAPP_SOURCE and DR_SIMAPP_VERSION are required in system.env."
+  echo "To continue to use the separate Sagemaker, Robomaker and RL Coach images, run 'git checkout legacy'."
+  echo ""
+  echo "Please add the following lines to your system.env file:"
+  echo "DR_SIMAPP_SOURCE=awsdeepracercommunity/deepracer-simapp"
+  echo "DR_SIMAPP_VERSION=${DEFAULT_SIMAPP_VERSION}-gpu"
+  return
+fi
+
 DEPENDENCY_VERSION=$(jq -r '.master_version  | select (.!=null)' $DIR/defaults/dependencies.json)
 
-SAGEMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-sagemaker:$DR_SAGEMAKER_IMAGE 2>/dev/null | jq -r .[].Config.Labels.version)
-if [ -z "$SAGEMAKER_VER" ]; then SAGEMAKER_VER=$DR_SAGEMAKER_IMAGE; fi
-if ! verlte $DEPENDENCY_VERSION $SAGEMAKER_VER; then
-  echo "WARNING: Incompatible version of Deepracer Sagemaker. Expected >$DEPENDENCY_VERSION. Got $SAGEMAKER_VER."
-fi
-
-ROBOMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-robomaker:$DR_ROBOMAKER_IMAGE 2>/dev/null | jq -r .[].Config.Labels.version)
-if [ -z "$ROBOMAKER_VER" ]; then ROBOMAKER_VER=$DR_ROBOMAKER_IMAGE; fi
-if ! verlte $DEPENDENCY_VERSION $ROBOMAKER_VER; then
-  echo "WARNING: Incompatible version of Deepracer Robomaker. Expected >$DEPENDENCY_VERSION. Got $ROBOMAKER_VER."
-fi
-
-COACH_VER=$(docker inspect awsdeepracercommunity/deepracer-rlcoach:$DR_COACH_IMAGE 2>/dev/null | jq -r .[].Config.Labels.version)
-if [ -z "$COACH_VER" ]; then COACH_VER=$DR_COACH_IMAGE; fi
-if ! verlte $DEPENDENCY_VERSION $COACH_VER; then
-  echo "WARNING: Incompatible version of Deepracer-for-Cloud Coach. Expected >$DEPENDENCY_VERSION. Got $COACH_VER."
+SIMAPP_VER=$(docker inspect ${DR_SIMAPP_SOURCE}:${DR_SIMAPP_VERSION} 2>/dev/null | jq -r .[].Config.Labels.version)
+if [ -z "$SIMAPP_VER" ]; then SIMAPP_VER=$SIMAPP_VERSION; fi
+if ! verlte $DEPENDENCY_VERSION $SIMAPP_VER; then
+  echo "WARNING: Incompatible version of Deepracer Sagemaker. Expected >$DEPENDENCY_VERSION. Got $SIMAPP_VER."
 fi
 
 ## Create a dr-local-aws command
