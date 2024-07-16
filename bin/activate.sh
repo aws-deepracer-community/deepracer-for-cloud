@@ -204,12 +204,19 @@ if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
 fi
 
 ## Version check
-if [[ -z "$DR_SIMAPP_SOURCE" ]]; then
-  echo "ERROR: Variable DR_SIMAPP_SOURCE not defined."
+if [[ -z "$DR_SIMAPP_SOURCE" || -z "$DR_SIMAPP_VERSION" ]]; then
+  DEFAULT_SIMAPP_VERSION=$(jq -r '.containers.simapp | select (.!=null)' $DIR/defaults/dependencies.json)
+  echo "ERROR: Variable DR_SIMAPP_SOURCE or DR_SIMAPP_VERSION not defined."
+  echo ""
+  echo "As of version 5.3 the variables DR_SIMAPP_SOURCE and DR_SIMAPP_VERSION are required in system.env."
+  echo "To continue to use the separate Sagemaker, Robomaker and RL Coach images, run 'git checkout legacy'."
+  echo ""
+  echo "Please add the following lines to your system.env file:"
+  echo "DR_SIMAPP_SOURCE=awsdeepracercommunity/deepracer-simapp"
+  echo "DR_SIMAPP_VERSION=${DEFAULT_SIMAPP_VERSION}-gpu"
+  return
 fi
-if [[ -z "$DR_SIMAPP_VERSION" ]]; then
-  echo "ERROR: Variable DR_SIMAPP_VERSION not defined."
-fi
+
 DEPENDENCY_VERSION=$(jq -r '.master_version  | select (.!=null)' $DIR/defaults/dependencies.json)
 
 SIMAPP_VER=$(docker inspect ${DR_SIMAPP_SOURCE}:${DR_SIMAPP_VERSION} 2>/dev/null | jq -r .[].Config.Labels.version)
