@@ -54,7 +54,7 @@ Check that OpenGL is working by looking for `gzserver` in `nvidia-smi`.
 OpenGL is also supported in WSL2 on Windows 11. By default an Xwayland server is started in Ubuntu 22.04.
 
 To enable OpenGL acceleration perform the following steps:
-* Install x11-server-utils with `sudo apt install x11-server-utils`.
+* Install x11-server-utils with `sudo apt install x11-xserver-utils`.
 * Configure DRfC using the following settings in `system.env`:
     * `DR_HOST_X=True`; uses the local X server rather than starting one within the docker container.
     * `DR_DISPLAY=:0`; the Xwayland starts on :0 by default.
