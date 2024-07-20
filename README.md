@@ -5,13 +5,13 @@ DRfC runs on Ubuntu 20.04 or 22.04. GPU acceleration requires a NVIDIA GPU, pref
 
 ## Introduction
 
-DeepRacer-For-Cloud (DRfC) started as an extension of the work done by Alex (https://github.com/alexschultz/deepracer-for-dummies), which is again a wrapper around the amazing work done by Chris (https://github.com/crr0004/deepracer). With the introduction of the second generation Deepracer Console the repository has been split up. This repository contains the scripts needed to *run* the training, but depends on Docker Hub to provide pre-built docker images. All the under-the-hood building capabilities are in the [Deepracer Build](https://github.com/aws-deepracer-community/deepracer) repository.
+DeepRacer-For-Cloud (DRfC) started as an extension of the work done by Alex (https://github.com/alexschultz/deepracer-for-dummies), which is again a wrapper around the amazing work done by Chris (https://github.com/crr0004/deepracer). With the introduction of the second generation Deepracer Console the repository has been split up. This repository contains the scripts needed to *run* the training, but depends on Docker Hub to provide pre-built docker images. All the under-the-hood building capabilities are in the [Deepracer Simapp](https://github.com/aws-deepracer-community/deepracer-simapp) repository.
 
 ## Main Features
 
 DRfC supports a wide set of features to ensure that you can focus on creating the best model:
 * User-friendly
-	* Based on the continously updated community [Robomaker](https://github.com/aws-deepracer-community/deepracer-simapp) and [Sagemaker](https://github.com/aws-deepracer-community/deepracer-sagemaker-container) containers, supporting a wide range of CPU and GPU setups.
+	* Based on the continously updated community [Robomaker](https://github.com/aws-deepracer-community/deepracer-simapp) container, supporting a wide range of CPU and GPU setups.
 	* Wide set of scripts (`dr-*`) enables effortless training.
 	* Detection of your AWS DeepRacer Console models; allows upload of a locally trained model to any of them.
 * Modes
