@@ -67,9 +67,9 @@ fi
 
 # Execute the upload command
 if [ -n "$COUNTER_FILE" ]; then
-  dr-upload-model -f
+  dr-upload-model $LOCAL_UPLOAD -f
 else
-  dr-upload-model -1 -f
+  dr-upload-model $LOCAL_UPLOAD -1 -f
 fi
 dr-update
 
