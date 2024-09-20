@@ -1151,10 +1151,7 @@
       "targets": [
         {
           "alias": "$tag_model entropy",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "${DS_INFLUXDB}"
-          },
+          "datasource": {},
           "groupBy": [
             {
               "params": [
