@@ -1198,10 +1198,7 @@
         },
         {
           "alias": "$tag_model entropy moving average",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "${DS_INFLUXDB}"
-          },
+          "datasource": {},
           "groupBy": [
             {
               "params": [
