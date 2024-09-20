@@ -1193,7 +1193,7 @@
           "measurement": "dr_sagemaker_epochs",
           "orderByTime": "ASC",
           "policy": "default",
-          "refId": "A",
+          "refId": "B",
           "resultFormat": "time_series",
           "select": [
             [
