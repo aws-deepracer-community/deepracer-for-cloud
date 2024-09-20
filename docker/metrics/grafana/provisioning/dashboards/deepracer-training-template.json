@@ -1041,10 +1041,7 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "${DS_INFLUXDB}"
-      },
+      "datasource": {},
       "description": "",
       "fieldConfig": {
         "defaults": {
