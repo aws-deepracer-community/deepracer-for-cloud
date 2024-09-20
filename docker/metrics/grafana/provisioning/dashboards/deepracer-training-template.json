@@ -1041,7 +1041,10 @@
       "type": "timeseries"
     },
     {
-      "datasource":{},
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXDB}"
+      },
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -1095,7 +1098,31 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": ".*entropy moving average"
+            },
+            "properties": [
+              {
+                "id": "custom.drawStyle",
+                "value": "line"
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "never"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 11,
@@ -1106,8 +1133,13 @@
       "id": 7,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": [
+            "min",
+            "mean",
+            "max",
+            "lastNotNull"
+          ],
+          "displayMode": "table",
           "placement": "bottom",
           "showLegend": true
         },
@@ -1132,7 +1164,7 @@
             },
             {
               "params": [
-                "model::tag"
+                "model"
               ],
               "type": "tag"
             },
@@ -1179,17 +1211,12 @@
             },
             {
               "params": [
-                "model::tag"
+                "model"
               ],
               "type": "tag"
-            },
-            {
-              "params": [
-                "none"
-              ],
-              "type": "fill"
             }
           ],
+          "hide": false,
           "measurement": "dr_sagemaker_epochs",
           "orderByTime": "ASC",
           "policy": "default",
@@ -1209,9 +1236,9 @@
               },
               {
                 "params": [
-                  30
+                  10
                 ],
-                "type": "moving average"
+                "type": "moving_average"
               }
             ]
           ],
