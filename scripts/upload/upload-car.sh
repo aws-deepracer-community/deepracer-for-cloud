@@ -36,7 +36,7 @@ done
 # The file is created directly from within the sagemaker container, using the most recent checkpoint
 
 # Find name of sagemaker container
-SAGEMAKER_CONTAINERS=$(docker ps | awk ' /sagemaker/ { print $1 } ' | xargs)
+SAGEMAKER_CONTAINERS=$(docker ps | awk ' /algo/ { print $1 } ' | xargs)
 if [[ -n $SAGEMAKER_CONTAINERS ]]; then
     for CONTAINER in $SAGEMAKER_CONTAINERS; do
         CONTAINER_NAME=$(docker ps --format '{{.Names}}' --filter id=$CONTAINER)
