@@ -4,9 +4,10 @@
 # After processing the options, it activates the environment, uploads the model, and updates the evaluation environment file with the new model prefix if specified.
 #
 # Usage:
-# ./upload-rotate.sh [-e <environment file>] [-L] [-E <evaluation environment file>] [-v]
+# ./upload-rotate.sh [-e <environment file>] [-L] [-E <evaluation environment file>] [-c <counter file>] [-v]
 #
 # Options:
+# -c <counter file>               Specify the path to the counter file. This is optional.
 # -e <environment file>           Specify the path to the environment configuration file. Defaults to 'run.env' in the script's directory.
 # -L                              Enable local upload. This option does not require a value.
 # -v                              Add more verbose logging, capturing iteration and entropy numbers.
@@ -28,8 +29,9 @@ LOCAL_UPLOAD=""
 EVAL_ENV_FILE=""
 
 # Process command line options
-while getopts "e:LE:v" opt; do
+while getopts "e:LE:vc:" opt; do
   case $opt in
+    c) COUNTER_FILE="$OPTARG" ;;
     e) ENV_FILE="$OPTARG" ;;
     L) LOCAL_UPLOAD="-L" ;;
     E) EVAL_ENV_FILE="$OPTARG" ;;
@@ -37,6 +39,19 @@ while getopts "e:LE:v" opt; do
     *) echo "Invalid option: -$OPTARG" >&2; exit 1 ;;
   esac
 done
+
+# If a counter file is specified, increment the counter
+if [ -n "$COUNTER_FILE" ]; then
+  if [ -f "$COUNTER_FILE" ]; then
+    COUNTER=$(cat "$COUNTER_FILE")
+    COUNTER=$((COUNTER + 1))
+    echo "$COUNTER" > "$COUNTER_FILE"
+    export UPLOAD_COUNTER=$COUNTER
+  else
+    echo "Error: Counter file '$COUNTER_FILE' not found." >&2
+    exit 1
+  fi
+fi
 
 # Activate the environment
 if [ -f "$ENV_FILE" ]; then
@@ -51,7 +66,11 @@ else
 fi
 
 # Execute the upload command
-dr-upload-model $LOCAL_UPLOAD -1 -f
+if [ -n "$COUNTER_FILE" ]; then
+  dr-upload-model $LOCAL_UPLOAD -f
+else
+  dr-upload-model $LOCAL_UPLOAD -1 -f
+fi
 dr-update
 
 # If an evaluation environment file is specified then alter the model prefix to enable evaluation
