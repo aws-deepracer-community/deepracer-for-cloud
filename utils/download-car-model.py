@@ -41,12 +41,19 @@ def check_model_file(prefix):
         for obj in response.get('Contents', []):
             if obj['Key'].endswith('model.tar.gz'):
                 print(f"Found model.tar.gz in {prefix}output/")
-                return True
-        print(f"No model.tar.gz found in {prefix}output/")
-        return False
+                return f"{obj['Key']}"
+
+        response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+        for obj in response.get('Contents', []):
+            if obj['Key'].endswith('carfile.tar.gz'):
+                print(f"Found carfile.tar.gz in {prefix}")
+                return f"{obj['Key']}"
+
+        print(f"No model.tar.gz found in {prefix}output/ and no carfile.tar.gz found in {prefix}")
+        return None
     except Exception as e:
-        print(f"Error checking {prefix}output/: {e}")
-        return False
+        print(f"Error checking {prefix}: {e}")
+        return None
 
 def get_matching_prefixes(prefix_pattern):
     """
@@ -67,29 +74,24 @@ def get_matching_prefixes(prefix_pattern):
         print(f"Error listing prefixes: {e}")
         return []
 
-def download_and_rename_model_file(prefix):
+def download_and_rename_model_file(prefix, file_key):
     """
-    Download and rename the model.tar.gz file from the specified prefix.
+    Download and rename the model.tar.gz file from the specified file key.
 
     Args:
-        prefix (str): The prefix to download the model file from.
+        prefix (str): The prefix of the model file.
+        file_key (str): The S3 key of the model file to download.
 
     Returns:
         bool: True if the model file is downloaded and renamed, False otherwise.
     """
     try:
-        response = s3.list_objects_v2(Bucket=bucket_name, Prefix=f"{prefix}output/")
-        for obj in response.get('Contents', []):
-            if obj['Key'].endswith('model.tar.gz'):
-                file_key = obj['Key']
-                local_filename = f"tmp/{prefix.strip('/')}.tar.gz"
-                s3.download_file(bucket_name, file_key, local_filename)
-                print(f"Downloaded and renamed {file_key} to {local_filename}")
-                return True
-        print(f"No model.tar.gz found in {prefix}output/")
-        return False
+        local_filename = os.path.join("tmp", f"{prefix.rstrip('/')}.tar.gz")
+        s3.download_file(bucket_name, file_key, local_filename)
+        print(f"Downloaded and renamed {file_key} to {local_filename}")
+        return True
     except Exception as e:
-        print(f"Error downloading {prefix}output/: {e}")
+        print(f"Error downloading {file_key}: {e}")
         return False
 
 def validate_s3_connection():
@@ -118,5 +120,6 @@ if __name__ == "__main__":
 
     matching_prefixes = get_matching_prefixes(args.pattern)
     for prefix in matching_prefixes:
-        if check_model_file(prefix):
-            download_and_rename_model_file(prefix)
+        model_file_path = check_model_file(prefix)
+        if model_file_path:
+            download_and_rename_model_file(prefix, model_file_path)
