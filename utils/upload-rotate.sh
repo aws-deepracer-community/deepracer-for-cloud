@@ -12,6 +12,7 @@
 # -L                              Enable local upload. This option does not require a value.
 # -v                              Add more verbose logging, capturing iteration and entropy numbers.
 # -E <evaluation environment file> Specify the path to the evaluation environment configuration file. This is optional.
+# -C                              Upload the car file. This option does not require a value.
 #
 # Example:
 # ./upload-rotate.sh -e custom.env -L -E eval.env
@@ -29,13 +30,14 @@ LOCAL_UPLOAD=""
 EVAL_ENV_FILE=""
 
 # Process command line options
-while getopts "e:LE:vc:" opt; do
+while getopts "e:LE:vc:C" opt; do
   case $opt in
     c) COUNTER_FILE="$OPTARG" ;;
     e) ENV_FILE="$OPTARG" ;;
     L) LOCAL_UPLOAD="-L" ;;
     E) EVAL_ENV_FILE="$OPTARG" ;;
     v) VERBOSE_LOGGING="true" ;;
+    C) CAR_FILE="-C" ;;
     *) echo "Invalid option: -$OPTARG" >&2; exit 1 ;;
   esac
 done
@@ -72,6 +74,11 @@ else
   dr-upload-model $LOCAL_UPLOAD -1 -f
 fi
 dr-update
+
+# If the car file option is specified, upload the car file
+if [ -n "$CAR_FILE" ]; then
+  dr-upload-car-zip $LOCAL_UPLOAD -f
+fi
 
 # If an evaluation environment file is specified then alter the model prefix to enable evaluation
 if [ -n "$EVAL_ENV_FILE" ]; then
