@@ -23,7 +23,7 @@ TOPIC="/racecar/deepracer/kvs_stream"
 WIDTH=480
 HEIGHT=360
 QUALITY=75
-BROWSER="firefox --new-tab"
+BROWSER=${BROWSER:-"firefox --new-tab"}
 PORT=$DR_WEBVIEWER_PORT
 
 while getopts ":w:h:q:t:b:p:" opt; do
@@ -121,7 +121,8 @@ if [[ -n "${DISPLAY}" && "${DR_HOST_X,,}" == "true" ]]; then
   if [ "${DR_DOCKER_STYLE,,}" == "swarm" ]; then
     sleep 5
   fi
-  $BROWSER "http://127.0.01:8100" &
+  echo Launching $BROWSER "http://127.0.0.1:${DR_WEBVIEWER_PORT}"
+  $BROWSER "http://127.0.0.1:${DR_WEBVIEWER_PORT}" &
 fi
 
 CURRENT_CONTAINER_HASH=$(docker ps | grep dr_viewer | head -c 12)
