@@ -194,7 +194,11 @@ if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
     exit 1
   fi
 
-  DISPLAY=$ROBO_DISPLAY docker stack deploy $COMPOSE_FILES $STACK_NAME
+  if [ "$DR_DOCKER_MAJOR_VERSION" -gt 24 ]; then
+    DETACH_FLAG="--detach=true"
+  fi
+
+  DISPLAY=$ROBO_DISPLAY docker stack deploy $COMPOSE_FILES $DETACH_FLAG $STACK_NAME
 
 else
   DISPLAY=$ROBO_DISPLAY docker compose $COMPOSE_FILES -p $STACK_NAME up -d --scale robomaker=$DR_WORKERS

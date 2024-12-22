@@ -109,8 +109,12 @@ STACK_NAME="deepracer-$DR_RUN_ID-viewer"
 COMPOSE_FILES=$DR_DIR/docker/docker-compose-webviewer.yml
 
 if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
+  if [ "$DR_DOCKER_MAJOR_VERSION" -gt 24 ]; then
+    DETACH_FLAG="--detach=true"
+  fi
+
   COMPOSE_FILES="$COMPOSE_FILES -c $DR_DIR/docker/docker-compose-webviewer-swarm.yml"
-  docker stack deploy -c $COMPOSE_FILES $STACK_NAME
+  docker stack deploy -c $COMPOSE_FILES $DETACH_FLAG $STACK_NAME
 else
   docker compose -f $COMPOSE_FILES -p $STACK_NAME up -d
 fi

@@ -202,7 +202,12 @@ if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
   export MINIO_GID=$(id -g)
   export MINIO_GROUPNAME=$(id -g -n)
   if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
-    docker stack deploy $DR_MINIO_COMPOSE_FILE s3
+
+    if [ "$DR_DOCKER_MAJOR_VERSION" -gt 24 ]; then
+      DETACH_FLAG="--detach=true"
+    fi
+
+    docker stack deploy $DR_MINIO_COMPOSE_FILE $DETACH_FLAG s3
   else
     docker compose $DR_MINIO_COMPOSE_FILE -p s3 up -d
   fi
