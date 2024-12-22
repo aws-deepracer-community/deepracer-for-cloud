@@ -17,9 +17,9 @@ if [[ -n "$SAGEMAKER_CONTAINERS" ]]; then
                     echo Found Sagemaker as $CONTAINER_NAME
 
                     # Check if Docker version is greater than 24
-                    if [ "$DOCKER_MAJOR_VERSION" -gt 24 ]; then
+                    if [ "$DR_DOCKER_MAJOR_VERSION" -gt 24 ]; then
                         # Remove version tag from docker-compose.yaml
-                        sed -i '/^version:/d' docker-compose.yaml
+                        sudo sed -i '/^version:/d' $COMPOSE_FILE
                     fi
 
                     sudo docker compose -f $COMPOSE_FILE stop $COMPOSE_SERVICE_NAME
