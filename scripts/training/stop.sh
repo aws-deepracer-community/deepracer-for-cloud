@@ -15,6 +15,13 @@ if [[ -n "$SAGEMAKER_CONTAINERS" ]]; then
             for COMPOSE_FILE in $COMPOSE_FILES; do
                 if sudo grep -q "RUN_ID=${DR_RUN_ID}" $COMPOSE_FILE && sudo grep -q "${RUN_NAME}" $COMPOSE_FILE; then
                     echo Found Sagemaker as $CONTAINER_NAME
+
+                    # Check if Docker version is greater than 24
+                    if [ "$DOCKER_MAJOR_VERSION" -gt 24 ]; then
+                        # Remove version tag from docker-compose.yaml
+                        sed -i '/^version:/d' docker-compose.yaml
+                    fi
+
                     sudo docker compose -f $COMPOSE_FILE stop $COMPOSE_SERVICE_NAME
                     docker container rm $CONTAINER -v >/dev/null
                 fi

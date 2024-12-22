@@ -225,6 +225,11 @@ if ! verlte $DEPENDENCY_VERSION $SIMAPP_VER; then
   echo "WARNING: Incompatible version of Deepracer Sagemaker. Expected >$DEPENDENCY_VERSION. Got $SIMAPP_VER."
 fi
 
+# Get Docker version
+DOCKER_VERSION=$(docker --version | grep -oP '\d+\.\d+\.\d+' | head -1)
+DR_DOCKER_MAJOR_VERSION=$(echo $DOCKER_VERSION | cut -d. -f1)
+export DR_DOCKER_MAJOR_VERSION
+
 ## Create a dr-local-aws command
 alias dr-local-aws='aws $DR_LOCAL_PROFILE_ENDPOINT_URL'
 
