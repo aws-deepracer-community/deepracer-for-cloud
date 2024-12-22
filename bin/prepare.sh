@@ -31,7 +31,7 @@ fi
 ## Patch system
 sudo apt update && sudo apt-mark hold grub-pc && sudo apt -y -o \
     DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" -qq --force-yes upgrade &&
-    sudo apt install --no-install-recommends -y jq awscli python3-boto3
+    sudo apt install --no-install-recommends -y jq awscli python3-boto3 screen
 source $DIR/detect.sh
 echo "Detected cloud type ${CLOUD_NAME}"
 
