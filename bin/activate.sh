@@ -174,6 +174,12 @@ if [[ -d "${DR_ROBOMAKER_MOUNT_SIMAPP_DIR,,}" ]]; then
   DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-simapp.yml"
 fi
 
+# Enable local scripts mount
+if [[ -d "${DR_ROBOMAKER_MOUNT_SCRIPTS_DIR,,}" ]]; then
+  DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-robomaker-scripts.yml"
+  DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-robomaker-scripts.yml"
+fi
+
 ## Check if we have an AWS IAM assumed role, or if we need to set specific credentials.
 if [ "${DR_CLOUD,,}" == "aws" ] && [ $(aws --output json sts get-caller-identity 2>/dev/null | jq '.Arn' | awk /assumed-role/ | wc -l) -gt 0 ]; then
   export DR_LOCAL_S3_AUTH_MODE="role"
