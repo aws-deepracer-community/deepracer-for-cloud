@@ -233,7 +233,7 @@ DEPENDENCY_VERSION=$(jq -r '.master_version  | select (.!=null)' $DIR/defaults/d
 SIMAPP_VER=$(docker inspect ${DR_SIMAPP_SOURCE}:${DR_SIMAPP_VERSION} 2>/dev/null | jq -r .[].Config.Labels.version)
 if [ -z "$SIMAPP_VER" ]; then SIMAPP_VER=$SIMAPP_VERSION; fi
 if ! verlte $DEPENDENCY_VERSION $SIMAPP_VER; then
-  echo "WARNING: Incompatible version of Deepracer Sagemaker. Expected >$DEPENDENCY_VERSION. Got $SIMAPP_VER."
+  echo "WARNING: Incompatible version of Deepracer Simapp. Expected >$DEPENDENCY_VERSION. Got $SIMAPP_VER."
 fi
 
 # Get Docker version
