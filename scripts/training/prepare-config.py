@@ -136,7 +136,10 @@ if config['MULTI_CONFIG'] == "True" and num_workers > 1:
 
         else:  # i >= 2 
             #read in additional configuration file.  format of file must be worker#-run.env
-            location = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'worker-{}.env'.format(i)))
+            if os.environ.get('DR_EXPERIMENT_NAME'):
+                location = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'experiments', os.environ.get('DR_EXPERIMENT_NAME'),'worker-{}.env'.format(i)))
+            else:
+                location = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'worker-{}.env'.format(i)))
             with open(location, 'r') as fh:
                 vars_dict = dict(
                     tuple(line.split('='))
