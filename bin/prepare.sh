@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
-
+set -euo pipefail
 trap ctrl_c INT
 
 function ctrl_c() {
@@ -12,26 +11,55 @@ function ctrl_c() {
 export DEBIAN_FRONTEND=noninteractive
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
-## Check distribution
-distribution=$(
-    . /etc/os-release
-    echo $ID$VERSION_ID | sed 's/\.//'
-)
+# Only allow supported Ubuntu versions
+. /etc/os-release
+SUPPORTED_VERSIONS=("20.04" "22.04" "24.04" "24.10" "25.04")
+DISTRIBUTION=${ID}${VERSION_ID//./}
+UBUNTU_MAJOR_VERSION=$(echo $VERSION_ID | cut -d. -f1)
+UBUNTU_MINOR_VERSION=$(echo $VERSION_ID | cut -d. -f2)
+if [[ "$ID" == "ubuntu" ]]; then
+    VERSION_OK=false
+    for V in "${SUPPORTED_VERSIONS[@]}"; do
+        if [[ "$VERSION_ID" == "$V" ]]; then
+            VERSION_OK=true
+            break
+        fi
+    done
+    if [[ "$VERSION_OK" != true ]]; then
+        echo "ERROR: Ubuntu $VERSION_ID is not a supported version. Supported versions: ${SUPPORTED_VERSIONS[*]}"
+        exit 1
+    fi
+fi
 
 ## Check if WSL2
 if grep -qi Microsoft /proc/version && grep -q "WSL2" /proc/version; then
     IS_WSL2="yes"
 fi
 
-## Remove needsreboot in Ubuntu 22.04
-if [[ "${distribution}" == "ubuntu2204" && -z "${IS_WSL2}" ]]; then
-    sudo apt remove -y needrestart
+# Remove needrestart in all Ubuntu 2x.04/2x.10+ (future-proof)
+if [[ "${ID}" == "ubuntu" && ${UBUNTU_MAJOR_VERSION} -ge 22 && -z "${IS_WSL2}" ]]; then
+    sudo apt remove -y needrestart || true
 fi
 
 ## Patch system
 sudo apt update && sudo apt-mark hold grub-pc && sudo apt -y -o \
-    DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" -qq --force-yes upgrade &&
-    sudo apt install --no-install-recommends -y jq awscli python3-boto3 screen
+    DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" -qq upgrade
+
+## Install required packages
+sudo apt install --no-install-recommends -y jq python3-boto3 screen git curl
+
+## Install AWS CLI
+if [[ "${ID}" == "ubuntu" && ( ${UBUNTU_MAJOR_VERSION} -eq 20 || ${UBUNTU_MAJOR_VERSION} -eq 22 ) ]]; then
+    sudo apt install -y awscli
+else
+    if command -v snap >/dev/null 2>&1; then
+        sudo snap install aws-cli --classic
+    else
+        echo "WARNING: snap not available, AWS CLI not installed"
+    fi
+fi
+
+## Detect cloud
 source $DIR/detect.sh
 echo "Detected cloud type ${CLOUD_NAME}"
 
@@ -53,18 +81,34 @@ fi
 
 ## Adding Nvidia Drivers
 if [[ "${ARCH}" == "gpu" && -z "${IS_WSL2}" ]]; then
-    case $distribution in
-    ubuntu2004)
-        sudo apt install -y nvidia-driver-525-server --no-install-recommends -o Dpkg::Options::="--force-overwrite"
-        ;;
-    ubuntu2204)
-        sudo apt install -y nvidia-driver-550 --no-install-recommends -o Dpkg::Options::="--force-overwrite"
-        ;;
-    *)
-        echo "Unsupported distribution: $distribution"
+    # For Ubuntu 20.04 and newer, check if any suitable NVIDIA driver (>=525) is already installed
+    if [[ "${ID}" == "ubuntu" && ${UBUNTU_MAJOR_VERSION} -ge 20 ]]; then
+        DRIVER_OK=false
+        # Find all installed nvidia-driver-XXX packages (status 'ii'), extract version, and check if >= 525
+        for PKG in $(dpkg -l | awk '$1 == "ii" && /nvidia-driver-[0-9]+/ {print $2}'); do
+            DRIVER_VER=$(echo "${PKG}" | grep -oE '[0-9]+$')
+            if [[ ${DRIVER_VER} -ge 525 ]]; then
+                echo "NVIDIA driver ${DRIVER_VER} already installed."
+                DRIVER_OK=true
+                break
+            fi
+        done
+        if [[ "${DRIVER_OK}" != true ]]; then
+            # Try to install the highest available driver >= 525
+            HIGHEST_DRIVER=$(apt-cache search --names-only '^nvidia-driver-[0-9]+$' | awk '{print $1}' | grep -oE '[0-9]+$' | awk '$1 >= 525' | sort -nr | head -n1)
+            if [[ -n "${HIGHEST_DRIVER}" ]]; then
+                sudo apt install -y "nvidia-driver-${HIGHEST_DRIVER}" --no-install-recommends -o Dpkg::Options::="--force-overwrite"
+            elif apt-cache show nvidia-driver-525-server &>/dev/null; then
+                sudo apt install -y nvidia-driver-525-server --no-install-recommends -o Dpkg::Options::="--force-overwrite"
+            else
+                echo "No supported NVIDIA driver >= 525 found for this Ubuntu version."
+                exit 1
+            fi
+        fi
+    else
+        echo "Unsupported distribution: ${DISTRIBUTION}"
         exit 1
-        ;;
-    esac
+    fi
 fi
 
 ## Installing Docker
@@ -79,11 +123,11 @@ if [[ "${ARCH}" == "gpu" ]]; then
 
     sudo apt update && sudo apt install -y --no-install-recommends nvidia-docker2 nvidia-container-runtime
     if [ -f "/etc/docker/daemon.json" ]; then
-        echo "Altering /etc/docker/daemon.json with default-rutime nvidia."
+        echo "Altering /etc/docker/daemon.json with default-runtime nvidia."
         cat /etc/docker/daemon.json | jq 'del(."default-runtime") + {"default-runtime": "nvidia"}' | sudo tee /etc/docker/daemon.json
     else
-        echo "Creating /etc/docker/daemon.json with default-rutime nvidia."
-        sudo cp $DIR/../defaults/docker-daemon.json /etc/docker/daemon.json
+        echo "Creating /etc/docker/daemon.json with default-runtime nvidia."
+        sudo cp "${DIR}/../defaults/docker-daemon.json" /etc/docker/daemon.json
     fi
 fi
 
@@ -96,19 +140,21 @@ else
 fi
 
 ## Ensure user can run docker
-sudo usermod -a -G docker $(id -un)
+sudo usermod -a -G docker "$(id -un)"
 
 ## Reboot to load driver -- continue install if in cloud-init
 CLOUD_INIT=$(pstree -s $BASHPID | awk /cloud-init/ | wc -l)
 
 if [[ "${CLOUD_INIT}" -ne 0 ]]; then
     echo "Rebooting in 5 seconds. Will continue with install."
-    cd $DIR
+    cd "${DIR}"
     ./runonce.sh "./init.sh -c ${CLOUD_NAME} -a ${ARCH}"
     sleep 5s
     sudo shutdown -r +1
 elif [[ -n "${IS_WSL2}" || "${ARCH}" == "cpu" ]]; then
     echo "First stage done. Log out, then log back in and run init.sh -c ${CLOUD_NAME} -a ${ARCH}"
+    echo "Note: You may need to log out and back in for docker group membership to take effect."
 else
     echo "First stage done. Please reboot and run init.sh -c ${CLOUD_NAME} -a ${ARCH}"
+    echo "Note: Reboot is required for NVIDIA drivers and docker group membership to take effect."
 fi
