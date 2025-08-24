@@ -15,7 +15,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 ## Check distribution
 distribution=$(
     . /etc/os-release
-    echo $ID$VERSION_ID | sed 's/\.//'
+    echo ${ID}${VERSION_ID} | sed 's/\.//'
 )
 
 ## Check if WSL2
@@ -23,15 +23,26 @@ if grep -qi Microsoft /proc/version && grep -q "WSL2" /proc/version; then
     IS_WSL2="yes"
 fi
 
-## Remove needsreboot in Ubuntu 22.04
-if [[ "${distribution}" == "ubuntu2204" && -z "${IS_WSL2}" ]]; then
+# Remove needrestart in Ubuntu 22.04 and 24.04
+if [[ "${distribution}" =~ ^ubuntu2[24]04$ ]] && [[ -z "${IS_WSL2}" ]]; then
     sudo apt remove -y needrestart
 fi
 
 ## Patch system
 sudo apt update && sudo apt-mark hold grub-pc && sudo apt -y -o \
-    DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" -qq --force-yes upgrade &&
-    sudo apt install --no-install-recommends -y jq awscli python3-boto3 screen
+    DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" -qq --force-yes upgrade
+
+## Install required packages
+sudo apt install --no-install-recommends -y jq python3-boto3 screen git curl
+
+## Install AWS CLI
+if [[ "${distribution}" =~ ^ubuntu2[02]04$ ]]; then
+    sudo apt install -y awscli
+else
+    sudo snap install aws-cli --classic
+fi
+
+## Detect cloud
 source $DIR/detect.sh
 echo "Detected cloud type ${CLOUD_NAME}"
 
@@ -59,6 +70,9 @@ if [[ "${ARCH}" == "gpu" && -z "${IS_WSL2}" ]]; then
         ;;
     ubuntu2204)
         sudo apt install -y nvidia-driver-550 --no-install-recommends -o Dpkg::Options::="--force-overwrite"
+        ;;
+    ubuntu2404)
+        sudo apt install -y nvidia-driver-570 --no-install-recommends -o Dpkg::Options::="--force-overwrite"
         ;;
     *)
         echo "Unsupported distribution: $distribution"
