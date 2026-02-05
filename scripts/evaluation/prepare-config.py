@@ -35,6 +35,10 @@ config['JOB_TYPE'] = 'EVALUATION'
 config['KINESIS_VIDEO_STREAM_NAME'] = os.environ.get('DR_KINESIS_STREAM_NAME', '')
 config['ROBOMAKER_SIMULATION_JOB_ACCOUNT_ID'] = os.environ.get('', 'Dummy')
 
+s3_container_endpoint_url = os.environ.get('DR_MINIO_URL', None)
+if s3_container_endpoint_url is not None:
+    config['S3_ENDPOINT_URL'] = s3_container_endpoint_url
+
 config['MODEL_S3_PREFIX'].append(os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'))
 config['MODEL_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
 config['SIMTRACE_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
@@ -143,7 +147,7 @@ if config['RACE_TYPE'] == 'HEAD_TO_MODEL':
     config['MODEL_NAME'] = config['DISPLAY_NAME']
 
 # S3 Setup / write and upload file
-s3_endpoint_url = os.environ.get('DR_LOCAL_S3_ENDPOINT_URL', None)
+s3_local_endpoint_url = os.environ.get('DR_LOCAL_S3_ENDPOINT_URL', None)
 s3_region = config['AWS_REGION']
 s3_bucket = config['MODEL_S3_BUCKET'][0]
 s3_prefix = config['MODEL_S3_PREFIX'][0]
@@ -156,7 +160,7 @@ s3_yaml_name = os.environ.get('DR_LOCAL_S3_EVAL_PARAMS_FILE', 'eval_params.yaml'
 yaml_key = os.path.normpath(os.path.join(s3_prefix, s3_yaml_name))
 
 session = boto3.session.Session(profile_name=s3_profile)
-s3_client = session.client('s3', region_name=s3_region, endpoint_url=s3_endpoint_url)
+s3_client = session.client('s3', region_name=s3_region, endpoint_url=s3_local_endpoint_url)
 
 yaml_key = os.path.normpath(os.path.join(s3_prefix, s3_yaml_name))
 local_yaml_path = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'tmp', 'eval-params-' + str(round(time.time())) + '.yaml'))
