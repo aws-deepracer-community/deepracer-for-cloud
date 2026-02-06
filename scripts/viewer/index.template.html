@@ -296,10 +296,13 @@
                                 const image = document.createElement('img')
                                 image.dataset.camera = camera.id
 
-                                const url = createStreamUrl(robo, camera.topic, qualityVal, widthSelectionValue)
+                                const numericWidth = Number(widthSelectionValue)
+                                const validatedWidth = Math.min(1920, Math.max(160, isNaN(numericWidth) ? 160 : numericWidth))
+
+                                const url = createStreamUrl(robo, camera.topic, qualityVal, validatedWidth)
                                 image.classList.add('card-img')
                                 image.setAttribute('src', url)
-                                image.style.width = widthSelectionValue + 'px'
+                                image.style.width = validatedWidth + 'px'
                                 image.setAttribute('alt', robo + '-' + camera.id)
                                 image.onerror = function() {
                                     this.style.border = '2px solid red';
