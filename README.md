@@ -1,7 +1,7 @@
 # DeepRacer-For-Cloud
 Provides a quick and easy way to get up and running with a DeepRacer training environment using a cloud virtual machine or a local compter, such [AWS EC2 Accelerated Computing instances](https://aws.amazon.com/ec2/instance-types/?nc1=h_ls#Accelerated_Computing) or the Azure [N-Series Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-gpu).
 
-DRfC runs on Ubuntu 20.04, 22.04 and 24.04. GPU acceleration requires a NVIDIA GPU, preferrably with more than 8GB of VRAM.
+DRfC runs on Ubuntu 22.04 and 24.04. GPU acceleration requires a NVIDIA GPU, preferrably with more than 8GB of VRAM.
 
 ## Introduction
 
