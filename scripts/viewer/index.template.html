@@ -415,21 +415,27 @@
             setTimeout(() => {
                 const { robo, camera, quality, width } = getFormValue()
 
-                // Validate quality
+                // Validate and clamp quality
                 const qualityNum = Number(quality)
-                if (!Number.isFinite(qualityNum) || qualityNum < 1 || qualityNum > 100) {
-                    document.getElementById('camera-quality').value = Number.isFinite(qualityNum) ? Math.max(1, Math.min(100, qualityNum)) : 75
-                    return
+                const clampedQuality = (!Number.isFinite(qualityNum) || qualityNum < 1 || qualityNum > 100)
+                    ? (Number.isFinite(qualityNum) ? Math.max(1, Math.min(100, qualityNum)) : 75)
+                    : qualityNum
+                
+                if (clampedQuality !== qualityNum) {
+                    document.getElementById('camera-quality').value = clampedQuality
                 }
 
-                // Validate width
+                // Validate and clamp width
                 const widthNum = Number(width)
-                if (!Number.isFinite(widthNum) || widthNum < 160 || widthNum > 1920) {
-                    document.getElementById('width-size').value = Number.isFinite(widthNum) ? Math.max(160, Math.min(1920, widthNum)) : 480
-                    return
+                const clampedWidth = (!Number.isFinite(widthNum) || widthNum < 160 || widthNum > 1920)
+                    ? (Number.isFinite(widthNum) ? Math.max(160, Math.min(1920, widthNum)) : 480)
+                    : widthNum
+                
+                if (clampedWidth !== widthNum) {
+                    document.getElementById('width-size').value = clampedWidth
                 }
 
-                const url = createUrl(robo, camera, quality, width)
+                const url = createUrl(robo, camera, clampedQuality, clampedWidth)
                 location.href = url.href
             }, 300)
         }
