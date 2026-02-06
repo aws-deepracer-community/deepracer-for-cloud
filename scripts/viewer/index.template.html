@@ -267,7 +267,7 @@
                 .filter((robo) => roboSelectionValue === 'all' || roboSelectionValue === robo)
                 .forEach((robo) => {
 
-                    if (cumulativeCameraAmount !== maximumCameraAmount) {
+                    if (cumulativeCameraAmount < maximumCameraAmount) {
                         const roboMaker = document.createElement('div')
                         roboMaker.classList.add('robo-maker')
                         roboMaker.dataset.robo = robo
@@ -315,18 +315,16 @@
                         roboMaker.appendChild(roboCameras)
                         mainContainer.appendChild(roboMaker)
 
-                    } else {
-                        if (cumulativeCameraAmount === maximumCameraAmount) {
-                            const div = document.createElement('div')
-                            div.innerText = "Maximum amount of " + maximumCameraAmount + " cameras reached"
-                            div.classList.add('max-cameras-reached-alert')
-                            const dismissButton = document.createElement('button')
-                            dismissButton.classList.add('dismiss-button')
-                            dismissButton.innerText = "Dismiss"
-                            dismissButton.addEventListener('click', () => document.querySelector('.max-cameras-reached-alert').remove())
-                            div.appendChild(dismissButton)
-                            mainContainer.append(div)
-                        }
+                    } else if (cumulativeCameraAmount === maximumCameraAmount) {
+                        const div = document.createElement('div')
+                        div.innerText = "Maximum amount of " + maximumCameraAmount + " cameras reached"
+                        div.classList.add('max-cameras-reached-alert')
+                        const dismissButton = document.createElement('button')
+                        dismissButton.classList.add('dismiss-button')
+                        dismissButton.innerText = "Dismiss"
+                        dismissButton.addEventListener('click', () => document.querySelector('.max-cameras-reached-alert').remove())
+                        div.appendChild(dismissButton)
+                        mainContainer.append(div)
                         cumulativeCameraAmount += 1
                     }
                 })
@@ -342,9 +340,25 @@
         }
 
         function createStreamUrl(robo, topic, quality, width) {
+            // Ensure width is a finite number within an acceptable range
+            let widthNum = Number(width)
+            if (!Number.isFinite(widthNum)) {
+                widthNum = 480
+            } else {
+                widthNum = Math.max(160, Math.min(1920, widthNum))
+            }
+
+            // Ensure quality is a finite number within an acceptable range
+            let qualityNum = Number(quality)
+            if (!Number.isFinite(qualityNum)) {
+                qualityNum = 75
+            } else {
+                qualityNum = Math.max(1, Math.min(100, qualityNum))
+            }
+
             // Calculate height maintaining 4:3 aspect ratio
-            const height = Math.round(width * 3 / 4)
-            return "/" + robo + "/stream?topic=" + topic + "&quality=" + quality + "&width=" + width + "&height=" + height
+            const height = Math.round(widthNum * 3 / 4)
+            return "/" + robo + "/stream?topic=" + topic + "&quality=" + qualityNum + "&width=" + widthNum + "&height=" + height
         }
 
         function createUrl(robo, camera, quality, width) {
@@ -400,15 +414,15 @@
 
                 // Validate quality
                 const qualityNum = Number(quality)
-                if (qualityNum < 1 || qualityNum > 100) {
-                    document.getElementById('camera-quality').value = Math.max(1, Math.min(100, qualityNum))
+                if (!Number.isFinite(qualityNum) || qualityNum < 1 || qualityNum > 100) {
+                    document.getElementById('camera-quality').value = Number.isFinite(qualityNum) ? Math.max(1, Math.min(100, qualityNum)) : 75
                     return
                 }
 
                 // Validate width
                 const widthNum = Number(width)
-                if (widthNum < 160 || widthNum > 1920) {
-                    document.getElementById('width-size').value = Math.max(160, Math.min(1920, widthNum))
+                if (!Number.isFinite(widthNum) || widthNum < 160 || widthNum > 1920) {
+                    document.getElementById('width-size').value = Number.isFinite(widthNum) ? Math.max(160, Math.min(1920, widthNum)) : 480
                     return
                 }
 
