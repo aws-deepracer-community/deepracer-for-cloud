@@ -116,7 +116,10 @@ function dr-logs-sagemaker {
     fi
   fi
 
-  if [[ "${DR_HOST_X,,}" == "true" && -n "$DISPLAY" ]]; then
+  if [[ "$TERM_PROGRAM" == "vscode" ]]; then
+    echo "VS Code terminal detected. Displaying Sagemaker logs inline."
+    docker logs $OPT_TIME -f $SAGEMAKER_CONTAINER
+  elif [[ "${DR_HOST_X,,}" == "true" && -n "$DISPLAY" ]]; then
     if [ -x "$(command -v gnome-terminal)" ]; then
       gnome-terminal --tab --title "DR-${DR_RUN_ID}: Sagemaker - ${SAGEMAKER_CONTAINER}" -- /usr/bin/bash -c "docker logs $OPT_TIME -f ${SAGEMAKER_CONTAINER}" 2>/dev/null
       echo "Sagemaker container $SAGEMAKER_CONTAINER logs opened in separate gnome-terminal. "
@@ -124,7 +127,7 @@ function dr-logs-sagemaker {
       x-terminal-emulator -e /bin/sh -c "docker logs $OPT_TIME -f ${SAGEMAKER_CONTAINER}" 2>/dev/null
       echo "Sagemaker container $SAGEMAKER_CONTAINER logs opened in separate terminal. "
     else
-      echo 'Could not find a defined x-terminal-emulator. Displaying inline.'
+      echo 'Could not find a terminal emulator. Displaying inline.'
       docker logs $OPT_TIME -f $SAGEMAKER_CONTAINER
     fi
   else
@@ -207,7 +210,10 @@ function dr-logs-robomaker {
     fi
   fi
 
-  if [[ "${DR_HOST_X,,}" == "true" && -n "$DISPLAY" ]]; then
+  if [[ "$TERM_PROGRAM" == "vscode" ]]; then
+    echo "VS Code terminal detected. Displaying Robomaker #${OPT_REPLICA} logs inline."
+    docker logs $OPT_TIME -f $ROBOMAKER_CONTAINER
+  elif [[ "${DR_HOST_X,,}" == "true" && -n "$DISPLAY" ]]; then
     if [ -x "$(command -v gnome-terminal)" ]; then
       gnome-terminal --tab --title "DR-${DR_RUN_ID}: Robomaker #${OPT_REPLICA} - ${ROBOMAKER_CONTAINER}" -- /usr/bin/bash -c "docker logs $OPT_TIME -f ${ROBOMAKER_CONTAINER}" 2>/dev/null
       echo "Robomaker #${OPT_REPLICA} ($ROBOMAKER_CONTAINER) logs opened in separate gnome-terminal. "
@@ -215,7 +221,7 @@ function dr-logs-robomaker {
       x-terminal-emulator -e /bin/sh -c "docker logs $OPT_TIME -f ${ROBOMAKER_CONTAINER}" 2>/dev/null
       echo "Robomaker #${OPT_REPLICA} ($ROBOMAKER_CONTAINER) logs opened in separate terminal. "
     else
-      echo 'Could not find a defined x-terminal-emulator. Displaying inline.'
+      echo 'Could not find a terminal emulator. Displaying inline.'
       docker logs $OPT_TIME -f $ROBOMAKER_CONTAINER
     fi
   else
