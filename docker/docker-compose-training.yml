@@ -8,7 +8,7 @@ networks:
 services:
   rl_coach:
     image: ${DR_SIMAPP_SOURCE}:${DR_SIMAPP_VERSION}
-    command: ["source /root/anaconda/bin/activate coach_env && python3 /opt/ml/code/rl_coach/start.py"]
+    command: ["source /root/anaconda/bin/activate sagemaker_env && python3 /opt/ml/code/rl_coach/start.py"]
     working_dir: "/opt/ml/code/"
     environment:
       - RUN_ID=${DR_RUN_ID}
