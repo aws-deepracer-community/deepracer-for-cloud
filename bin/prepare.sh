@@ -32,6 +32,7 @@ if [[ "$ID" == "ubuntu" ]]; then
 fi
 
 ## Check if WSL2
+IS_WSL2=""
 if grep -qi Microsoft /proc/version && grep -q "WSL2" /proc/version; then
     IS_WSL2="yes"
 fi
@@ -84,7 +85,7 @@ if [[ "${ARCH}" == "gpu" && -z "${IS_WSL2}" ]]; then
     DRIVER_OK=false
     # Find all installed nvidia-driver-XXX packages (status 'ii'), extract version, and check if >= 525
     for PKG in $(dpkg -l | awk '$1 == "ii" && /nvidia-driver-[0-9]+/ {print $2}'); do
-        DRIVER_VER=$(echo "${PKG}" | grep -oE '[0-9]+$')
+        DRIVER_VER=$(echo "${PKG}" | sed -E 's/nvidia-driver-([0-9]+).*/\1/')
         if [[ ${DRIVER_VER} -ge 560 ]]; then
             echo "NVIDIA driver ${DRIVER_VER} already installed."
             DRIVER_OK=true
