@@ -13,7 +13,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 # Only allow supported Ubuntu versions
 . /etc/os-release
-SUPPORTED_VERSIONS=("20.04" "22.04" "24.04" "24.10" "25.04")
+SUPPORTED_VERSIONS=("22.04" "24.04" "24.10" "25.04" "25.10")
 DISTRIBUTION=${ID}${VERSION_ID//./}
 UBUNTU_MAJOR_VERSION=$(echo $VERSION_ID | cut -d. -f1)
 UBUNTU_MINOR_VERSION=$(echo $VERSION_ID | cut -d. -f2)
@@ -49,7 +49,7 @@ sudo apt update && sudo apt-mark hold grub-pc && sudo apt -y -o \
 sudo apt install --no-install-recommends -y jq python3-boto3 screen git curl
 
 ## Install AWS CLI
-if [[ "${ID}" == "ubuntu" && ( ${UBUNTU_MAJOR_VERSION} -eq 20 || ${UBUNTU_MAJOR_VERSION} -eq 22 ) ]]; then
+if [[ "${ID}" == "ubuntu" && ( ${UBUNTU_MAJOR_VERSION} -eq 22 ) ]]; then
     sudo apt install -y awscli
 else
     if command -v snap >/dev/null 2>&1; then
@@ -81,33 +81,27 @@ fi
 
 ## Adding Nvidia Drivers
 if [[ "${ARCH}" == "gpu" && -z "${IS_WSL2}" ]]; then
-    # For Ubuntu 20.04 and newer, check if any suitable NVIDIA driver (>=525) is already installed
-    if [[ "${ID}" == "ubuntu" && ${UBUNTU_MAJOR_VERSION} -ge 20 ]]; then
-        DRIVER_OK=false
-        # Find all installed nvidia-driver-XXX packages (status 'ii'), extract version, and check if >= 525
-        for PKG in $(dpkg -l | awk '$1 == "ii" && /nvidia-driver-[0-9]+/ {print $2}'); do
-            DRIVER_VER=$(echo "${PKG}" | grep -oE '[0-9]+$')
-            if [[ ${DRIVER_VER} -ge 525 ]]; then
-                echo "NVIDIA driver ${DRIVER_VER} already installed."
-                DRIVER_OK=true
-                break
-            fi
-        done
-        if [[ "${DRIVER_OK}" != true ]]; then
-            # Try to install the highest available driver >= 525
-            HIGHEST_DRIVER=$(apt-cache search --names-only '^nvidia-driver-[0-9]+$' | awk '{print $1}' | grep -oE '[0-9]+$' | awk '$1 >= 525' | sort -nr | head -n1)
-            if [[ -n "${HIGHEST_DRIVER}" ]]; then
-                sudo apt install -y "nvidia-driver-${HIGHEST_DRIVER}" --no-install-recommends -o Dpkg::Options::="--force-overwrite"
-            elif apt-cache show nvidia-driver-525-server &>/dev/null; then
-                sudo apt install -y nvidia-driver-525-server --no-install-recommends -o Dpkg::Options::="--force-overwrite"
-            else
-                echo "No supported NVIDIA driver >= 525 found for this Ubuntu version."
-                exit 1
-            fi
+    DRIVER_OK=false
+    # Find all installed nvidia-driver-XXX packages (status 'ii'), extract version, and check if >= 525
+    for PKG in $(dpkg -l | awk '$1 == "ii" && /nvidia-driver-[0-9]+/ {print $2}'); do
+        DRIVER_VER=$(echo "${PKG}" | grep -oE '[0-9]+$')
+        if [[ ${DRIVER_VER} -ge 560 ]]; then
+            echo "NVIDIA driver ${DRIVER_VER} already installed."
+            DRIVER_OK=true
+            break
         fi
-    else
-        echo "Unsupported distribution: ${DISTRIBUTION}"
-        exit 1
+    done
+    if [[ "${DRIVER_OK}" != true ]]; then
+        # Try to install the highest available driver >= 560
+        HIGHEST_DRIVER=$(apt-cache search --names-only '^nvidia-driver-[0-9]+$' | awk '{print $1}' | grep -oE '[0-9]+$' | awk '$1 >= 560' | sort -nr | head -n1)
+        if [[ -n "${HIGHEST_DRIVER}" ]]; then
+            sudo apt install -y "nvidia-driver-${HIGHEST_DRIVER}" --no-install-recommends -o Dpkg::Options::="--force-overwrite"
+        elif apt-cache show nvidia-driver-560-server &>/dev/null; then
+            sudo apt install -y nvidia-driver-560-server --no-install-recommends -o Dpkg::Options::="--force-overwrite"
+        else
+            echo "No supported NVIDIA driver >= 560 found for this Ubuntu version."
+            exit 1
+        fi
     fi
 fi
 
