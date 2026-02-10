@@ -95,7 +95,8 @@ cp $INSTALL_DIR/defaults/reward_function.py $INSTALL_DIR/custom_files/
 cp $INSTALL_DIR/defaults/template-system.env $INSTALL_DIR/system.env
 cp $INSTALL_DIR/defaults/template-run.env $INSTALL_DIR/run.env
 if [[ "${OPT_CLOUD}" == "aws" ]]; then
-    AWS_EC2_AVAIL_ZONE=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
+    IMDS_TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+    AWS_EC2_AVAIL_ZONE=$(curl -s -H "X-aws-ec2-metadata-token: $IMDS_TOKEN" http://169.254.169.254/latest/meta-data/placement/availability-zone)
     AWS_REGION="$(echo $AWS_EC2_AVAIL_ZONE | sed 's/[a-z]$//')"
     sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
     sed -i "s/<LOCAL_PROFILE>/default/g" $INSTALL_DIR/system.env
