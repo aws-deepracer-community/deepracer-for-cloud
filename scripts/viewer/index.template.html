@@ -187,6 +187,18 @@
 
         
         let { robo, camera, quality, width } = extractPropertiesFromUrl(location.href)
+        // Set defaults: ALL workers, kvs_stream camera, width 480, quality 70
+        let needsUrlUpdate = false;
+        if (!robo) { robo = 'all'; needsUrlUpdate = true; }
+        if (!camera) { camera = 'kvs_stream'; needsUrlUpdate = true; }
+        if (!width) { width = 480; needsUrlUpdate = true; }
+        if (!quality) { quality = 70; needsUrlUpdate = true; }
+
+        // If any defaults were used, update the URL to reflect them (without reloading)
+        if (needsUrlUpdate) {
+            const url = createUrl(robo, camera, quality, width);
+            window.history.replaceState({}, '', url.href);
+        }
 
         const widthSize = document.getElementById('width-size')
 
@@ -248,15 +260,18 @@
             let widthSelectionValue = document.getElementById('width-size').value
             widthSelectionValue = urlWidthSelection || widthSelectionValue
 
+            // Cleanup: close all streams by clearing src of all images before removing them
+            mainContainer.querySelectorAll('img.card-img').forEach(img => { img.src = ''; });
             mainContainer.innerHTML = ''
+
+            // Prevent All cameras with All cars
+            if (roboSelectionValue === 'all' && cameraSelectionValue === 'all') {
+                cameraSelectionValue = 'kvs_stream';
+                cameraSelectionEl.value = 'kvs_stream';
+            }
 
             if (roboSelectionValue === 'all') {
                 cameraAllSelectEl.classList.add('hide')
-
-                if (cameraSelectionValue === 'all') {
-                    cameraSelectionEl.value = cameraSelectTopEl.value
-                    updatePage()
-                }
             } else {
                 cameraAllSelectEl.classList.remove('hide')
             }
@@ -389,17 +404,12 @@
             }
         }
 
-        function setupForm(robo, camera, quality, width=480) {
-            if (robo) {
-                document.getElementById('robo-select').value = robo
-            }
-            if (camera) {
-                document.getElementById('camera-select').value = camera
-            }
-            if (quality) {
-                document.getElementById('camera-quality').value = quality
-            }
-            document.getElementById('width-size').value = width || 480
+        function setupForm(robo, camera, quality, width) {
+            // Always set default to ALL workers, kvs_stream camera, width 480, quality 70 if not present
+            document.getElementById('robo-select').value = robo || 'all';
+            document.getElementById('camera-select').value = camera || 'kvs_stream';
+            document.getElementById('camera-quality').value = quality || 70;
+            document.getElementById('width-size').value = width || 480;
         }
 
         function getFormValue() {
