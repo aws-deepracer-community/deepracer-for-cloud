@@ -65,7 +65,7 @@ fi
 # Check GPU
 if [ "$OPT_ARCH" = "gpu" ]; then
     if GPUS="$(docker run --rm --gpus all --pull=missing \
-        nvidia/cuda:11.8.0-base-ubuntu20.04 \
+        nvcr.io/nvidia/cuda:12.6.3-base-ubuntu24.04 \
         bash -lc 'nvidia-smi -L | wc -l')" ; then
 
         if [ "${GPUS:-0}" -ge 1 ]; then
