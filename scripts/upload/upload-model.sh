@@ -7,8 +7,6 @@ usage() {
   echo "       -d        Dry-Run mode. Does not perform any write or delete operatios on target."
   echo "       -b        Uploads best checkpoint. Default is last checkpoint."
   echo "       -p model  Uploads model from specified S3 prefix."
-  echo "       -i        Import model with the upload name"
-  echo "       -I name   Import model with a specific name"
   echo "       -1        Increment upload name with 1 (dr-increment-upload-model)"
   echo "       -L        Upload model to the local S3 bucket"
   exit 1
@@ -21,7 +19,7 @@ function ctrl_c() {
   exit 1
 }
 
-while getopts ":fwdhbp:c:1iI:L" opt; do
+while getopts ":fwdhbp:c:1L" opt; do
   case $opt in
   b)
     OPT_CHECKPOINT="Best"
@@ -40,12 +38,6 @@ while getopts ":fwdhbp:c:1iI:L" opt; do
     ;;
   w)
     OPT_WIPE="--delete"
-    ;;
-  i)
-    OPT_IMPORT="$DR_UPLOAD_S3_PREFIX"
-    ;;
-  I)
-    OPT_IMPORT="$OPTARG"
     ;;
   L)
     OPT_LOCAL="Local"
@@ -69,9 +61,6 @@ fi
 
 if [[ -n "${OPT_INCREMENT}" ]]; then
   source $DR_DIR/scripts/upload/increment.sh ${OPT_FORCE}
-  if [[ -n ${OPT_IMPORT} ]]; then
-    OPT_IMPORT="$DR_UPLOAD_S3_PREFIX"
-  fi
 fi
 
 SOURCE_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
@@ -80,9 +69,6 @@ if [[ -n "${OPT_PREFIX}" ]]; then
   SOURCE_S3_REWARD=${OPT_PREFIX}/reward_function.py
   SOURCE_S3_METRICS=${OPT_PREFIX}/metrics
   TARGET_S3_PREFIX=${OPT_PREFIX}
-  if [[ -n ${OPT_IMPORT} ]]; then
-    OPT_IMPORT="${TARGET_S3_PREFIX}"
-  fi
 else
   SOURCE_S3_MODEL_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
   SOURCE_S3_REWARD=${DR_LOCAL_S3_REWARD_KEY}
@@ -94,10 +80,6 @@ if [[ -z "${OPT_LOCAL}" ]]; then
   TARGET_S3_BUCKET=${DR_UPLOAD_S3_BUCKET}
   UPLOAD_PROFILE=${DR_UPLOAD_PROFILE}
 else
-  if [[ -n "${OPT_IMPORT}" ]]; then
-    echo "Combination of -i and -L is not permitted."
-    exit 1
-  fi
   if [[ "${TARGET_S3_PREFIX}" = "${SOURCE_S3_MODEL_PREFIX}" ]]; then
     echo "Target equals source. Exiting."
     exit 1
@@ -215,8 +197,3 @@ aws ${UPLOAD_PROFILE} s3 sync ${WORK_DIR}/metrics/ ${TARGET_METRICS_FILE_S3_KEY}
 aws ${UPLOAD_PROFILE} s3 cp ${PARAMS_FILE} ${TARGET_PARAMS_FILE_S3_KEY} ${OPT_DRYRUN}
 aws ${UPLOAD_PROFILE} s3 cp ${HYPERPARAM_FILE} ${TARGET_HYPERPARAM_FILE_S3_KEY} ${OPT_DRYRUN}
 aws ${UPLOAD_PROFILE} s3 cp ${METADATA_FILE} s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/ ${OPT_DRYRUN}
-
-# After upload trigger the import
-if [[ -n "${OPT_IMPORT}" && -z "${OPT_DRYRUN}" ]]; then
-  $DR_DIR/scripts/upload/import-model.py "${DR_UPLOAD_S3_PROFILE}" "${DR_UPLOAD_S3_ROLE}" "${TARGET_S3_BUCKET}" "${TARGET_S3_PREFIX}" "${OPT_IMPORT}"
-fi
