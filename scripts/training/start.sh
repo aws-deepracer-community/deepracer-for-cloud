@@ -148,10 +148,10 @@ if [ "$DR_WORKERS" -gt 1 ]; then
   else
     echo "Creating Robomaker configuration in $S3_PATH/$DR_LOCAL_S3_TRAINING_PARAMS_FILE"
   fi
-  export ROBOMAKER_COMMAND="/opt/simapp/run.sh multi distributed_training.launch"
+  export ROBOMAKER_COMMAND="/opt/ml/code/run.sh multi distributed_training.launch.py"
 
 else
-  export ROBOMAKER_COMMAND="/opt/simapp/run.sh run distributed_training.launch"
+  export ROBOMAKER_COMMAND="/opt/ml/code/run.sh run distributed_training.launch.py"
   echo "Creating Robomaker configuration in $S3_PATH/$DR_LOCAL_S3_TRAINING_PARAMS_FILE"
 fi
 

@@ -1,6 +1,5 @@
 import math
 import numpy
-import rospy
 import time
 
 class Reward:
@@ -32,11 +31,11 @@ class Reward:
 
         return rtf, fps
     
-    def record_time(self, steps):
+    def record_time(self, steps, sim_time=0.0):
 
         index = int(steps) % self.time.shape[0]
         self.time[index,0] = time.time()
-        self.time[index,1] = rospy.get_time()
+        self.time[index,1] = sim_time
 
     def reward_function(self, params):
 
@@ -44,7 +43,7 @@ class Reward:
         steps = params["steps"]
 
         if self.track_time:
-            self.record_time(steps)
+            self.record_time(steps, sim_time=params.get("sim_time", 0.0))
 
         if self.track_time:
             if steps >= self.time.shape[0]:

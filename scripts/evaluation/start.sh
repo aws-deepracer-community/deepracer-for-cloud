@@ -64,7 +64,7 @@ fi
 # set evaluation specific environment variables
 S3_PATH="s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX"
 
-export ROBOMAKER_COMMAND="./run.sh run evaluation.launch"
+export ROBOMAKER_COMMAND="/opt/ml/code/run.sh run evaluation.launch.py"
 export DR_CURRENT_PARAMS_FILE=${DR_LOCAL_S3_EVAL_PARAMS_FILE}
 
 if [ ${DR_ROBOMAKER_MOUNT_LOGS,,} = "true" ]; then

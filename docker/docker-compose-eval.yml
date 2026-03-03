@@ -30,6 +30,7 @@ services:
       - ROS_MASTER_URI=http://localhost:11311/
       - ROS_IP=127.0.0.1
       - GAZEBO_ARGS=${DR_GAZEBO_ARGS:-}
+      - GAZEBO_RENDER_ENGINE=${DR_GAZEBO_RENDER_ENGINE:-ogre}
       - TELEGRAF_HOST=${DR_TELEGRAF_HOST:-}
       - TELEGRAF_PORT=${DR_TELEGRAF_PORT:-}
     init: true
