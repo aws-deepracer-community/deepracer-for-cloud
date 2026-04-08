@@ -218,13 +218,6 @@ if [[ "${DR_HOST_X,,}" == "true" ]]; then
   fi
 fi
 
-# Chose the rendering engine - OGRE2 if we have a GPU, otherwise OGRE
-if [[ -z "${DR_GAZEBO_RENDER_ENGINE}" ]]; then
-  if [[ -f "/etc/docker/daemon.json" ]] && jq -e '.runtimes.nvidia // (."default-runtime" == "nvidia")' /etc/docker/daemon.json &>/dev/null; then
-    export DR_GAZEBO_RENDER_ENGINE="ogre2"
-  fi
-fi
-
 # Prevent docker swarms to restart
 if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
   DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training-swarm.yml"
