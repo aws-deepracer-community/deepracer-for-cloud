@@ -7,6 +7,26 @@ function ctrl_c() {
     exit 1
 }
 
+# Find a free /24 subnet in 192.168.200-254/24 that doesn't conflict with
+# existing Docker networks or host routes.
+function find_free_subnet() {
+    local USED NW_IDS
+    NW_IDS=$(docker network ls -q 2>/dev/null)
+    USED=$(
+        { [[ -n "$NW_IDS" ]] && docker network inspect $NW_IDS \
+              --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' 2>/dev/null; \
+          ip route show 2>/dev/null | awk '{print $1}' | grep -E '^[0-9]+\.'; } | sort -u
+    )
+    for j in $(seq 200 254); do
+        local CANDIDATE="192.168.${j}.0/24"
+        if ! echo "$USED" | grep -qF "$CANDIDATE"; then
+            echo "$CANDIDATE"
+            return 0
+        fi
+    done
+    return 1
+}
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd)"
 
@@ -40,26 +60,11 @@ while getopts ":m:c:a:s:" opt; do
     esac
 done
 
+# Check if cloud type is set, if not try to detect it. If detection fails, default to local.
 if [[ -z "$OPT_CLOUD" ]]; then
     source $SCRIPT_DIR/detect.sh
     OPT_CLOUD=$CLOUD_NAME
     echo "Detected cloud type to be $CLOUD_NAME"
-fi
-
-# Find CPU Level
-CPU_LEVEL="cpu"
-
-if [[ -f /proc/cpuinfo ]] && [[ "$(cat /proc/cpuinfo | grep avx2 | wc -l)" > 0 ]]; then
-    CPU_LEVEL="cpu"
-elif [[ "$(type sysctl 2>/dev/null)" ]] && [[ "$(sysctl -n hw.optional.avx2_0)" == 1 ]]; then
-    CPU_LEVEL="cpu"
-fi
-
-# Check if Intel (to ensure MKN)
-if [[ -f /proc/cpuinfo ]] && [[ "$(cat /proc/cpuinfo | grep GenuineIntel | wc -l)" > 0 ]]; then
-    CPU_INTEL="true"
-elif [[ "$(type sysctl 2>/dev/null)" ]] && [[ "$(sysctl -n machdep.cpu.vendor)" == "GenuineIntel" ]]; then
-    CPU_INTEL="true"
 fi
 
 # Check GPU
@@ -135,8 +140,6 @@ sed -i "s/<REGION_REPLACE>/$AWS_REGION/g" $INSTALL_DIR/system.env
 
 if [[ "${OPT_ARCH}" == "gpu" ]]; then
     SAGEMAKER_TAG="gpu"
-elif [[ -n "${CPU_INTEL}" ]]; then
-    SAGEMAKER_TAG="cpu"
 else
     SAGEMAKER_TAG="cpu"
 fi
@@ -188,20 +191,18 @@ if [[ "${OPT_STYLE}" == "swarm" ]]; then
     SWARM_NODE=$(docker node inspect self | jq .[0].ID -r)
     docker node update --label-add Sagemaker=true $SWARM_NODE >/dev/null 2>/dev/null
     docker node update --label-add Robomaker=true $SWARM_NODE >/dev/null 2>/dev/null
-    docker network ls | grep -q $SAGEMAKER_NW
-    if [ $? -ne 0 ]; then
-        docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm
-    else
-        docker network rm $SAGEMAKER_NW
-        docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm --subnet=192.168.2.0/24
-    fi
+    NW_SUBNET=$(find_free_subnet)
+    docker network ls | grep -q $SAGEMAKER_NW && docker network rm $SAGEMAKER_NW >/dev/null 2>&1
+    docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm \
+        ${NW_SUBNET:+--subnet=$NW_SUBNET} \
+        --label com.docker.compose.network=sagemaker-local \
+        --label com.docker.compose.project=sagemaker-local
 
 elif [[ "${OPT_STYLE}" == "compose" ]]; then
 
-    docker network ls | grep -q $SAGEMAKER_NW
-    if [ $? -ne 0 ]; then
-        docker network create $SAGEMAKER_NW
-    fi
+    NW_SUBNET=$(find_free_subnet)
+    docker network ls | grep -q $SAGEMAKER_NW || \
+        docker network create $SAGEMAKER_NW ${NW_SUBNET:+--subnet=$NW_SUBNET}
 
 else
     echo "Unknown docker style ${OPT_STYLE}. Exiting."

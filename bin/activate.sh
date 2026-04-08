@@ -4,6 +4,26 @@ verlte() {
   [ "$1" = "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
 }
 
+# Find a free /24 subnet in 192.168.200-254/24 that doesn't conflict with
+# existing Docker networks or host routes.
+function find_free_subnet() {
+  local USED NW_IDS
+  NW_IDS=$(docker network ls -q 2>/dev/null)
+  USED=$(
+    { [[ -n "$NW_IDS" ]] && docker network inspect $NW_IDS \
+          --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' 2>/dev/null; \
+      ip route show 2>/dev/null | awk '{print $1}' | grep -E '^[0-9]+\.'; } | sort -u
+  )
+  for j in $(seq 200 254); do
+    local CANDIDATE="192.168.${j}.0/24"
+    if ! echo "$USED" | grep -qF "$CANDIDATE"; then
+      echo "$CANDIDATE"
+      return 0
+    fi
+  done
+  return 1
+}
+
 function dr-update-env {
 
   if [[ -f "$DIR/system.env" ]]; then
@@ -89,6 +109,48 @@ else
   export DR_DOCKER_FILE_SEP="-f"
 fi
 
+# Check if sagemaker-local network has required compose label; recreate if missing
+SAGEMAKER_NW='sagemaker-local'
+if ! docker network ls --format '{{.Name}}' | grep -q "^${SAGEMAKER_NW}$"; then
+  echo "Network $SAGEMAKER_NW does not exist. Creating."
+  NW_SUBNET=$(find_free_subnet)
+  if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
+    docker network create "$SAGEMAKER_NW" -d overlay --attachable --scope swarm \
+      ${NW_SUBNET:+--subnet=$NW_SUBNET} \
+      --label com.docker.compose.network=sagemaker-local \
+      --label com.docker.compose.project=sagemaker-local >/dev/null 2>&1
+  else
+    docker network create "$SAGEMAKER_NW" \
+      ${NW_SUBNET:+--subnet=$NW_SUBNET} \
+      --label com.docker.compose.network=sagemaker-local \
+      --label com.docker.compose.project=sagemaker-local >/dev/null 2>&1
+  fi
+else
+  NW_LABEL_NETWORK=$(docker network inspect "$SAGEMAKER_NW" --format '{{index .Labels "com.docker.compose.network"}}')
+  if [[ "$NW_LABEL_NETWORK" != "sagemaker-local" ]]; then
+    echo "Network $SAGEMAKER_NW is missing required label."
+    NW_CONTAINERS=$(docker network inspect "$SAGEMAKER_NW" --format '{{len .Containers}}')
+    if [[ "${NW_CONTAINERS:-0}" -eq 0 ]]; then
+      NW_SUBNET=$(find_free_subnet)
+      docker network rm "$SAGEMAKER_NW" >/dev/null 2>&1
+      if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
+        docker network create "$SAGEMAKER_NW" -d overlay --attachable --scope swarm \
+          ${NW_SUBNET:+--subnet=$NW_SUBNET} \
+          --label com.docker.compose.network=sagemaker-local \
+          --label com.docker.compose.project=sagemaker-local >/dev/null 2>&1
+      else
+        docker network create "$SAGEMAKER_NW" \
+          ${NW_SUBNET:+--subnet=$NW_SUBNET} \
+          --label com.docker.compose.network=sagemaker-local \
+          --label com.docker.compose.project=sagemaker-local >/dev/null 2>&1
+      fi
+      echo "Network $SAGEMAKER_NW recreated with required labels."
+    else
+      echo "WARNING: Network $SAGEMAKER_NW has containers attached; cannot recreate. Stop all containers and re-source activate.sh."
+    fi
+  fi
+fi
+
 # Check if CUDA_VISIBLE_DEVICES is configured.
 if [[ -n "${CUDA_VISIBLE_DEVICES}" ]]; then
   echo "WARNING: You have CUDA_VISIBLE_DEVICES defined. The will no longer work as"
@@ -153,13 +215,6 @@ if [[ "${DR_HOST_X,,}" == "true" ]]; then
   else
     DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
     DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
-  fi
-fi
-
-# Chose the rendering engine - OGRE2 if we have a GPU, otherwise OGRE
-if [[ -z "${DR_GAZEBO_RENDER_ENGINE}" ]]; then
-  if [[ -f "/etc/docker/daemon.json" ]] && jq -e '.runtimes.nvidia // (."default-runtime" == "nvidia")' /etc/docker/daemon.json &>/dev/null; then
-    export DR_GAZEBO_RENDER_ENGINE="ogre2"
   fi
 fi
 
