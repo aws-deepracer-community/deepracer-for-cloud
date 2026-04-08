@@ -111,7 +111,21 @@ fi
 
 # Check if sagemaker-local network has required compose label; recreate if missing
 SAGEMAKER_NW='sagemaker-local'
-if docker network ls --format '{{.Name}}' | grep -q "^${SAGEMAKER_NW}$"; then
+if ! docker network ls --format '{{.Name}}' | grep -q "^${SAGEMAKER_NW}$"; then
+  echo "Network $SAGEMAKER_NW does not exist. Creating."
+  NW_SUBNET=$(find_free_subnet)
+  if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
+    docker network create "$SAGEMAKER_NW" -d overlay --attachable --scope swarm \
+      ${NW_SUBNET:+--subnet=$NW_SUBNET} \
+      --label com.docker.compose.network=sagemaker-local \
+      --label com.docker.compose.project=sagemaker-local >/dev/null 2>&1
+  else
+    docker network create "$SAGEMAKER_NW" \
+      ${NW_SUBNET:+--subnet=$NW_SUBNET} \
+      --label com.docker.compose.network=sagemaker-local \
+      --label com.docker.compose.project=sagemaker-local >/dev/null 2>&1
+  fi
+else
   NW_LABEL_NETWORK=$(docker network inspect "$SAGEMAKER_NW" --format '{{index .Labels "com.docker.compose.network"}}')
   if [[ "$NW_LABEL_NETWORK" != "sagemaker-local" ]]; then
     echo "Network $SAGEMAKER_NW is missing required label."
