@@ -59,7 +59,7 @@ while getopts ":whqsavr:" opt; do
 done
 
 ## Check if WSL2
-if grep -qi Microsoft /proc/version && grep -q "WSL2" /proc/version; then
+if [[ -f /proc/version ]] && grep -qi Microsoft /proc/version && grep -q "WSL2" /proc/version; then
     IS_WSL2="yes"
 fi
 

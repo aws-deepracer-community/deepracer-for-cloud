@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 usage() {
   echo "Usage: $0 [-f] [-w] [-d] [-b] [-1] [-i] [-I] [-L] [-c <checkpoint>] [-p <model-prefix>]"

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [[ $# -eq 0 ]]; then
     echo "Schedules a command to be run after the next reboot."

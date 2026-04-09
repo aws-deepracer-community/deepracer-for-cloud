@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This script evaluates DeepRacer models by managing the evaluation process.
 # It requires one argument: the path to the environment configuration file.

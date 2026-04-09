@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 COMPOSE_FILES=./docker/docker-compose-metrics.yml
 

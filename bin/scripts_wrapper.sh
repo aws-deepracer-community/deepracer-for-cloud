@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 function dr-upload-custom-files {
   eval CUSTOM_TARGET=$(echo s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_CUSTOM_FILES_PREFIX/)
@@ -215,7 +215,7 @@ function dr-logs-robomaker {
     docker logs $OPT_TIME -f $ROBOMAKER_CONTAINER
   elif [[ "${DR_HOST_X,,}" == "true" && -n "$DISPLAY" ]]; then
     if [ -x "$(command -v gnome-terminal)" ]; then
-      gnome-terminal --tab --title "DR-${DR_RUN_ID}: Robomaker #${OPT_REPLICA} - ${ROBOMAKER_CONTAINER}" -- /usr/bin/bash -c "docker logs $OPT_TIME -f ${ROBOMAKER_CONTAINER}" 2>/dev/null
+      gnome-terminal --tab --title "DR-${DR_RUN_ID}: Robomaker #${OPT_REPLICA} - ${ROBOMAKER_CONTAINER}" -- /usr/usr/bin/env bash -c "docker logs $OPT_TIME -f ${ROBOMAKER_CONTAINER}" 2>/dev/null
       echo "Robomaker #${OPT_REPLICA} ($ROBOMAKER_CONTAINER) logs opened in separate gnome-terminal. "
     elif [ -x "$(command -v x-terminal-emulator)" ]; then
       x-terminal-emulator -e /bin/sh -c "docker logs $OPT_TIME -f ${ROBOMAKER_CONTAINER}" 2>/dev/null
