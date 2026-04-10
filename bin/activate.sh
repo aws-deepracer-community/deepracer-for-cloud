@@ -294,7 +294,11 @@ DEPENDENCY_VERSION=$(jq -r '.master_version  | select (.!=null)' $DIR/defaults/d
 
 SIMAPP_VER=$(docker inspect ${DR_SIMAPP_SOURCE}:${DR_SIMAPP_VERSION} 2>/dev/null | jq -r .[].Config.Labels.version)
 if [ -z "$SIMAPP_VER" ]; then SIMAPP_VER=$SIMAPP_VERSION; fi
-if ! verlte $DEPENDENCY_VERSION $SIMAPP_VER; then
+if [ -z "$SIMAPP_VER" ]; then
+  # Image not pulled -- fall back to checking the configured version tag
+  SIMAPP_VER=$(echo ${DR_SIMAPP_VERSION} | grep -oP '^\d+\.\d+(\.\d+)?')
+fi
+if [ -n "$SIMAPP_VER" ] && ! verlte $DEPENDENCY_VERSION $SIMAPP_VER; then
   echo "WARNING: Incompatible version of Deepracer Simapp. Expected >$DEPENDENCY_VERSION. Got $SIMAPP_VER."
 fi
 
@@ -307,6 +311,7 @@ export DR_DOCKER_MAJOR_VERSION
 alias dr-local-aws='aws $DR_LOCAL_PROFILE_ENDPOINT_URL'
 
 source $SCRIPT_DIR/scripts_wrapper.sh
+source $SCRIPT_DIR/summary.sh
 
 function dr-update {
   dr-update-env
@@ -315,3 +320,6 @@ function dr-update {
 function dr-reload {
   source $DIR/bin/activate.sh $DR_CONFIG
 }
+
+## Show summary after activation if not in quiet mode and if in interactive shell
+[[ $- == *i* && "${DR_QUIET_ACTIVATE,,}" != "true" ]] && dr-summary
