@@ -24,6 +24,17 @@ function find_free_subnet() {
   return 1
 }
 
+# Create the sagemaker-local Docker network with the required compose labels.
+function _create_sagemaker_network() {
+  local NW_SUBNET=$(find_free_subnet)
+  local SWARM_FLAGS
+  [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]] && SWARM_FLAGS="-d overlay --attachable --scope swarm"
+  docker network create "$SAGEMAKER_NW" $SWARM_FLAGS \
+    ${NW_SUBNET:+--subnet=$NW_SUBNET} \
+    --label com.docker.compose.network=sagemaker-local \
+    --label com.docker.compose.project=sagemaker-local >/dev/null 2>&1
+}
+
 function dr-update-env {
 
   if [[ -f "$DIR/system.env" ]]; then
@@ -111,43 +122,22 @@ fi
 
 # Check if sagemaker-local network has required compose label; recreate if missing
 SAGEMAKER_NW='sagemaker-local'
+
 if ! docker network ls --format '{{.Name}}' | grep -q "^${SAGEMAKER_NW}$"; then
   echo "Network $SAGEMAKER_NW does not exist. Creating."
-  NW_SUBNET=$(find_free_subnet)
-  if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
-    docker network create "$SAGEMAKER_NW" -d overlay --attachable --scope swarm \
-      ${NW_SUBNET:+--subnet=$NW_SUBNET} \
-      --label com.docker.compose.network=sagemaker-local \
-      --label com.docker.compose.project=sagemaker-local >/dev/null 2>&1
-  else
-    docker network create "$SAGEMAKER_NW" \
-      ${NW_SUBNET:+--subnet=$NW_SUBNET} \
-      --label com.docker.compose.network=sagemaker-local \
-      --label com.docker.compose.project=sagemaker-local >/dev/null 2>&1
-  fi
+  _create_sagemaker_network
 else
   NW_LABEL_NETWORK=$(docker network inspect "$SAGEMAKER_NW" --format '{{index .Labels "com.docker.compose.network"}}')
   if [[ "$NW_LABEL_NETWORK" != "sagemaker-local" ]]; then
     echo "Network $SAGEMAKER_NW is missing required label."
     NW_CONTAINERS=$(docker network inspect "$SAGEMAKER_NW" --format '{{len .Containers}}')
-    if [[ "${NW_CONTAINERS:-0}" -eq 0 ]]; then
-      NW_SUBNET=$(find_free_subnet)
-      docker network rm "$SAGEMAKER_NW" >/dev/null 2>&1
-      if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
-        docker network create "$SAGEMAKER_NW" -d overlay --attachable --scope swarm \
-          ${NW_SUBNET:+--subnet=$NW_SUBNET} \
-          --label com.docker.compose.network=sagemaker-local \
-          --label com.docker.compose.project=sagemaker-local >/dev/null 2>&1
-      else
-        docker network create "$SAGEMAKER_NW" \
-          ${NW_SUBNET:+--subnet=$NW_SUBNET} \
-          --label com.docker.compose.network=sagemaker-local \
-          --label com.docker.compose.project=sagemaker-local >/dev/null 2>&1
-      fi
-      echo "Network $SAGEMAKER_NW recreated with required labels."
-    else
-      echo "WARNING: Network $SAGEMAKER_NW has containers attached; cannot recreate. Stop all containers and re-source activate.sh."
+    if [[ "${NW_CONTAINERS:-0}" -gt 0 ]]; then
+      dr-stop-all
     fi
+    docker network rm "$SAGEMAKER_NW" >/dev/null 2>&1
+    _create_sagemaker_network
+    echo "Network $SAGEMAKER_NW recreated with required labels."
+
   fi
 fi
 
