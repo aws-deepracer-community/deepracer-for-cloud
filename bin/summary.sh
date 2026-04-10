@@ -83,7 +83,7 @@ function dr-summary {
 
   # ── pre-compute dynamic values ────────────────────────────────────────────
   local cloud_val="${DR_CLOUD:-n/a}"
-  [[ "${DR_CLOUD,,}" == "aws" ]] && cloud_val="aws - ${DR_AWS_APP_REGION}"
+  [[ "${DR_CLOUD,,}" == "aws" ]] && cloud_val="aws"
   [[ "${DR_CLOUD,,}" == "remote" ]] && cloud_val="remote"
 
   local s3_color
@@ -118,7 +118,7 @@ function dr-summary {
 
     local lrows=() rrows=()
     lrows+=(" ${C_KEY}$(printf '%-*s' $CKW 'Docker style')${RST} ${C_VAL}${DR_DOCKER_STYLE:-swarm}${RST}")
-    lrows+=(" ${C_KEY}$(printf '%-*s' $CKW 'Cloud')${RST} ${DIM}${cloud_val}${RST}  ${s3_color}${DR_LOCAL_S3_BUCKET:-n/a}${RST}")
+    lrows+=(" ${C_KEY}$(printf '%-*s' $CKW 'Cloud / Bucket')${RST} ${DIM}${cloud_val}${RST}  ${s3_color}${DR_LOCAL_S3_BUCKET:-n/a}${RST}")
     lrows+=(" ${C_KEY}$(printf '%-*s' $CKW 'Workers')${RST} ${C_VAL}${DR_WORKERS:-1}${RST}")
     lrows+=(" ${C_KEY}$(printf '%-*s' $CKW 'NVIDIA runtime')${RST} ${nvidia_runtime}")
 
@@ -135,7 +135,7 @@ function dr-summary {
   else
     _dr_section "System Configuration"
     _dr_row " ${C_KEY}$(printf '%-22s' 'Docker style')${RST} ${C_VAL}${DR_DOCKER_STYLE:-swarm}${RST}"
-    _dr_row " ${C_KEY}$(printf '%-22s' 'Cloud')${RST} ${DIM}${cloud_val}${RST}  ${s3_color}${DR_LOCAL_S3_BUCKET:-n/a}${RST}"
+    _dr_row " ${C_KEY}$(printf '%-22s' 'Cloud / Bucket')${RST} ${DIM}${cloud_val}${RST}  ${s3_color}${DR_LOCAL_S3_BUCKET:-n/a}${RST}"
     _dr_kv "Workers"        "${DR_WORKERS:-1}"
     _dr_row " ${C_KEY}$(printf '%-22s' 'NVIDIA runtime')${RST} ${nvidia_runtime}"
     _dr_section "Run Configuration" "ID: ${DR_RUN_ID:-0}"
