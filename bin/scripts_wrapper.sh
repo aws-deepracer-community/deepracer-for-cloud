@@ -58,6 +58,52 @@ function dr-stop-evaluation {
   bash -c "cd $DR_DIR/scripts/evaluation && ./stop.sh"
 }
 
+function dr-stop-all {
+  # Step 1: Stop all stacks (swarm) or all compose projects (compose)
+  if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
+    docker stack ls --format '{{.Name}}' | while read -r STACK; do
+      echo "Removing stack: $STACK"
+      docker stack rm "$STACK"
+    done
+  else
+    while IFS=$'\t' read -r NAME CONFIGS; do
+      echo "Stopping compose project: $NAME"
+      local CONFIG_FLAGS
+      CONFIG_FLAGS=$(echo "$CONFIGS" | tr ',' '\n' | sed 's/^/-f /' | tr '\n' ' ')
+      docker compose $CONFIG_FLAGS -p "$NAME" down
+    done < <(docker compose ls --format json 2>/dev/null \
+      | jq -r '.[] | [.Name, .ConfigFiles] | @tsv')
+  fi
+
+  # Step 2: Stop the s3/minio stack if still running
+  if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
+    if docker stack ls --format '{{.Name}}' | grep -qx 's3'; then
+      echo "Removing stack: s3"
+      docker stack rm s3
+    fi
+  else
+    if docker compose ls --format json 2>/dev/null | jq -e '.[] | select(.Name == "s3")' >/dev/null 2>&1; then
+      echo "Stopping compose project: s3"
+      docker compose -p s3 down
+    fi
+  fi
+  echo "Waiting 10 seconds for stacks and services to stop..."
+  sleep 10
+  # Step 3: Stop any remaining containers still attached to sagemaker-local
+  local REMAINING
+  REMAINING=$(docker network inspect sagemaker-local --format '{{json .Containers}}' 2>/dev/null \
+    | jq -r 'keys[] | select(test("^[0-9a-f]{64}$"))' 2>/dev/null)
+  if [[ -n "$REMAINING" ]]; then
+    echo "Stopping remaining containers on sagemaker-local:"
+    echo "$REMAINING" | while read -r CONTAINER_ID; do
+      local CONTAINER_NAME
+      CONTAINER_NAME=$(docker inspect --format '{{.Name}}' "$CONTAINER_ID" | sed 's|^/||')
+      echo "  Stopping: $CONTAINER_NAME"
+      docker stop "$CONTAINER_ID"
+    done
+  fi
+}
+
 function dr-start-tournament {
   echo "Tournaments are no longer supported. Use Head-to-Model evaluation instead."
 }
