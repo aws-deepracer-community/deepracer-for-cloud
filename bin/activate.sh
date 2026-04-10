@@ -1,7 +1,30 @@
 #!/usr/bin/env bash
 
+# Portable readlink -f: BSD readlink (macOS) does not support -f.
+_realpath() {
+  if command -v realpath >/dev/null 2>&1; then
+    realpath "$1"
+  elif command -v grealpath >/dev/null 2>&1; then
+    grealpath "$1"
+  else
+    readlink -f "$1"
+  fi
+}
+
+# Portable version comparison: sort -V is GNU-only; macOS ships BSD sort.
 verlte() {
-  [ "$1" = "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
+  local v1 v2
+  v1="$1" v2="$2"
+  # Split into numeric fields and compare segment by segment.
+  IFS='.' read -r -a a1 <<< "$v1"
+  IFS='.' read -r -a a2 <<< "$v2"
+  local i
+  for (( i=0; i<${#a1[@]} || i<${#a2[@]}; i++ )); do
+    local n1=${a1[$i]:-0} n2=${a2[$i]:-0}
+    if (( n1 < n2 )); then return 0; fi
+    if (( n1 > n2 )); then return 1; fi
+  done
+  return 0
 }
 
 # Find a free /24 subnet in 192.168.200-254/24 that doesn't conflict with
@@ -12,7 +35,12 @@ function find_free_subnet() {
   USED=$(
     { [[ -n "$NW_IDS" ]] && docker network inspect $NW_IDS \
           --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' 2>/dev/null; \
-      ip route show 2>/dev/null | awk '{print $1}' | grep -E '^[0-9]+\.'; } | sort -u
+      if ip route show 2>/dev/null | grep -q .; then
+          ip route show 2>/dev/null | awk '{print $1}' | grep -E '^[0-9]+\.'
+      else
+          # macOS: parse inet routes from netstat
+          netstat -rn -f inet 2>/dev/null | awk 'NR>4 && $1~/^[0-9]/{print $1}'
+      fi; } | sort -u
   )
   for j in $(seq 200 254); do
     local CANDIDATE="192.168.${j}.0/24"
@@ -101,7 +129,7 @@ function dr-update-env {
 
 }
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-}")" >/dev/null 2>&1 && pwd)"
 DIR="$(dirname $SCRIPT_DIR)"
 export DR_DIR=$DIR
 
@@ -125,7 +153,7 @@ unset _DR_OPT_EXPERIMENT
 EXPERIMENT_FLAG="$( grep DR_EXPERIMENT_NAME $DIR/system.env | grep -v \#)"
 
 if [[ -f "$1" ]]; then
-  export DR_CONFIG=$(readlink -f $1)
+  export DR_CONFIG=$(_realpath "$1")
   dr-update-env || return 1
 elif [[ -n "${DR_EXPERIMENT_NAME:-}" ]] || [[ -n "$EXPERIMENT_FLAG" ]]; then
   dr-update-env || return 1
@@ -150,7 +178,7 @@ if [[ "$(type service 2>/dev/null)" ]]; then
 fi
 
 ## Check if WSL2
-if grep -qi Microsoft /proc/version && grep -q "WSL2" /proc/version; then
+if [[ -f /proc/version ]] && grep -qi Microsoft /proc/version && grep -q "WSL2" /proc/version; then
     IS_WSL2="yes"
 fi
 
@@ -281,11 +309,18 @@ if [[ -d "${DR_ROBOMAKER_MOUNT_SCRIPTS_DIR,,}" ]]; then
 fi
 
 ## Check if we have an AWS IAM assumed role, or if we need to set specific credentials.
-if [ "${DR_CLOUD,,}" == "aws" ] && [ $(aws --output json sts get-caller-identity 2>/dev/null | jq '.Arn' | awk /assumed-role/ | wc -l) -gt 0 ]; then
+## On macOS/Darwin, IMDS is not reachable from inside the Colima VM, so always use
+## explicit keys from the configured AWS profile.
+if [[ "$(uname -s)" != "Darwin" ]] && [ "${DR_CLOUD,,}" == "aws" ] && [ $(aws --output json sts get-caller-identity 2>/dev/null | jq '.Arn' | awk /assumed-role/ | wc -l) -gt 0 ]; then
   export DR_LOCAL_S3_AUTH_MODE="role"
 else
   export DR_LOCAL_ACCESS_KEY_ID=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_access_key_id | xargs)
   export DR_LOCAL_SECRET_ACCESS_KEY=$(aws --profile $DR_LOCAL_S3_PROFILE configure get aws_secret_access_key | xargs)
+  if [[ -z "${DR_LOCAL_ACCESS_KEY_ID}" || -z "${DR_LOCAL_SECRET_ACCESS_KEY}" ]]; then
+    echo "ERROR: AWS credentials not found in profile '${DR_LOCAL_S3_PROFILE}'."
+    echo "       Run: aws configure --profile ${DR_LOCAL_S3_PROFILE}"
+    return 1
+  fi
   DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-keys.yml"
   DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-keys.yml"
   export DR_UPLOAD_PROFILE="--profile $DR_UPLOAD_S3_PROFILE"
@@ -341,7 +376,7 @@ if [ -n "$SIMAPP_VER" ] && ! verlte $DEPENDENCY_VERSION $SIMAPP_VER; then
 fi
 
 # Get Docker version
-DOCKER_VERSION=$(docker --version | grep -oP '\d+\.\d+\.\d+' | head -1)
+DOCKER_VERSION=$(docker --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
 DR_DOCKER_MAJOR_VERSION=$(echo $DOCKER_VERSION | cut -d. -f1)
 export DR_DOCKER_MAJOR_VERSION
 

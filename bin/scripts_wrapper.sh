@@ -175,7 +175,7 @@ function dr-logs-sagemaker {
     docker logs $OPT_TIME -f $SAGEMAKER_CONTAINER
   elif [[ "${DR_HOST_X,,}" == "true" && -n "$DISPLAY" ]]; then
     if [ -x "$(command -v gnome-terminal)" ]; then
-      gnome-terminal --tab --title "DR-${DR_RUN_ID}: Sagemaker - ${SAGEMAKER_CONTAINER}" -- /usr/bin/bash -c "docker logs $OPT_TIME -f ${SAGEMAKER_CONTAINER}" 2>/dev/null
+      gnome-terminal --tab --title "DR-${DR_RUN_ID}: Sagemaker - ${SAGEMAKER_CONTAINER}" -- /usr/usr/bin/env bash -c "docker logs $OPT_TIME -f ${SAGEMAKER_CONTAINER}" 2>/dev/null
       echo "Sagemaker container $SAGEMAKER_CONTAINER logs opened in separate gnome-terminal. "
     elif [ -x "$(command -v x-terminal-emulator)" ]; then
       x-terminal-emulator -e /bin/sh -c "docker logs $OPT_TIME -f ${SAGEMAKER_CONTAINER}" 2>/dev/null

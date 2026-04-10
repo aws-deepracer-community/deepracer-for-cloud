@@ -3,6 +3,8 @@ Provides a quick and easy way to get up and running with a DeepRacer training en
 
 DRfC runs on Ubuntu 22.04 and 24.04. GPU acceleration requires a NVIDIA GPU, preferrably with more than 8GB of VRAM. ARM64/Graviton instances (AWS Graviton, Apple Silicon) are also supported for CPU-only training.
 
+**Experimental:** macOS is supported in CPU-only mode via [Colima](https://github.com/abiosoft/colima), on both AWS Mac EC2 instances and local Mac hardware (Intel and Apple Silicon). See [docs/mac.md](docs/mac.md) for setup instructions.
+
 ## Introduction
 
 DeepRacer-For-Cloud (DRfC) started as an extension of the work done by Alex (https://github.com/alexschultz/deepracer-for-dummies), which is again a wrapper around the amazing work done by Chris (https://github.com/crr0004/deepracer). With the introduction of the second generation Deepracer Console the repository has been split up. This repository contains the scripts needed to *run* the training, but depends on Docker Hub to provide pre-built docker images. All the under-the-hood building capabilities are in the [Deepracer Simapp](https://github.com/aws-deepracer-community/deepracer-simapp) repository.

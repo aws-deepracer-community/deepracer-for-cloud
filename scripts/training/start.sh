@@ -64,7 +64,11 @@ if [[ -f /proc/version ]] && grep -qi Microsoft /proc/version && grep -q "WSL2" 
 fi
 
 # Ensure Sagemaker's folder is there
-if [ ! -d /tmp/sagemaker ]; then
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  # On macOS, Docker runs inside Colima's Linux VM -- create the dir there.
+  colima ssh -- sudo mkdir -p /tmp/sagemaker
+  colima ssh -- sudo chmod -R a+w /tmp/sagemaker
+elif [ ! -d /tmp/sagemaker ]; then
   sudo mkdir -p /tmp/sagemaker
   sudo chmod -R g+w /tmp/sagemaker
 fi

@@ -49,6 +49,15 @@ if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
   fi
 fi
 
+# Ensure Sagemaker's folder is there
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  colima ssh -- sudo mkdir -p /tmp/sagemaker
+  colima ssh -- sudo chmod -R a+w /tmp/sagemaker
+elif [ ! -d /tmp/sagemaker ]; then
+  sudo mkdir -p /tmp/sagemaker
+  sudo chmod -R g+w /tmp/sagemaker
+fi
+
 echo "Evaluation of model s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX starting."
 echo "Using image ${DR_SIMAPP_SOURCE}:${DR_SIMAPP_VERSION}"
 echo ""
