@@ -46,7 +46,7 @@ function dr-summary {
   _dr_blank() { _dr_row ""; }
   _dr_section() {
     _dr_hline "├" "─" "┤"
-    local label="  ${BOLD}${C_SECTION}$1${RST}"
+    local label=" ${BOLD}${C_SECTION}$1${RST}"
     [[ -n "${2:-}" ]] && label+="${DIM}  $2${RST}"
     _dr_row "$label"
     _dr_hline "├" "─" "┤"
@@ -104,16 +104,16 @@ function dr-summary {
   # ── header ────────────────────────────────────────────────────────────────
   echo; (( ++_dr_lines ))
   _dr_hline "╭" "─" "╮"
-  _dr_row "${BOLD}${C_HEADER}  DeepRacer for Cloud  —  Environment Summary${RST}"
-  _dr_row "${DIM}  Config: ${DR_CONFIG}${RST}"
+  _dr_row " ${BOLD}${C_HEADER}DeepRacer for Cloud  —  Environment Summary${RST}"
+  _dr_row " ${DIM}Config: ${DR_CONFIG}${RST}"
 
   # ── system config + run config ────────────────────────────────────────────
   if [[ "$WIDE" == true ]]; then
     local CKW=18  # key column width in 2-col mode
     _dr_hline_2col "├" "─" "┬" "─" "┤"
     _dr_row_2col \
-      "  ${BOLD}${C_SECTION}System Configuration${RST}" \
-      "  ${BOLD}${C_SECTION}Run Configuration${RST}${DIM}  ID: ${DR_RUN_ID:-0}${RST}"
+      " ${BOLD}${C_SECTION}System Configuration${RST}" \
+      " ${BOLD}${C_SECTION}Run Configuration${RST}${DIM}  ID: ${DR_RUN_ID:-0}${RST}"
     _dr_hline_2col "├" "─" "┼" "─" "┤"
 
     local lrows=() rrows=()
@@ -148,7 +148,7 @@ function dr-summary {
   # ── docker images ─────────────────────────────────────────────────────────
   if [[ "$WIDE" == true ]]; then
     # 2-col closing line already drawn; just add section label row
-    local label="  ${BOLD}${C_SECTION}Configured Docker Images${RST}"
+    local label=" ${BOLD}${C_SECTION}Configured Docker Images${RST}"
     _dr_row "$label"
     _dr_hline "├" "─" "┤"
   else
