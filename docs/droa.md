@@ -149,7 +149,7 @@ droa-import-model (--model-prefix <prefix> | --model-dir <dir>)
 | `DR_DROA_URL` | `system.env` | Base URL of your DRoA deployment |
 | `DR_DROA_USERNAME` | `system.env` | DRoA login email |
 | `DR_MINIO_URL` | `system.env` | MinIO endpoint URL (e.g. `http://minio:9000`) |
-| `DR_LOCAL_PROFILE` | `system.env` | boto3 AWS profile name for MinIO access |
+| `DR_LOCAL_S3_PROFILE` | `system.env` | boto3 AWS profile name for MinIO access |
 | `DR_LOCAL_S3_BUCKET` | `run.env` | Local S3 bucket name |
 | `DR_LOCAL_S3_MODEL_PREFIX` | `run.env` | Default model prefix for `--model-prefix` |
 

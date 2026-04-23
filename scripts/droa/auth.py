@@ -212,7 +212,7 @@ def load_droa_config(args) -> "DRoAConfig":
     env: dict = {}
     if site_url:
         env = fetch_env_config(site_url)
-        print(f"Loaded configuration from {site_url}/env.js")
+        print(f"Loaded configuration from {site_url}/env.js", file=sys.stderr)
 
     region = getattr(args, "region", None) or env.get("region")
     user_pool_id = getattr(args, "user_pool_id", None) or env.get("userPoolId")
@@ -278,7 +278,7 @@ def build_auth(url: str, credentials: dict, region: str, site_url: str | None = 
 
             sign_headers = {
                 "accept": "*/*",
-                "accept-encoding": "gzip, deflate, br",
+                "accept-encoding": "gzip, deflate",
                 "accept-language": "en-US,en;q=0.9,de-DE;q=0.8,de;q=0.7",
                 "amz-sdk-invocation-id": str(uuid.uuid4()),
                 "amz-sdk-request": "attempt=1; max=3",
@@ -307,7 +307,7 @@ def build_auth(url: str, credentials: dict, region: str, site_url: str | None = 
                 print("\n--- DEBUG: signed request ---", file=sys.stderr)
                 print(f"  {r.method} {r.url}", file=sys.stderr)
                 print(
-                    f"  (access key: {credentials['access_key']})", file=sys.stderr)
+                    f"  (access key: ***{credentials['access_key'][-4:]})", file=sys.stderr)
                 for k, v in sorted(r.headers.items()):
                     display = v[:40] + \
                         "..." if k.lower() == "x-amz-security-token" and len(v) > 40 else v

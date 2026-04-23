@@ -55,7 +55,7 @@ Environment variables (--model-prefix mode)
   DR_LOCAL_S3_BUCKET       Local S3 bucket name
   DR_LOCAL_S3_MODEL_PREFIX Default model prefix (overridden by --model-prefix)
   DR_MINIO_URL             MinIO endpoint URL (e.g. http://minio:9000)
-  DR_LOCAL_PROFILE         AWS profile name for local S3 access (default: "default")
+  DR_LOCAL_S3_PROFILE      AWS profile name for local S3 access (default: "default")
   DR_*                     Training config variables used to build training_params.yaml
 """
 
@@ -115,7 +115,7 @@ def _content_type(file_path):
 
 
 # ---------------------------------------------------------------------------
-# Local S3 client (MinIO via DR_MINIO_URL + DR_LOCAL_PROFILE)
+# Local S3 client (MinIO via DR_MINIO_URL + DR_LOCAL_S3_PROFILE)
 # ---------------------------------------------------------------------------
 
 def _local_s3_client():
@@ -215,11 +215,12 @@ def _build_training_params(work_dir, target_bucket, target_prefix):
             "DR_H2B_RANDOMIZE_BOT_CAR_LOCATIONS", "False")
         cfg["BOT_CAR_SPEED"] = e("DR_H2B_BOT_CAR_SPEED", "0.2")
 
-    # TRACK_DIRECTION_CLOCKWISE: infer from world name suffix or DR_TRAIN_REVERSE_DIRECTION
-    world = cfg["WORLD_NAME"]
-    if world.endswith("_cw"):
+    # TRACK_DIRECTION_CLOCKWISE: infer from the raw DR_WORLD_NAME (which still carries
+    # the _cw/_ccw suffix) before that suffix is stripped for WORLD_NAME above.
+    raw_world = e("DR_WORLD_NAME", "LGSWide")
+    if raw_world.endswith("_cw"):
         cfg["TRACK_DIRECTION_CLOCKWISE"] = True
-    elif world.endswith("_ccw"):
+    elif raw_world.endswith("_ccw"):
         cfg["TRACK_DIRECTION_CLOCKWISE"] = False
     else:
         reverse = e("DR_TRAIN_REVERSE_DIRECTION",
@@ -404,8 +405,13 @@ def _build_from_s3_prefix(model_prefix, checkpoint_mode, checkpoint_num,
 # Upload to DRoA S3
 # ---------------------------------------------------------------------------
 
-def upload_model_folder(cfg, model_dir, credentials, validate_required=True):
-    """Upload all eligible files from model_dir to the DRoA S3 bucket."""
+def upload_model_folder(cfg, model_dir, credentials, validate_required=True, s3_prefix=None):
+    """Upload all eligible files from model_dir to the DRoA S3 bucket.
+
+    If ``s3_prefix`` is provided the files are uploaded under that exact prefix
+    (important when training_params.yaml already references that prefix).
+    Otherwise a new UUID-based prefix is generated.
+    """
     if validate_required:
         present = {f.name for f in Path(model_dir).rglob("*") if f.is_file()}
         missing = REQUIRED_FILES_DIR - present
@@ -413,7 +419,8 @@ def upload_model_folder(cfg, model_dir, credentials, validate_required=True):
             raise ValueError(
                 f"Missing required model files: {', '.join(sorted(missing))}")
 
-    s3_prefix = f"uploads/models/{uuid.uuid4()}"
+    if s3_prefix is None:
+        s3_prefix = f"uploads/models/{uuid.uuid4()}"
     s3 = boto3.client(
         "s3",
         region_name=cfg.region,
@@ -565,6 +572,7 @@ def main():
         print("[2/4] Credentials obtained.")
 
     temp_dir = None
+    upload_prefix = None
     try:
         if args.model_dir:
             source_dir = args.model_dir
@@ -590,7 +598,8 @@ def main():
 
         print("[3/4] Uploading to DRoA S3...")
         s3_path = upload_model_folder(
-            cfg, source_dir, credentials, validate_required=validate)
+            cfg, source_dir, credentials, validate_required=validate,
+            s3_prefix=upload_prefix if not args.model_dir else None)
         model_id = call_import_model_api(
             cfg, s3_path, args.model_name, args.model_description, credentials
         )
