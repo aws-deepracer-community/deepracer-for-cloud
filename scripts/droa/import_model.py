@@ -366,11 +366,21 @@ def _build_from_s3_prefix(model_prefix, checkpoint_mode, checkpoint_num,
         _build_training_params(work, target_bucket, target_prefix)
 
     # Normalise training_params.yaml for DRoA:
-    # 1. WORLD_NAME must not have a _cw/_ccw suffix (DRoA TrackId has none)
-    # 2. TRACK_DIRECTION_CLOCKWISE must be present (DRFC never wrote it)
+    # 1. Patch all S3 bucket/prefix fields to the DRoA upload destination
+    #    (the file from the bucket still references the original DRFC paths).
+    # 2. WORLD_NAME must not have a _cw/_ccw suffix (DRoA TrackId has none)
+    # 3. TRACK_DIRECTION_CLOCKWISE must be present (DRFC never wrote it)
     with open(tp_dst) as fh:
         tp_data = yaml.safe_load(fh) or {}
     changed = False
+    # Always overwrite the S3 destination fields regardless of where the file came from
+    tp_data["METRICS_S3_BUCKET"] = target_bucket
+    tp_data["METRICS_S3_OBJECT_KEY"] = f"{target_prefix}/TrainingMetrics.json"
+    tp_data["MODEL_METADATA_FILE_S3_KEY"] = f"{target_prefix}/model/model_metadata.json"
+    tp_data["REWARD_FILE_S3_KEY"] = f"{target_prefix}/reward_function.py"
+    tp_data["SAGEMAKER_SHARED_S3_BUCKET"] = target_bucket
+    tp_data["SAGEMAKER_SHARED_S3_PREFIX"] = target_prefix
+    changed = True
     # Strip direction suffix from WORLD_NAME if present
     world_raw = tp_data.get("WORLD_NAME", "")
     world_clean = re.sub(r'_(cw|ccw)$', '', world_raw)
