@@ -15,6 +15,9 @@ Usage examples
   # Include reward function, action space and Metrics URL:
   python get_model.py 2w7R6h2PNexQ9kC --verbose
 
+  # Print DeepRacer Utils training metrics summary:
+  python get_model.py 2w7R6h2PNexQ9kC --summary
+
   # Raw JSON (suitable for piping to jq):
   python get_model.py 2w7R6h2PNexQ9kC --json | jq .status
 
@@ -166,6 +169,7 @@ def parse_args() -> argparse.Namespace:
             "examples:\n"
             "  %(prog)s 2w7R6h2PNexQ9kC\n"
             "  %(prog)s 2w7R6h2PNexQ9kC --verbose\n"
+            "  %(prog)s 2w7R6h2PNexQ9kC --summary\n"
             "  %(prog)s 2w7R6h2PNexQ9kC --json | jq .status"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -179,6 +183,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-v", "--verbose", action="store_true",
         help="Also print reward function, action space, and Metrics URL",
+    )
+    parser.add_argument(
+        "--summary", action="store_true",
+        help="Load training metrics via DeepRacer Utils and print a mean summary",
     )
     return parser.parse_args()
 
@@ -206,6 +214,24 @@ def main() -> None:
         print(json.dumps(model, indent=2, default=str))
     else:
         print_model(model, verbose=args.verbose)
+
+    if args.summary:
+        metrics_url = model.get("trainingMetricsUrl")
+        if not metrics_url:
+            print("Error: no trainingMetricsUrl available for this model.", file=sys.stderr)
+            sys.exit(1)
+        try:
+            from deepracer.logs import TrainingMetrics
+        except ImportError:
+            print(
+                "Error: deepracer-utils is not installed. "
+                "Run: pip install deepracer-utils",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        print()
+        tm = TrainingMetrics(None, url=metrics_url)
+        print(tm.getSummary(method="mean", summary_index=["r-i", "master_iteration"]))
 
 
 if __name__ == "__main__":
