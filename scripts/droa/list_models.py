@@ -144,7 +144,7 @@ def main() -> None:
     print(header)
     print("-" * (id_w + name_w + status_w + tstatus_w + 30))
     for m in models:
-        created = m.get("createdAt", "")[:19].replace("T", " ")
+        created = (m.get("createdAt") or "")[:19].replace("T", " ")
         print(
             f"{m.get('modelId', ''):<{id_w}}  "
             f"{m.get('name', ''):<{name_w}}  "

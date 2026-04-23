@@ -5,12 +5,12 @@
 Shared authentication and configuration utilities for DRoA (DeepRacer on AWS) scripts.
 
 Provides:
-  fetch_env_config(site_url)          — fetch and parse <site_url>/env.js
-  authenticate(...)                   — Cognito User Pool sign-in → ID token
-  get_aws_credentials(...)            — Identity Pool → temporary AWS credentials
-  load_droa_config(args)              — resolve config from env vars + CLI args
-  build_auth(url, credentials, region) — create a SigV4 AWSRequestsAuth instance
-  add_common_args(parser)             — add shared CLI flags to an argparse parser
+  fetch_env_config(site_url)           — fetch and parse <site_url>/env.js
+  authenticate(...)                    — Cognito User Pool sign-in → ID token
+  get_aws_credentials(...)             — Identity Pool → temporary AWS credentials
+  load_droa_config(args)               — resolve config from env vars + CLI args
+  build_auth(url, credentials, region) — prepare botocore SigV4 request signing using AWSRequest/SigV4Auth
+  add_common_args(parser)              — add shared CLI flags to an argparse parser
 """
 
 import datetime
@@ -20,7 +20,6 @@ import os
 import re
 import sys
 import uuid
-from urllib.parse import urlparse
 
 import boto3
 import requests
