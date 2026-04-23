@@ -72,6 +72,8 @@ During installation DRfC will automatically pull the latest image based on wheth
 
 Full documentation can be found on the [Deepracer-for-Cloud GitHub Pages](https://aws-deepracer-community.github.io/deepracer-for-cloud).
 
+For importing and managing models via the community [DeepRacer on AWS (DRoA)](https://aws.amazon.com/solutions/implementations/deepracer-on-aws/) console, see the [DRoA integration guide](docs/droa.md).
+
 ## Support
 
 * For general support it is suggested to join the [AWS DeepRacing Community](https://deepracing.io/). The Community Slack has a channel #dr-training-local where the community provides active support.
