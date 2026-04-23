@@ -115,9 +115,11 @@ def main() -> None:
     if credentials:
         print("Using cached credentials.", file=sys.stderr)
     else:
-        password = args.password or getpass.getpass(f"Password for {username}: ")
+        password = args.password or getpass.getpass(
+            f"Password for {username}: ")
         id_token = authenticate(cfg.region, cfg.client_id, username, password)
-        credentials = get_aws_credentials(cfg.region, cfg.user_pool_id, cfg.identity_pool_id, id_token)
+        credentials = get_aws_credentials(
+            cfg.region, cfg.user_pool_id, cfg.identity_pool_id, id_token)
         save_credentials_to_cache(cfg.identity_pool_id, username, credentials)
 
     model = fetch_model(cfg, credentials, args.model_id)

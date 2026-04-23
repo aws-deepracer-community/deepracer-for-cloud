@@ -139,8 +139,10 @@ def print_model(model: dict, verbose: bool = False) -> None:
                 disc = action_space.get("discrete") or []
                 if cont:
                     _kv("Type", "continuous", indent=1)
-                    _kv("Speed range", f"{cont.get('lowSpeed')} – {cont.get('highSpeed')} m/s", indent=1)
-                    _kv("Steering range", f"{cont.get('lowSteeringAngle')}° – {cont.get('highSteeringAngle')}°", indent=1)
+                    _kv("Speed range",
+                        f"{cont.get('lowSpeed')} – {cont.get('highSpeed')} m/s", indent=1)
+                    _kv("Steering range",
+                        f"{cont.get('lowSteeringAngle')}° – {cont.get('highSteeringAngle')}°", indent=1)
                 elif disc:
                     _kv("Type", f"discrete ({len(disc)} actions)", indent=1)
                     for i, a in enumerate(disc):
@@ -205,9 +207,11 @@ def main() -> None:
     if credentials:
         print("Using cached credentials.", file=sys.stderr)
     else:
-        password = args.password or getpass.getpass(f"Password for {username}: ")
+        password = args.password or getpass.getpass(
+            f"Password for {username}: ")
         id_token = authenticate(cfg.region, cfg.client_id, username, password)
-        credentials = get_aws_credentials(cfg.region, cfg.user_pool_id, cfg.identity_pool_id, id_token)
+        credentials = get_aws_credentials(
+            cfg.region, cfg.user_pool_id, cfg.identity_pool_id, id_token)
         save_credentials_to_cache(cfg.identity_pool_id, username, credentials)
     model = get_model(cfg, credentials, args.model_id)
     if args.output_json:
@@ -218,7 +222,8 @@ def main() -> None:
     if args.summary:
         metrics_url = model.get("trainingMetricsUrl")
         if not metrics_url:
-            print("Error: no trainingMetricsUrl available for this model.", file=sys.stderr)
+            print("Error: no trainingMetricsUrl available for this model.",
+                  file=sys.stderr)
             sys.exit(1)
         try:
             from deepracer.logs import TrainingMetrics
@@ -231,7 +236,8 @@ def main() -> None:
             sys.exit(1)
         print()
         tm = TrainingMetrics(None, url=metrics_url)
-        print(tm.getSummary(method="mean", summary_index=["r-i", "master_iteration"]))
+        print(tm.getSummary(method="mean",
+              summary_index=["r-i", "master_iteration"]))
 
 
 if __name__ == "__main__":

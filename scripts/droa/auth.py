@@ -42,7 +42,8 @@ def fetch_env_config(site_url: str) -> dict:
             f"Could not fetch env.js from {env_js_url}: "
             f"{response.status_code} {response.reason}"
         )
-    match = re.search(r"window\.EnvironmentConfig\s*=\s*(\{.+\})\s*;", response.text, re.DOTALL)
+    match = re.search(
+        r"window\.EnvironmentConfig\s*=\s*(\{.+\})\s*;", response.text, re.DOTALL)
     if not match:
         raise RuntimeError(f"Could not find EnvironmentConfig in {env_js_url}")
     raw = match.group(1)
@@ -113,7 +114,8 @@ def get_aws_credentials(
             aws_session_token=creds_response["Credentials"]["SessionToken"],
         )
         identity = sts.get_caller_identity()
-        print(f"  STS identity: Account={identity['Account']} Arn={identity['Arn']}", file=sys.stderr)
+        print(
+            f"  STS identity: Account={identity['Account']} Arn={identity['Arn']}", file=sys.stderr)
 
     return {
         "access_key": creds["AccessKeyId"],
@@ -128,7 +130,8 @@ def get_aws_credentials(
 # ---------------------------------------------------------------------------
 
 def _credential_cache_path(identity_pool_id: str, username: str) -> str:
-    key = hashlib.sha256(f"{identity_pool_id}:{username}".encode()).hexdigest()[:16]
+    key = hashlib.sha256(
+        f"{identity_pool_id}:{username}".encode()).hexdigest()[:16]
     cache_dir = os.path.expanduser("~/.droa-cache")
     os.makedirs(cache_dir, mode=0o700, exist_ok=True)
     return os.path.join(cache_dir, f"{key}.json")
@@ -162,7 +165,8 @@ def save_credentials_to_cache(identity_pool_id: str, username: str, credentials:
         data = {
             k: v for k, v in credentials.items() if k != "expiry"
         }
-        data["expiry"] = expiry.isoformat() if hasattr(expiry, "isoformat") else str(expiry)
+        data["expiry"] = expiry.isoformat() if hasattr(
+            expiry, "isoformat") else str(expiry)
         with open(path, "w") as f:
             json.dump(data, f)
         os.chmod(path, 0o600)
@@ -210,12 +214,16 @@ def load_droa_config(args) -> "DRoAConfig":
         env = fetch_env_config(site_url)
         print(f"Loaded configuration from {site_url}/env.js")
 
-    region           = getattr(args, "region", None)             or env.get("region")
-    user_pool_id     = getattr(args, "user_pool_id", None)       or env.get("userPoolId")
-    client_id        = getattr(args, "user_pool_client_id", None) or env.get("userPoolClientId")
-    identity_pool_id = getattr(args, "identity_pool_id", None)   or env.get("identityPoolId")
-    api_endpoint     = getattr(args, "api_endpoint", None)       or env.get("apiEndpointUrl")
-    upload_bucket    = getattr(args, "upload_bucket", None)      or env.get("uploadBucketName")
+    region = getattr(args, "region", None) or env.get("region")
+    user_pool_id = getattr(args, "user_pool_id", None) or env.get("userPoolId")
+    client_id = getattr(args, "user_pool_client_id",
+                        None) or env.get("userPoolClientId")
+    identity_pool_id = getattr(
+        args, "identity_pool_id", None) or env.get("identityPoolId")
+    api_endpoint = getattr(args, "api_endpoint",
+                           None) or env.get("apiEndpointUrl")
+    upload_bucket = getattr(args, "upload_bucket",
+                            None) or env.get("uploadBucketName")
 
     missing = [
         name for name, val in [
@@ -289,16 +297,20 @@ def build_auth(url: str, credentials: dict, region: str, site_url: str | None = 
             if origin:
                 sign_headers["origin"] = origin
                 sign_headers["referer"] = origin + "/"
-            aws_request = AWSRequest(method=r.method, url=r.url, data=body, headers=sign_headers)
-            SigV4Auth(frozen_creds, "execute-api", region).add_auth(aws_request)
+            aws_request = AWSRequest(
+                method=r.method, url=r.url, data=body, headers=sign_headers)
+            SigV4Auth(frozen_creds, "execute-api",
+                      region).add_auth(aws_request)
             r.headers.update(dict(aws_request.headers))
 
             if os.environ.get("DR_DROA_DEBUG"):
                 print("\n--- DEBUG: signed request ---", file=sys.stderr)
                 print(f"  {r.method} {r.url}", file=sys.stderr)
-                print(f"  (access key: {credentials['access_key']})", file=sys.stderr)
+                print(
+                    f"  (access key: {credentials['access_key']})", file=sys.stderr)
                 for k, v in sorted(r.headers.items()):
-                    display = v[:40] + "..." if k.lower() == "x-amz-security-token" and len(v) > 40 else v
+                    display = v[:40] + \
+                        "..." if k.lower() == "x-amz-security-token" and len(v) > 40 else v
                     print(f"  {k}: {display}", file=sys.stderr)
                 print("-----------------------------\n", file=sys.stderr)
             return r
@@ -318,13 +330,19 @@ def add_common_args(parser) -> None:
              "All AWS config is read automatically from <url>/env.js.",
     )
     parser.add_argument("--region", help="Override: AWS region")
-    parser.add_argument("--user-pool-id", help="Override: Cognito User Pool ID")
-    parser.add_argument("--user-pool-client-id", help="Override: Cognito App Client ID")
-    parser.add_argument("--identity-pool-id", help="Override: Cognito Identity Pool ID")
-    parser.add_argument("--api-endpoint", help="Override: API Gateway base URL")
-    parser.add_argument("--upload-bucket", help="Override: S3 upload bucket name")
+    parser.add_argument(
+        "--user-pool-id", help="Override: Cognito User Pool ID")
+    parser.add_argument("--user-pool-client-id",
+                        help="Override: Cognito App Client ID")
+    parser.add_argument("--identity-pool-id",
+                        help="Override: Cognito Identity Pool ID")
+    parser.add_argument(
+        "--api-endpoint", help="Override: API Gateway base URL")
+    parser.add_argument("--upload-bucket",
+                        help="Override: S3 upload bucket name")
     parser.add_argument(
         "--username",
         help="Cognito username / email (defaults to DR_DROA_USERNAME env var)",
     )
-    parser.add_argument("--password", help="Cognito password (prompted if omitted)")
+    parser.add_argument(
+        "--password", help="Cognito password (prompted if omitted)")

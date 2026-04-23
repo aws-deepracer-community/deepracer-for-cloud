@@ -64,9 +64,10 @@ from auth import (
     load_cached_credentials, save_credentials_to_cache,
 )
 
-ASSET_TYPES = ["TRAINING_LOGS", "EVALUATION_LOGS", "PHYSICAL_CAR_MODEL", "VIRTUAL_MODEL", "VIDEOS"]
+ASSET_TYPES = ["TRAINING_LOGS", "EVALUATION_LOGS",
+               "PHYSICAL_CAR_MODEL", "VIRTUAL_MODEL", "VIDEOS"]
 POLL_INTERVAL = 5    # seconds between status checks
-POLL_TIMEOUT  = 300  # seconds before giving up (packaging can take a while)
+POLL_TIMEOUT = 300  # seconds before giving up (packaging can take a while)
 
 
 def get_asset_url(cfg, credentials, model_id, asset_type, evaluation_id=None):
@@ -98,8 +99,10 @@ def get_asset_url(cfg, credentials, model_id, asset_type, evaluation_id=None):
                 f"The asset may not be available yet."
             )
         if time.monotonic() > deadline:
-            raise RuntimeError(f"Timed out waiting for asset after {POLL_TIMEOUT}s.")
-        print(f"  Packaging in progress (status: {status}) — retrying in {POLL_INTERVAL}s...", file=sys.stderr)
+            raise RuntimeError(
+                f"Timed out waiting for asset after {POLL_TIMEOUT}s.")
+        print(
+            f"  Packaging in progress (status: {status}) — retrying in {POLL_INTERVAL}s...", file=sys.stderr)
         time.sleep(POLL_INTERVAL)
 
 
@@ -144,7 +147,8 @@ def main():
         sys.exit(1)
 
     if args.asset_type == "EVALUATION_LOGS" and not args.evaluation_id:
-        print("Error: --evaluation-id is required for EVALUATION_LOGS.", file=sys.stderr)
+        print("Error: --evaluation-id is required for EVALUATION_LOGS.",
+              file=sys.stderr)
         sys.exit(1)
 
     cfg = load_droa_config(args)
@@ -153,19 +157,23 @@ def main():
     if credentials:
         print("Using cached credentials.", file=sys.stderr)
     else:
-        password = args.password or getpass.getpass(f"Password for {username}: ")
+        password = args.password or getpass.getpass(
+            f"Password for {username}: ")
         id_token = authenticate(cfg.region, cfg.client_id, username, password)
-        credentials = get_aws_credentials(cfg.region, cfg.user_pool_id, cfg.identity_pool_id, id_token)
+        credentials = get_aws_credentials(
+            cfg.region, cfg.user_pool_id, cfg.identity_pool_id, id_token)
         save_credentials_to_cache(cfg.identity_pool_id, username, credentials)
 
-    print(f"Requesting {args.asset_type} for model {args.model_id}...", file=sys.stderr)
+    print(
+        f"Requesting {args.asset_type} for model {args.model_id}...", file=sys.stderr)
     presigned_url = get_asset_url(
         cfg, credentials, args.model_id, args.asset_type, args.evaluation_id
     )
 
     dl_response = requests.get(presigned_url, timeout=120, stream=True)
     if not dl_response.ok:
-        raise RuntimeError(f"Download failed: {dl_response.status_code} {dl_response.reason}")
+        raise RuntimeError(
+            f"Download failed: {dl_response.status_code} {dl_response.reason}")
 
     out_path = args.output
     if not out_path:
