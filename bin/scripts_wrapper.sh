@@ -343,9 +343,14 @@ function dr-logs-loganalysis {
 }
 
 function dr-url-loganalysis {
-  eval LOG_ANALYSIS_ID=$(docker ps | awk ' /deepracer-analysis/ { print $1 }')
+  LOG_ANALYSIS_ID=$(docker ps --filter "name=deepracer-analysis" --format "{{.ID}}" | head -1)
   if [ -n "$LOG_ANALYSIS_ID" ]; then
-    docker exec "$LOG_ANALYSIS_ID" bash -c "jupyter server list"
+    URL=$(docker logs "$LOG_ANALYSIS_ID" 2>&1 | grep -oE 'http://127\.0\.0\.1:[0-9]+[^ ]*token=[a-f0-9]+' | tail -1)
+    if [ -n "$URL" ]; then
+      echo "${URL/127.0.0.1/localhost}"
+    else
+      echo "Jupyter URL not found yet. Try again in a moment."
+    fi
   else
     echo "Log-analysis is not running."
   fi
