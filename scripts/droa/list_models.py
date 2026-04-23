@@ -1,7 +1,50 @@
 #!/usr/bin/env python3
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0
-"""List all models in DeepRacer on AWS."""
+"""
+List all models in DeepRacer on AWS (DRoA).
+
+Fetches the full paginated model list from GET /models and prints it as a
+table.  Use --json for machine-readable output.
+
+Usage examples
+--------------
+  # Print table of all models:
+  python list_models.py
+
+  # Raw JSON (suitable for piping to jq):
+  python list_models.py --json | jq '[.[] | {id: .modelId, name: .name}]'
+
+  # Override site URL and username on the command line:
+  python list_models.py --url https://my.droa.example.com --username alice
+
+Table columns
+-------------
+  Model ID        15-char alphanumeric model identifier
+  Name            Model name (up to 64 chars)
+  Status          Current model lifecycle status
+  Training        Training job status
+  Created At      Creation timestamp (UTC, second precision)
+
+Authentication
+--------------
+Credentials are obtained via the Cognito Identity Pool embedded in the DRoA
+site's /env.js.  A password prompt is shown on the first call; subsequent
+calls within the credential lifetime (~1 h) reuse a cache stored in
+~/.droa-cache/.
+
+The site URL is read from DR_DROA_URL and the username from DR_DROA_USERNAME
+(both set in system.env), or supplied via --url / --username.
+
+Model status values
+-------------------
+  DELETING  ERROR  EVALUATING  IMPORTING  QUEUED  READY
+  STOPPING  SUBMITTING  TRAINING
+
+Training status values
+----------------------
+  CANCELED  COMPLETED  FAILED  IN_PROGRESS  INITIALIZING  QUEUED  STOPPING
+"""
 
 import argparse
 import getpass
@@ -42,7 +85,15 @@ def list_models(cfg, credentials: dict) -> list:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="List models in DeepRacer on AWS.")
+    parser = argparse.ArgumentParser(
+        description="List models in DeepRacer on AWS.",
+        epilog=(
+            "examples:\n"
+            "  %(prog)s\n"
+            "  %(prog)s --json | jq '[.[] | {id: .modelId, name: .name}]'"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     add_common_args(parser)
     parser.add_argument(
         "--json", dest="output_json", action="store_true",

@@ -6,9 +6,9 @@ function droa-list-models {
   dr-update-env && python3 "${DR_DIR}/scripts/droa/list_models.py" "$@"
 }
 
-#function droa-get-model {
-#  dr-update-env && python3 "${DR_DIR}/scripts/droa/get_model.py" "$@"
-#}
+function droa-get-model {
+  dr-update-env && python3 "${DR_DIR}/scripts/droa/get_model.py" "$@"
+}
 
 #function droa-get-logs {
 #  dr-update-env && python3 "${DR_DIR}/scripts/droa/get_logs.py" "$@"
