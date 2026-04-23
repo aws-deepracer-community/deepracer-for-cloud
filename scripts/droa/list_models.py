@@ -120,7 +120,11 @@ def main() -> None:
         id_token = authenticate(cfg.region, cfg.client_id, username, password)
         credentials = get_aws_credentials(cfg.region, cfg.user_pool_id, cfg.identity_pool_id, id_token)
         save_credentials_to_cache(cfg.identity_pool_id, username, credentials)
-    models = list_models(cfg, credentials)
+    models = sorted(
+        list_models(cfg, credentials),
+        key=lambda m: m.get("createdAt") or "",
+        reverse=True,
+    )
 
     if args.output_json:
         print(json.dumps(models, indent=2, default=str))
