@@ -423,11 +423,11 @@ def upload_model_folder(cfg, model_dir, credentials, validate_required=True, s3_
     Otherwise a new UUID-based prefix is generated.
     """
     if validate_required:
-        present = {f.name for f in Path(model_dir).rglob("*") if f.is_file()}
-        missing = REQUIRED_FILES_DIR - present
+        root = Path(model_dir)
+        missing = {f for f in REQUIRED_FILES_DIR if not (root / f).is_file()}
         if missing:
             raise ValueError(
-                f"Missing required model files: {', '.join(sorted(missing))}")
+                f"Missing required model files at root of model dir: {', '.join(sorted(missing))}")
 
     if s3_prefix is None:
         s3_prefix = f"uploads/models/{uuid.uuid4()}"

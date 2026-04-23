@@ -23,7 +23,7 @@ DR_DROA_USERNAME=<your-droa-email>
 
 ### Python environment
 
-Run `bin/prepare.sh` to create the `.venv` virtual environment and install the required Python packages (`boto3`, `pyyaml`, `requests`). After `source bin/activate.sh` the venv is active and all `droa-*` commands are available.
+Run `bin/prepare.sh` to create the `.venv` virtual environment and install the required Python packages (`boto3`, `pyyaml`, `requests`, `deepracer-utils`). After `source bin/activate.sh` the venv is active and all `droa-*` commands are available.
 
 ---
 
@@ -37,7 +37,7 @@ List all models in your DRoA installation, sorted newest-first.
 droa-list-models [--json]
 ```
 
-Output columns: `modelId`, `name`, `status`, `raceType`, `createdAt`.
+Output columns: `modelId`, `name`, `status`, `trainingStatus`, `createdAt`.
 
 | Status | Meaning |
 |--------|---------|
@@ -71,7 +71,7 @@ droa-get-model <modelId> [--verbose] [--summary] [--json]
 Download training or evaluation logs for a model.
 
 ```
-droa-download-logs <modelId> [--type TRAINING_LOGS|EVALUATION_LOGS|PHYSICAL_CAR_MODEL|VIRTUAL_MODEL|VIDEOS]
+droa-download-logs <modelId> [--asset-type TRAINING_LOGS|EVALUATION_LOGS|PHYSICAL_CAR_MODEL|VIRTUAL_MODEL|VIDEOS]
                               [--evaluation-id <id>]
                               [--output <file>]
                               [--summary]
@@ -79,9 +79,9 @@ droa-download-logs <modelId> [--type TRAINING_LOGS|EVALUATION_LOGS|PHYSICAL_CAR_
 
 | Flag | Description |
 |------|-------------|
-| `--type` | Asset type (default: `TRAINING_LOGS`) |
-| `--evaluation-id` | Required when `--type EVALUATION_LOGS` |
-| `--output` | Save to file instead of stdout |
+| `--asset-type` | Asset type (default: `TRAINING_LOGS`) |
+| `--evaluation-id` | Required when `--asset-type EVALUATION_LOGS` |
+| `--output` / `-o` | Output file path (default: derived from the presigned URL filename) |
 | `--summary` | Print DeepRacer Utils stability summary after download (TRAINING_LOGS only) |
 
 The command polls until the asset is ready (up to 5 minutes for `VIRTUAL_MODEL`).
@@ -93,10 +93,10 @@ The command polls until the asset is ready (up to 5 minutes for `VIRTUAL_MODEL`)
 Delete a model. Only models with status `READY` or `ERROR` can be deleted.
 
 ```
-droa-delete-model <modelId> [--force]
+droa-delete-model <modelId> [-y/--yes]
 ```
 
-Without `--force`, you are shown the model name and status and must type the model name to confirm. Deletion is asynchronous — the model transitions to `DELETING` status.
+Without `--yes`, you are shown the model name and status and must type the model name to confirm. Deletion is asynchronous — the model transitions to `DELETING` status.
 
 ---
 
@@ -128,7 +128,7 @@ droa-import-model (--model-prefix <prefix> | --model-dir <dir>)
 
 #### What happens
 
-1. Model files are pulled from MinIO (path-style S3, using `DR_MINIO_URL` and `DR_LOCAL_PROFILE`).
+1. Model files are pulled from MinIO (path-style S3, using `DR_MINIO_URL` and `DR_LOCAL_S3_PROFILE`).
 2. `training_params.yaml` is copied from the bucket (`training_params_1.yaml` preferred for multi-worker runs). If missing, it is generated from `DR_*` environment variables.
 3. `WORLD_NAME` direction suffixes (`_cw`, `_ccw`) are stripped and `TRACK_DIRECTION_CLOCKWISE` is added — required by DRoA's track validation.
 4. Files are uploaded to the DRoA S3 transit bucket and the import API is called.
