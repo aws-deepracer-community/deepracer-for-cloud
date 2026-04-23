@@ -308,7 +308,7 @@ export DR_DOCKER_MAJOR_VERSION
 alias dr-local-aws='aws $DR_LOCAL_PROFILE_ENDPOINT_URL'
 
 source $SCRIPT_DIR/scripts_wrapper.sh
-source $SCRIPT_DIR/summary.sh
+source $SCRIPT_DIR/module/summary.sh
 source $SCRIPT_DIR/module/droa.sh
 
 function dr-update {
