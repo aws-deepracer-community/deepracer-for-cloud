@@ -1,0 +1,55 @@
+name: Syntax Check
+
+on:
+  pull_request:
+    branches:
+      - master
+      - dev
+
+jobs:
+  bash-syntax:
+    name: Bash Syntax Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check bash scripts in bin/
+        run: |
+          find bin/ -name '*.sh' | sort | while read -r f; do
+            bash -n "$f" && echo "OK: $f"
+          done
+
+      - name: Check bash scripts in scripts/
+        run: |
+          find scripts/ -name '*.sh' | sort | while read -r f; do
+            bash -n "$f" && echo "OK: $f"
+          done
+
+  python-syntax:
+    name: Python Syntax Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Check Python scripts in scripts/
+        run: |
+          find scripts/ -name '*.py' | sort | while read -r f; do
+            python3 -m py_compile "$f" && echo "OK: $f"
+          done
+
+  docker-compose-syntax:
+    name: Docker Compose Syntax Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check docker-compose YAML files
+        run: |
+          find docker/ -name 'docker-compose*.yml' | sort | while read -r f; do
+            python3 -c 'import sys, yaml; yaml.safe_load(open(sys.argv[1])) or True; print("OK: " + sys.argv[1])' "$f" \
+              || { echo "FAIL: $f"; exit 1; }
+          done
