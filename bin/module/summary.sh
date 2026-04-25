@@ -145,6 +145,17 @@ function dr-summary {
     _dr_kv "Car name"       "${DR_CAR_NAME:-n/a}"
   fi
 
+  # ── simapp version check (used inline in docker images section) ───────────
+  local simapp_update_available=false _required_simapp_ver=""
+  _required_simapp_ver=$(jq -r '.containers.simapp | select (.!=null)' "$DR_DIR/defaults/dependencies.json" 2>/dev/null || true)
+  if [[ -n "$_required_simapp_ver" && -n "${DR_SIMAPP_VERSION:-}" ]]; then
+    local _configured_simapp_ver
+    _configured_simapp_ver=$(echo "${DR_SIMAPP_VERSION}" | grep -oP '^\d+\.\d+(\.\d+)?')
+    if [[ -n "$_configured_simapp_ver" ]] && ! verlte "$_required_simapp_ver" "$_configured_simapp_ver"; then
+      simapp_update_available=true
+    fi
+  fi
+
   # ── docker images ─────────────────────────────────────────────────────────
   if [[ "$WIDE" == true ]]; then
     # 2-col closing line already drawn; just add section label row
@@ -173,12 +184,15 @@ function dr-summary {
     fi
   fi
 
+  local _simapp_upd_note=""
+  [[ "$simapp_update_available" == true ]] && _simapp_upd_note="  ${C_WARN}⬆ update available (→ ${_required_simapp_ver})${RST}"
+
   if [[ "$WIDE" == true ]]; then
     local IKW=14
     if [[ -n "$simapp_id" ]]; then
-      _dr_row " ${C_KEY}$(printf '%-*s' $IKW 'SimApp')${RST} ${C_OK}${simapp_disp}${RST}  ${DIM}ID: ${simapp_id}  ✓ local${RST}"
+      _dr_row " ${C_KEY}$(printf '%-*s' $IKW 'SimApp')${RST} ${C_OK}${simapp_disp}${RST}  ${DIM}ID: ${simapp_id}  ✓ local${RST}${_simapp_upd_note}"
     else
-      _dr_row " ${C_KEY}$(printf '%-*s' $IKW 'SimApp')${RST} ${C_WARN}${simapp_disp}  (not pulled)${RST}"
+      _dr_row " ${C_KEY}$(printf '%-*s' $IKW 'SimApp')${RST} ${C_WARN}${simapp_disp}  (not pulled)${RST}${_simapp_upd_note}"
     fi
     if [[ -n "$analysis_id" ]]; then
       _dr_row " ${C_KEY}$(printf '%-*s' $IKW 'Analysis')${RST} ${C_OK}${analysis_disp}${RST}  ${DIM}ID: ${analysis_id}  ✓ local${RST}"
@@ -195,9 +209,9 @@ function dr-summary {
   else
     if [[ -n "$simapp_id" ]]; then
       _dr_kv "SimApp" "${simapp_disp}" "ok"
-      _dr_row " ${DIM}$(printf '%22s' '') ID: ${simapp_id}  ✓ local${RST}"
+      _dr_row " ${DIM}$(printf '%22s' '') ID: ${simapp_id}  ✓ local${RST}${_simapp_upd_note}"
     else
-      _dr_kv "SimApp" "${simapp_disp}  (not pulled)" "warn"
+      _dr_kv "SimApp" "${simapp_disp}  (not pulled)${_simapp_upd_note}" "warn"
     fi
     if [[ -n "$analysis_id" ]]; then
       _dr_kv "Analysis" "${analysis_disp}" "ok"
@@ -313,7 +327,7 @@ function dr-summary {
   fi
 
   # ── update notifications ─────────────────────────────────────────────────
-  local git_update_available=false simapp_update_available=false
+  local git_update_available=false
 
   # Check for branch updates: fetch from origin (5-second timeout) then compare
   timeout 5 git -C "$DR_DIR" fetch --quiet origin 2>/dev/null || true
@@ -324,27 +338,9 @@ function dr-summary {
     git_update_available=true
   fi
 
-  # Check for SimApp update: compare configured version against dependencies.json
-  local _required_simapp_ver
-  _required_simapp_ver=$(jq -r '.containers.simapp | select (.!=null)' "$DR_DIR/defaults/dependencies.json" 2>/dev/null || true)
-  if [[ -n "$_required_simapp_ver" && -n "${DR_SIMAPP_VERSION:-}" ]]; then
-    local _configured_simapp_ver
-    _configured_simapp_ver=$(echo "${DR_SIMAPP_VERSION}" | grep -oP '^\d+\.\d+(\.\d+)?')
-    if [[ -n "$_configured_simapp_ver" ]] && ! verlte "$_required_simapp_ver" "$_configured_simapp_ver"; then
-      simapp_update_available=true
-    fi
-  fi
-
-  if [[ "$git_update_available" == true || "$simapp_update_available" == true ]]; then
+  if [[ "$git_update_available" == true ]]; then
     _dr_section "Update Notifications"
-    if [[ "$git_update_available" == true ]]; then
-      _dr_row " ${C_WARN}⬆ Branch update available${RST}  ${DIM}Run 'git pull' to update${RST}"
-    fi
-    if [[ "$simapp_update_available" == true ]]; then
-      local _cur_ver
-      _cur_ver=$(echo "${DR_SIMAPP_VERSION}" | grep -oP '^\d+\.\d+(\.\d+)?')
-      _dr_row " ${C_WARN}⬆ SimApp update available${RST}  ${DIM}Expected: ${_required_simapp_ver}  Current: ${_cur_ver:-${DR_SIMAPP_VERSION}}${RST}"
-    fi
+    _dr_row " ${C_WARN}⬆ Branch update available${RST}  ${DIM}Run 'git pull' to update${RST}"
   fi
 
   # ── footer ────────────────────────────────────────────────────────────────
