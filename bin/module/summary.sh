@@ -84,15 +84,15 @@ function dr-summary {
   # ── spinner (shown while pre-compute phase runs) ─────────────────────────
   local _dr_spinner_pid=""
   if [[ -t 1 ]]; then
-    (
-      local frames=('◰' '◳' '◲' '◱') i=0
+    { (
+      local frames=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏') i=0
       while true; do
         printf '\r  \033[38;5;33m%s\033[0m  \033[2mLoading DeepRacer-for-Cloud...\033[0m' \
           "${frames[i]}" >/dev/tty 2>/dev/null
         (( i = (i + 1) % 4 ))
         sleep 0.12
       done
-    ) &
+    ) & } 2>/dev/null
     _dr_spinner_pid=$!
   fi
 
@@ -130,6 +130,7 @@ function dr-summary {
   # ── stop spinner and clear its line before rendering ─────────────────────
   if [[ -n "${_dr_spinner_pid:-}" ]]; then
     kill "$_dr_spinner_pid" 2>/dev/null
+    disown "$_dr_spinner_pid" 2>/dev/null
     wait "$_dr_spinner_pid" 2>/dev/null
     printf '\r\033[K' >/dev/tty 2>/dev/null || true
   fi
