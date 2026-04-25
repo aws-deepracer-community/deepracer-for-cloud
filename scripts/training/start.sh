@@ -64,10 +64,7 @@ if [[ -f /proc/version ]] && grep -qi Microsoft /proc/version && grep -q "WSL2" 
 fi
 
 # Ensure Sagemaker's folder is there
-if [ ! -d /tmp/sagemaker ]; then
-  sudo mkdir -p /tmp/sagemaker
-  sudo chmod -R g+w /tmp/sagemaker
-fi
+_dr_ensure_sagemaker_dir
 
 # set evaluation specific environment variables
 STACK_NAME="deepracer-$DR_RUN_ID"
@@ -84,9 +81,25 @@ WORK_DIR=${DR_DIR}/tmp/start/
 mkdir -p ${WORK_DIR}
 rm -f ${WORK_DIR}/*
 
-REWARD_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_REWARD_KEY} ${WORK_DIR} --no-progress 2>/dev/null | awk '/reward/ {print $4}' | xargs readlink -f 2>/dev/null)
-METADATA_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_MODEL_METADATA_KEY} ${WORK_DIR} --no-progress 2>/dev/null | awk '/model_metadata.json$/ {print $4}' | xargs readlink -f 2>/dev/null)
-HYPERPARAM_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_HYPERPARAMETERS_KEY} ${WORK_DIR} --no-progress 2>/dev/null | awk '/hyperparameters.json$/ {print $4}' | xargs readlink -f 2>/dev/null)
+REWARD_FILE=""
+METADATA_FILE=""
+HYPERPARAM_FILE=""
+
+aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_REWARD_KEY} ${WORK_DIR} --no-progress >/dev/null 2>&1
+aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_MODEL_METADATA_KEY} ${WORK_DIR} --no-progress >/dev/null 2>&1
+aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${DR_LOCAL_S3_BUCKET}/${DR_LOCAL_S3_HYPERPARAMETERS_KEY} ${WORK_DIR} --no-progress >/dev/null 2>&1
+
+if [ -f "${WORK_DIR}/$(basename "$DR_LOCAL_S3_REWARD_KEY")" ]; then
+  REWARD_FILE=$(_realpath "${WORK_DIR}/$(basename "$DR_LOCAL_S3_REWARD_KEY")")
+fi
+
+if [ -f "${WORK_DIR}/$(basename "$DR_LOCAL_S3_MODEL_METADATA_KEY")" ]; then
+  METADATA_FILE=$(_realpath "${WORK_DIR}/$(basename "$DR_LOCAL_S3_MODEL_METADATA_KEY")")
+fi
+
+if [ -f "${WORK_DIR}/$(basename "$DR_LOCAL_S3_HYPERPARAMETERS_KEY")" ]; then
+  HYPERPARAM_FILE=$(_realpath "${WORK_DIR}/$(basename "$DR_LOCAL_S3_HYPERPARAMETERS_KEY")")
+fi
 
 if [ -n "$METADATA_FILE" ] && [ -n "$REWARD_FILE" ] && [ -n "$HYPERPARAM_FILE" ]; then
   echo "Training of model s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX starting."

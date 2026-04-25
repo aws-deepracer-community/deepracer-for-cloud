@@ -74,9 +74,25 @@ WORK_DIR=${DR_DIR}/tmp/download
 mkdir -p ${WORK_DIR} && rm -rf ${WORK_DIR} && mkdir -p ${WORK_DIR}/config ${WORK_DIR}/full
 
 # Check if metadata-files are available
-REWARD_FILE=$(aws ${DR_UPLOAD_PROFILE} s3 cp "${SOURCE_REWARD_FILE_S3_KEY}" ${WORK_DIR}/config/ --no-progress | awk '/reward/ {print $4}' | xargs readlink -f 2>/dev/null)
-METADATA_FILE=$(aws ${DR_UPLOAD_PROFILE} s3 cp "${SOURCE_METADATA_S3_KEY}" ${WORK_DIR}/config/ --no-progress | awk '/model_metadata.json$/ {print $4}' | xargs readlink -f 2>/dev/null)
-HYPERPARAM_FILE=$(aws ${DR_UPLOAD_PROFILE} s3 cp "${SOURCE_HYPERPARAM_FILE_S3_KEY}" ${WORK_DIR}/config/ --no-progress | awk '/hyperparameters.json$/ {print $4}' | xargs readlink -f 2>/dev/null)
+REWARD_FILE=""
+METADATA_FILE=""
+HYPERPARAM_FILE=""
+
+aws ${DR_UPLOAD_PROFILE} s3 cp "${SOURCE_REWARD_FILE_S3_KEY}" ${WORK_DIR}/config/ --no-progress >/dev/null
+aws ${DR_UPLOAD_PROFILE} s3 cp "${SOURCE_METADATA_S3_KEY}" ${WORK_DIR}/config/ --no-progress >/dev/null
+aws ${DR_UPLOAD_PROFILE} s3 cp "${SOURCE_HYPERPARAM_FILE_S3_KEY}" ${WORK_DIR}/config/ --no-progress >/dev/null
+
+if [ -f "${WORK_DIR}/config/$(basename "$SOURCE_REWARD_FILE_S3_KEY")" ]; then
+  REWARD_FILE=$(_realpath "${WORK_DIR}/config/$(basename "$SOURCE_REWARD_FILE_S3_KEY")")
+fi
+
+if [ -f "${WORK_DIR}/config/$(basename "$SOURCE_METADATA_S3_KEY")" ]; then
+  METADATA_FILE=$(_realpath "${WORK_DIR}/config/$(basename "$SOURCE_METADATA_S3_KEY")")
+fi
+
+if [ -f "${WORK_DIR}/config/$(basename "$SOURCE_HYPERPARAM_FILE_S3_KEY")" ]; then
+  HYPERPARAM_FILE=$(_realpath "${WORK_DIR}/config/$(basename "$SOURCE_HYPERPARAM_FILE_S3_KEY")")
+fi
 
 if [ -n "$METADATA_FILE" ] && [ -n "$REWARD_FILE" ] && [ -n "$HYPERPARAM_FILE" ]; then
   echo "All meta-data files found. Source model ${SOURCE_S3_URL} valid."

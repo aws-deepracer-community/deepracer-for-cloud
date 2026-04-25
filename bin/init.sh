@@ -7,6 +7,13 @@ function ctrl_c() {
     exit 1
 }
 
+# Portable sed -i: BSD sed (macOS) requires an explicit empty-string backup suffix.
+if sed --version 2>/dev/null | grep -q GNU; then
+    sedi() { sed -i "$@"; }
+else
+    sedi() { sed -i '' "$@"; }
+fi
+
 # Find a free /24 subnet in 192.168.200-254/24 that doesn't conflict with
 # existing Docker networks or host routes.
 function find_free_subnet() {
@@ -15,7 +22,12 @@ function find_free_subnet() {
     USED=$(
         { [[ -n "$NW_IDS" ]] && docker network inspect $NW_IDS \
               --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' 2>/dev/null; \
-          ip route show 2>/dev/null | awk '{print $1}' | grep -E '^[0-9]+\.'; } | sort -u
+          if ip route show 2>/dev/null | grep -q .; then
+              ip route show 2>/dev/null | awk '{print $1}' | grep -E '^[0-9]+\.'
+          else
+              # macOS: parse inet routes from netstat
+              netstat -rn -f inet 2>/dev/null | awk 'NR>4 && $1~/^[0-9]/{print $1}'
+          fi; } | sort -u
     )
     for j in $(seq 200 254); do
         local CANDIDATE="192.168.${j}.0/24"
@@ -27,8 +39,8 @@ function find_free_subnet() {
     return 1
 }
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" >/dev/null 2>&1 && pwd)"
+INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." >/dev/null 2>&1 && pwd)"
 
 if [[ "$INSTALL_DIR" == *\ * ]]; then
     echo "Deepracer-for-Cloud cannot be installed in path with spaces. Exiting."
@@ -111,19 +123,19 @@ if [[ "${OPT_CLOUD}" == "aws" ]]; then
     IMDS_TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
     AWS_EC2_AVAIL_ZONE=$(curl -s -H "X-aws-ec2-metadata-token: $IMDS_TOKEN" http://169.254.169.254/latest/meta-data/placement/availability-zone)
     AWS_REGION="$(echo $AWS_EC2_AVAIL_ZONE | sed 's/[a-z]$//')"
-    sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
-    sed -i "s/<LOCAL_PROFILE>/default/g" $INSTALL_DIR/system.env
+    sedi "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
+    sedi "s/<LOCAL_PROFILE>/default/g" $INSTALL_DIR/system.env
 elif [[ "${OPT_CLOUD}" == "remote" ]]; then
     AWS_REGION="us-east-1"
-    sed -i "s/<LOCAL_PROFILE>/minio/g" $INSTALL_DIR/system.env
-    sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
+    sedi "s/<LOCAL_PROFILE>/minio/g" $INSTALL_DIR/system.env
+    sedi "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
     echo "Please run 'aws configure --profile minio' to set the credentials"
     echo "Please define DR_REMOTE_MINIO_URL in system.env to point to remote minio instance."
 else
     AWS_REGION="us-east-1"
     MINIO_PROFILE="minio"
-    sed -i "s/<LOCAL_PROFILE>/$MINIO_PROFILE/g" $INSTALL_DIR/system.env
-    sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
+    sedi "s/<LOCAL_PROFILE>/$MINIO_PROFILE/g" $INSTALL_DIR/system.env
+    sedi "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
 
     aws configure --profile $MINIO_PROFILE get aws_access_key_id >/dev/null 2>/dev/null
 
@@ -134,9 +146,9 @@ else
         aws configure --profile $MINIO_PROFILE set region us-east-1
     fi
 fi
-sed -i "s/<AWS_DR_BUCKET_ROLE>/to-be-defined/g" $INSTALL_DIR/system.env
-sed -i "s/<CLOUD_REPLACE>/$OPT_CLOUD/g" $INSTALL_DIR/system.env
-sed -i "s/<REGION_REPLACE>/$AWS_REGION/g" $INSTALL_DIR/system.env
+sedi "s/<AWS_DR_BUCKET_ROLE>/to-be-defined/g" $INSTALL_DIR/system.env
+sedi "s/<CLOUD_REPLACE>/$OPT_CLOUD/g" $INSTALL_DIR/system.env
+sedi "s/<REGION_REPLACE>/$AWS_REGION/g" $INSTALL_DIR/system.env
 
 if [[ "${OPT_ARCH}" == "gpu" ]]; then
     SAGEMAKER_TAG="gpu"
@@ -155,7 +167,7 @@ done
 
 # Download docker images. Change to build statements if locally built images are desired.
 SIMAPP_VERSION=$(jq -r '.containers.simapp | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
-sed -i "s/<SIMAPP_VERSION_TAG>/$SIMAPP_VERSION-$SAGEMAKER_TAG/g" $INSTALL_DIR/system.env
+sedi "s/<SIMAPP_VERSION_TAG>/$SIMAPP_VERSION-$SAGEMAKER_TAG/g" $INSTALL_DIR/system.env
 docker pull awsdeepracercommunity/deepracer-simapp:$SIMAPP_VERSION-$SAGEMAKER_TAG
 
 # create the network sagemaker-local if it doesn't exit
@@ -172,8 +184,14 @@ if [[ "${OPT_STYLE}" == "swarm" ]]; then
     docker swarm init
     if [ $? -ne 0 ]; then
 
-        DEFAULT_IFACE=$(ip route | grep default | awk '{print $5}')
-        DEFAULT_IP=$(ip addr show $DEFAULT_IFACE | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+        if ip route 2>/dev/null | grep -q default; then
+            DEFAULT_IFACE=$(ip route | grep default | awk '{print $5}')
+            DEFAULT_IP=$(ip addr show $DEFAULT_IFACE | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+        else
+            # macOS fallback
+            DEFAULT_IFACE=$(route -n get default 2>/dev/null | awk '/interface:/{print $2}')
+            DEFAULT_IP=$(ipconfig getifaddr "$DEFAULT_IFACE" 2>/dev/null)
+        fi
 
         if [ -z "$DEFAULT_IP" ]; then
             echo "Could not determine default IP address. Exiting."
@@ -208,11 +226,12 @@ else
     echo "Unknown docker style ${OPT_STYLE}. Exiting."
     exit 1
 fi
-sed -i "s/<DOCKER_STYLE>/${OPT_STYLE}/g" $INSTALL_DIR/system.env
+sedi "s/<DOCKER_STYLE>/${OPT_STYLE}/g" $INSTALL_DIR/system.env
 
 # ensure our variables are set on startup - not for local setup.
 if [[ "${OPT_CLOUD}" != "local" ]]; then
-    NUM_IN_PROFILE=$(cat $HOME/.profile | grep "$INSTALL_DIR/bin/activate.sh" | wc -l)
+    touch "$HOME/.profile"
+    NUM_IN_PROFILE=$(grep -c "$INSTALL_DIR/bin/activate.sh" "$HOME/.profile" || true)
     if [ "$NUM_IN_PROFILE" -eq 0 ]; then
         echo "source $INSTALL_DIR/bin/activate.sh" >>$HOME/.profile
     fi

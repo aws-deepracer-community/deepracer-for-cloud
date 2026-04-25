@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source $DR_DIR/bin/scripts_wrapper.sh
+
 usage() {
   echo "Usage: $0 [-t topic] [-w width] [-h height] [-q quality] -b [browser-command]"
   echo "       -w        Width of individual stream."
@@ -73,4 +75,4 @@ done
 
 echo "</body></html>" >>$FILE
 echo "Starting browser '$BROWSER'."
-$BROWSER $(readlink -f $FILE) &
+$BROWSER $(_realpath "$FILE") &

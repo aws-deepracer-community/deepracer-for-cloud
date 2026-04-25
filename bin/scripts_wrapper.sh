@@ -1,5 +1,79 @@
 #!/usr/bin/env bash
 
+function _dr_is_macos {
+  [[ "$(uname -s)" == "Darwin" ]]
+}
+
+if ! declare -F _realpath >/dev/null 2>&1; then
+  function _realpath {
+    if command -v realpath >/dev/null 2>&1; then
+      realpath "$1"
+    elif command -v grealpath >/dev/null 2>&1; then
+      grealpath "$1"
+    elif ! _dr_is_macos && readlink -f / >/dev/null 2>&1; then
+      readlink -f "$1"
+    else
+      python3 -c 'import os, sys; print(os.path.realpath(sys.argv[1]))' "$1"
+    fi
+  }
+fi
+export -f _realpath
+
+function _dr_require_colima {
+  if ! _dr_is_macos; then
+    return 0
+  fi
+
+  if ! command -v colima >/dev/null 2>&1; then
+    echo "ERROR: Colima is required on macOS. Run bin/prepare-mac.sh or install and start Colima." >&2
+    return 1
+  fi
+
+  if ! colima status 2>/dev/null | grep -qi "running"; then
+    echo "ERROR: Colima is not running. Start it with: colima start" >&2
+    return 1
+  fi
+}
+
+function _dr_ensure_sagemaker_dir {
+  if _dr_is_macos; then
+    _dr_require_colima || return 1
+    colima ssh -- sudo mkdir -p /tmp/sagemaker
+    colima ssh -- sudo chmod -R ug+w /tmp/sagemaker
+  elif [ ! -d /tmp/sagemaker ]; then
+    sudo mkdir -p /tmp/sagemaker
+    sudo chmod -R g+w /tmp/sagemaker
+  fi
+}
+
+function _dr_runtime_cat {
+  if _dr_is_macos; then
+    _dr_require_colima || return 1
+    colima ssh -- sudo cat "$1"
+  else
+    sudo cat "$1"
+  fi
+}
+
+function _dr_find_sagemaker_compose_files {
+  local compose_service_name="$1"
+
+  if _dr_is_macos; then
+    _dr_require_colima || return 1
+    colima ssh -- sudo env COMPOSE_SERVICE_NAME="$compose_service_name" sh -lc 'find /tmp/sagemaker -name docker-compose.yaml -exec grep -l -- "$COMPOSE_SERVICE_NAME" {} +'
+  else
+    sudo find /tmp/sagemaker -name docker-compose.yaml -exec grep -l -- "$compose_service_name" {} +
+  fi
+}
+
+function _dr_compose_file_matches_run {
+  local compose_file="$1"
+  local compose_content
+
+  compose_content=$(_dr_runtime_cat "$compose_file" 2>/dev/null) || return 1
+  grep -Fq "RUN_ID=${DR_RUN_ID}" <<<"$compose_content" && grep -Fq "${DR_LOCAL_S3_MODEL_PREFIX}" <<<"$compose_content"
+}
+
 function dr-upload-custom-files {
   eval CUSTOM_TARGET=$(echo s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_CUSTOM_FILES_PREFIX/)
   echo "Uploading files to $CUSTOM_TARGET"
@@ -175,7 +249,7 @@ function dr-logs-sagemaker {
     docker logs $OPT_TIME -f $SAGEMAKER_CONTAINER
   elif [[ "${DR_HOST_X,,}" == "true" && -n "$DISPLAY" ]]; then
     if [ -x "$(command -v gnome-terminal)" ]; then
-      gnome-terminal --tab --title "DR-${DR_RUN_ID}: Sagemaker - ${SAGEMAKER_CONTAINER}" -- /usr/bin/bash -c "docker logs $OPT_TIME -f ${SAGEMAKER_CONTAINER}" 2>/dev/null
+      gnome-terminal --tab --title "DR-${DR_RUN_ID}: Sagemaker - ${SAGEMAKER_CONTAINER}" -- /usr/usr/bin/env bash -c "docker logs $OPT_TIME -f ${SAGEMAKER_CONTAINER}" 2>/dev/null
       echo "Sagemaker container $SAGEMAKER_CONTAINER logs opened in separate gnome-terminal. "
     elif [ -x "$(command -v x-terminal-emulator)" ]; then
       x-terminal-emulator -e /bin/sh -c "docker logs $OPT_TIME -f ${SAGEMAKER_CONTAINER}" 2>/dev/null
@@ -193,8 +267,6 @@ function dr-logs-sagemaker {
 function dr-find-sagemaker {
 
   STACK_NAME="deepracer-$DR_RUN_ID"
-  RUN_NAME=${DR_LOCAL_S3_MODEL_PREFIX}
-
   SAGEMAKER_CONTAINERS=$(docker ps | awk ' /simapp/ { print $1 } ' | xargs)
 
   if [[ -n "$SAGEMAKER_CONTAINERS" ]]; then
@@ -204,9 +276,9 @@ function dr-find-sagemaker {
           COMPOSE_SERVICE_NAME=$(echo $CONTAINER_NAME | perl -n -e'/(.*)-(algo-(.)-(.*))/; print $2')
 
           if [[ -n "$COMPOSE_SERVICE_NAME" ]]; then
-              COMPOSE_FILES=$(sudo find /tmp/sagemaker -name docker-compose.yaml -exec grep -l "$COMPOSE_SERVICE_NAME" {} +)
+                COMPOSE_FILES=$(_dr_find_sagemaker_compose_files "$COMPOSE_SERVICE_NAME")
               for COMPOSE_FILE in $COMPOSE_FILES; do
-                  if sudo grep -q "RUN_ID=${DR_RUN_ID}" $COMPOSE_FILE && sudo grep -q "${RUN_NAME}" $COMPOSE_FILE; then
+                  if _dr_compose_file_matches_run "$COMPOSE_FILE"; then
                       echo $CONTAINER
                   fi
               done

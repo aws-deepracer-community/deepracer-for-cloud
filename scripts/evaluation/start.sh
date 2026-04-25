@@ -49,6 +49,9 @@ if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
   fi
 fi
 
+# Ensure Sagemaker's folder is there
+_dr_ensure_sagemaker_dir
+
 echo "Evaluation of model s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_MODEL_PREFIX starting."
 echo "Using image ${DR_SIMAPP_SOURCE}:${DR_SIMAPP_VERSION}"
 echo ""
