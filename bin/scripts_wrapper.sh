@@ -17,6 +17,7 @@ if ! declare -F _realpath >/dev/null 2>&1; then
     fi
   }
 fi
+export -f _realpath
 
 function _dr_require_colima {
   if ! _dr_is_macos; then
