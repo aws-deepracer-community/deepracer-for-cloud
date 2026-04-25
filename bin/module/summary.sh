@@ -81,6 +81,21 @@ function dr-summary {
     (( ++_dr_lines ))
   }
 
+  # ── spinner (shown while pre-compute phase runs) ─────────────────────────
+  local _dr_spinner_pid=""
+  if [[ -t 1 ]]; then
+    (
+      local frames=('◰' '◳' '◲' '◱') i=0
+      while true; do
+        printf '\r  \033[38;5;33m%s\033[0m  \033[2mLoading DeepRacer-for-Cloud...\033[0m' \
+          "${frames[i]}" >/dev/tty 2>/dev/null
+        (( i = (i + 1) % 4 ))
+        sleep 0.12
+      done
+    ) &
+    _dr_spinner_pid=$!
+  fi
+
   # ── pre-compute git branch / update status ───────────────────────────────
   local _git_branch _git_update_available=false
   _git_branch=$(git -C "$DR_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || true)
@@ -110,6 +125,13 @@ function dr-summary {
     nvidia_runtime="${C_OK}available${RST}"
   else
     nvidia_runtime="${C_WARN}not found${RST}"
+  fi
+
+  # ── stop spinner and clear its line before rendering ─────────────────────
+  if [[ -n "${_dr_spinner_pid:-}" ]]; then
+    kill "$_dr_spinner_pid" 2>/dev/null
+    wait "$_dr_spinner_pid" 2>/dev/null
+    printf '\r\033[K' >/dev/tty 2>/dev/null || true
   fi
 
   # ── header ────────────────────────────────────────────────────────────────
