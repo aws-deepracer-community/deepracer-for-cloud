@@ -81,6 +81,17 @@ function dr-summary {
     (( ++_dr_lines ))
   }
 
+  # ── pre-compute git branch / update status ───────────────────────────────
+  local _git_branch _git_update_available=false
+  _git_branch=$(git -C "$DR_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+  timeout 5 git -C "$DR_DIR" fetch --quiet origin 2>/dev/null || true
+  local _local_hash _remote_hash
+  _local_hash=$(git -C "$DR_DIR" rev-parse HEAD 2>/dev/null || true)
+  _remote_hash=$(git -C "$DR_DIR" rev-parse '@{u}' 2>/dev/null || true)
+  if [[ -n "$_local_hash" && -n "$_remote_hash" && "$_local_hash" != "$_remote_hash" ]]; then
+    _git_update_available=true
+  fi
+
   # ── pre-compute dynamic values ────────────────────────────────────────────
   local cloud_val="${DR_CLOUD:-n/a}"
   [[ "${DR_CLOUD,,}" == "aws" ]] && cloud_val="aws"
@@ -106,6 +117,11 @@ function dr-summary {
   _dr_hline "╭" "─" "╮"
   _dr_row " ${BOLD}${C_HEADER}DeepRacer for Cloud  —  Environment Summary${RST}"
   _dr_row " ${DIM}Config: ${DR_CONFIG}${RST}"
+  local _branch_row=" ${DIM}Branch: ${RST}${C_VAL}${_git_branch:-unknown}${RST}"
+  if [[ "$_git_update_available" == true ]]; then
+    _branch_row+="  ${C_WARN}⬆ update available — run 'git pull'${RST}"
+  fi
+  _dr_row "$_branch_row"
 
   # ── system config + run config ────────────────────────────────────────────
   if [[ "$WIDE" == true ]]; then
@@ -324,23 +340,6 @@ function dr-summary {
 
   if [[ "$found_any" == false ]]; then
     _dr_row "  ${C_WARN}No DeepRacer-related services or containers running.${RST}"
-  fi
-
-  # ── update notifications ─────────────────────────────────────────────────
-  local git_update_available=false
-
-  # Check for branch updates: fetch from origin (5-second timeout) then compare
-  timeout 5 git -C "$DR_DIR" fetch --quiet origin 2>/dev/null || true
-  local _local_hash _remote_hash
-  _local_hash=$(git -C "$DR_DIR" rev-parse HEAD 2>/dev/null || true)
-  _remote_hash=$(git -C "$DR_DIR" rev-parse '@{u}' 2>/dev/null || true)
-  if [[ -n "$_local_hash" && -n "$_remote_hash" && "$_local_hash" != "$_remote_hash" ]]; then
-    git_update_available=true
-  fi
-
-  if [[ "$git_update_available" == true ]]; then
-    _dr_section "Update Notifications"
-    _dr_row " ${C_WARN}⬆ Branch update available${RST}  ${DIM}Run 'git pull' to update${RST}"
   fi
 
   # ── footer ────────────────────────────────────────────────────────────────
