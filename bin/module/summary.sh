@@ -81,6 +81,32 @@ function dr-summary {
     (( ++_dr_lines ))
   }
 
+  # ── spinner (shown while pre-compute phase runs) ─────────────────────────
+  local _dr_spinner_pid=""
+  if [[ -t 1 ]]; then
+    (
+      local frames=('◰' '◳' '◲' '◱') i=0
+      while true; do
+        printf '\r  \033[38;5;33m%s\033[0m  \033[2mLoading DeepRacer-for-Cloud...\033[0m' \
+          "${frames[i]}" >/dev/tty 2>/dev/null
+        (( i = (i + 1) % 4 ))
+        sleep 0.12
+      done
+    ) &
+    _dr_spinner_pid=$!
+  fi
+
+  # ── pre-compute git branch / update status ───────────────────────────────
+  local _git_branch _git_update_available=false
+  _git_branch=$(git -C "$DR_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || true)
+  timeout 5 git -C "$DR_DIR" fetch --quiet origin 2>/dev/null || true
+  local _local_hash _remote_hash
+  _local_hash=$(git -C "$DR_DIR" rev-parse HEAD 2>/dev/null || true)
+  _remote_hash=$(git -C "$DR_DIR" rev-parse '@{u}' 2>/dev/null || true)
+  if [[ -n "$_local_hash" && -n "$_remote_hash" && "$_local_hash" != "$_remote_hash" ]]; then
+    _git_update_available=true
+  fi
+
   # ── pre-compute dynamic values ────────────────────────────────────────────
   local cloud_val="${DR_CLOUD:-n/a}"
   [[ "${DR_CLOUD,,}" == "aws" ]] && cloud_val="aws"
@@ -101,11 +127,23 @@ function dr-summary {
     nvidia_runtime="${C_WARN}not found${RST}"
   fi
 
+  # ── stop spinner and clear its line before rendering ─────────────────────
+  if [[ -n "${_dr_spinner_pid:-}" ]]; then
+    kill "$_dr_spinner_pid" 2>/dev/null
+    wait "$_dr_spinner_pid" 2>/dev/null
+    printf '\r\033[K' >/dev/tty 2>/dev/null || true
+  fi
+
   # ── header ────────────────────────────────────────────────────────────────
   echo; (( ++_dr_lines ))
   _dr_hline "╭" "─" "╮"
   _dr_row " ${BOLD}${C_HEADER}DeepRacer for Cloud  —  Environment Summary${RST}"
   _dr_row " ${DIM}Config: ${DR_CONFIG}${RST}"
+  local _branch_row=" ${DIM}Branch: ${RST}${C_VAL}${_git_branch:-unknown}${RST}"
+  if [[ "$_git_update_available" == true ]]; then
+    _branch_row+="  ${C_WARN}⬆ update available — run 'git pull'${RST}"
+  fi
+  _dr_row "$_branch_row"
 
   # ── system config + run config ────────────────────────────────────────────
   if [[ "$WIDE" == true ]]; then
@@ -145,6 +183,17 @@ function dr-summary {
     _dr_kv "Car name"       "${DR_CAR_NAME:-n/a}"
   fi
 
+  # ── simapp version check (used inline in docker images section) ───────────
+  local simapp_update_available=false _required_simapp_ver=""
+  _required_simapp_ver=$(jq -r '.containers.simapp | select (.!=null)' "$DR_DIR/defaults/dependencies.json" 2>/dev/null || true)
+  if [[ -n "$_required_simapp_ver" && -n "${DR_SIMAPP_VERSION:-}" ]]; then
+    local _configured_simapp_ver
+    _configured_simapp_ver=$(echo "${DR_SIMAPP_VERSION}" | grep -oP '^\d+\.\d+(\.\d+)?')
+    if [[ -n "$_configured_simapp_ver" ]] && ! verlte "$_required_simapp_ver" "$_configured_simapp_ver"; then
+      simapp_update_available=true
+    fi
+  fi
+
   # ── docker images ─────────────────────────────────────────────────────────
   if [[ "$WIDE" == true ]]; then
     # 2-col closing line already drawn; just add section label row
@@ -173,12 +222,15 @@ function dr-summary {
     fi
   fi
 
+  local _simapp_upd_note=""
+  [[ "$simapp_update_available" == true ]] && _simapp_upd_note="  ${C_WARN}⬆ update available (→ ${_required_simapp_ver})${RST}"
+
   if [[ "$WIDE" == true ]]; then
     local IKW=14
     if [[ -n "$simapp_id" ]]; then
-      _dr_row " ${C_KEY}$(printf '%-*s' $IKW 'SimApp')${RST} ${C_OK}${simapp_disp}${RST}  ${DIM}ID: ${simapp_id}  ✓ local${RST}"
+      _dr_row " ${C_KEY}$(printf '%-*s' $IKW 'SimApp')${RST} ${C_OK}${simapp_disp}${RST}  ${DIM}ID: ${simapp_id}  ✓ local${RST}${_simapp_upd_note}"
     else
-      _dr_row " ${C_KEY}$(printf '%-*s' $IKW 'SimApp')${RST} ${C_WARN}${simapp_disp}  (not pulled)${RST}"
+      _dr_row " ${C_KEY}$(printf '%-*s' $IKW 'SimApp')${RST} ${C_WARN}${simapp_disp}  (not pulled)${RST}${_simapp_upd_note}"
     fi
     if [[ -n "$analysis_id" ]]; then
       _dr_row " ${C_KEY}$(printf '%-*s' $IKW 'Analysis')${RST} ${C_OK}${analysis_disp}${RST}  ${DIM}ID: ${analysis_id}  ✓ local${RST}"
@@ -195,9 +247,9 @@ function dr-summary {
   else
     if [[ -n "$simapp_id" ]]; then
       _dr_kv "SimApp" "${simapp_disp}" "ok"
-      _dr_row " ${DIM}$(printf '%22s' '') ID: ${simapp_id}  ✓ local${RST}"
+      _dr_row " ${DIM}$(printf '%22s' '') ID: ${simapp_id}  ✓ local${RST}${_simapp_upd_note}"
     else
-      _dr_kv "SimApp" "${simapp_disp}  (not pulled)" "warn"
+      _dr_kv "SimApp" "${simapp_disp}  (not pulled)${_simapp_upd_note}" "warn"
     fi
     if [[ -n "$analysis_id" ]]; then
       _dr_kv "Analysis" "${analysis_disp}" "ok"
