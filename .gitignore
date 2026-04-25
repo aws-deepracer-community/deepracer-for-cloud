@@ -1,4 +1,5 @@
 .vscode/
+.venv/
 custom_files/
 logs/
 docker/volumes/
@@ -15,3 +16,9 @@ autorun.s3url
 nohup.out
 /*.sh
 _
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd

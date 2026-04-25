@@ -96,6 +96,13 @@ else
   return 1
 fi
 
+## Activate Python virtual environment
+if [[ -f "${DR_DIR}/.venv/bin/activate" ]]; then
+  source "${DR_DIR}/.venv/bin/activate"
+else
+  echo "WARNING: Python venv not found at ${DR_DIR}/.venv. Run bin/prepare.sh to create it."
+fi
+
 # Check if Docker runs -- if not, then start it.
 if [[ "$(type service 2>/dev/null)" ]]; then
   service docker status >/dev/null || sudo service docker start
@@ -301,7 +308,8 @@ export DR_DOCKER_MAJOR_VERSION
 alias dr-local-aws='aws $DR_LOCAL_PROFILE_ENDPOINT_URL'
 
 source $SCRIPT_DIR/scripts_wrapper.sh
-source $SCRIPT_DIR/summary.sh
+source $SCRIPT_DIR/module/summary.sh
+source $SCRIPT_DIR/module/droa.sh
 
 function dr-update {
   dr-update-env

@@ -1,0 +1,4 @@
+boto3
+pyyaml
+requests
+deepracer-utils

@@ -47,7 +47,7 @@ sudo apt update && sudo apt-mark hold grub-pc && sudo apt -y -o \
     DPkg::options::="--force-confdef" -o DPkg::options::="--force-confold" -qq upgrade
 
 ## Install required packages
-sudo apt install --no-install-recommends -y jq python3-boto3 screen git curl
+sudo apt install --no-install-recommends -y jq python3-boto3 python3-venv screen git curl
 
 ## Install AWS CLI
 if [[ "${ID}" == "ubuntu" && ( ${UBUNTU_MAJOR_VERSION} -eq 22 ) ]]; then
@@ -59,6 +59,15 @@ else
         echo "WARNING: snap not available, AWS CLI not installed"
     fi
 fi
+
+## Create Python virtual environment
+VENV_DIR="${DIR}/../.venv"
+if [[ ! -d "${VENV_DIR}" ]]; then
+    echo "Creating Python virtual environment at ${VENV_DIR}"
+    python3 -m venv --prompt drfc "${VENV_DIR}"
+fi
+echo "Installing Python requirements into virtual environment"
+"${VENV_DIR}/bin/pip" install --quiet -r "${DIR}/../requirements.txt"
 
 ## Detect cloud
 source $DIR/detect.sh
