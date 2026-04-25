@@ -142,7 +142,9 @@ function dr-summary {
   if [[ -n "${DR_EXPERIMENT_NAME:-}" ]]; then
     _meta_row=" ${DIM}Experiment: ${RST}${C_VAL}${DR_EXPERIMENT_NAME}${RST}"
   else
-    _meta_row=" ${DIM}Config: ${RST}${C_VAL}$(basename "${DR_CONFIG}")${RST}"
+    local _rel_config
+    _rel_config=$(realpath --relative-to="${PWD}" "${DR_CONFIG}" 2>/dev/null || basename "${DR_CONFIG}")
+    _meta_row=" ${DIM}Config: ${RST}${C_VAL}${_rel_config}${RST}"
   fi
   local _branch_row="${DIM}  Branch: ${RST}${C_VAL}${_git_branch:-unknown}${RST}"
   if [[ "$_git_update_available" == true ]]; then
