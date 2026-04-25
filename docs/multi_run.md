@@ -1,44 +1,109 @@
-# Managing experiments
+# Managing Experiments
 
-Often when training a model you may find that you want to run different training experiments with different settings, reward functions, action spaces, etc. 
+## Experiment sub-directories
 
-By default DRfC will assume that you store all the settings in run.env and in the files inside the `custom_files/` directory, however when running multiple sequential experiments these folders can get cluttered with many files and it can be tricky to keep track of what settings or files were used for a particular training run.
+When iterating on a model you typically need different reward functions, action spaces, hyperparameters, and track settings across runs. By default DRfC stores all of this in `run.env` and `custom_files/` at the root of the installation, which can become difficult to manage over time.
 
-DRfC has an optional feature which can be enabled to store all the config files for a particular training run in a dedicated sub-directory. 
+The **experiment sub-directory** feature lets you keep every config and custom file for a training run in its own folder under `experiments/`. DRfC then picks up those files automatically when you activate with the experiment name.
 
-## To enable experiment sub-directories
-1. create the initial directory structure for your experiments. The top level directory must be called `experiments/` and must be in the root of your DRfC installation, along with a further subdir for your first experiment which must then contain a subdir called `custom_files`. 
-
-    `mkdir` using the `-p` flag can create this for you in a single easy command (be sure to run from inside the main DRfC directory):
-
-    ```
-    mkdir -p experiments/test-1/custom_files
-    ```
-2. Move (or copy) run.env into the experiment directory
-    ```
-    mv run.env experiments/test-1
-    ```
-
-    If you are using multiple workers then also move the `worker-#.env` files. 
-3. Create (or move) the files in the new experiment's custom_files directory for reward function, model metadata and hyperparameters.
-    ```
-    cp custom_files/* experiments/test-1/custom_files
-    ```
-4. Uncomment the `DR_EXPERIMENT_NAME` line from system.env and set it to your experiment name (which must match the name of your new subdir inside `experiments`, in this example it should be set to `test-1`)
-5. Run `dr-update` or restart your shell and re-source `bin/activate.sh`
-6. Start training as normal using `dr-start-training`
-
-## To iterate on an experiment
-
-To create a new experiment based on a previous one just copy the entire experiment subdir to a new name and update the `DR_EXPERIMENT_NAME` line in system.env.
+### Directory structure
 
 ```
-cp -av experiments/test-1 experiments/test-2
+deepracer-for-cloud/
+├── experiments/
+│   ├── sprint-v1/
+│   │   ├── run.env
+│   │   ├── worker-2.env          # optional – multi-worker only
+│   │   └── custom_files/
+│   │       ├── reward_function.py
+│   │       ├── model_metadata.json
+│   │       └── hyperparameters.json
+│   └── sprint-v2/
+│       ├── run.env
+│       └── custom_files/
+│           └── ...
+├── system.env
+└── ...
 ```
 
-You should edit the `run.env` inside the new experiment folder to update the `DR_LOCAL_S3_MODEL_PREFIX` (and `DR_LOCAL_S3_PRETRAINED_PREFIX` if you are cloning the previous experiment's model).
+The `experiments/` directory is excluded from git (via `.gitignore`) to avoid committing sensitive configuration and credentials.
 
-Don't forget to run `dr-update` after changing any files. 
+### Setting up your first experiment
+
+1. Create the directory structure (run from the DRfC root):
+
+    ```bash
+    mkdir -p experiments/sprint-v1/custom_files
+    ```
+
+2. Copy your current run configuration into the experiment:
+
+    ```bash
+    cp run.env experiments/sprint-v1/
+    cp custom_files/* experiments/sprint-v1/custom_files/
+    ```
+
+    If you are using multiple workers, copy the worker env files too:
+
+    ```bash
+    cp worker-*.env experiments/sprint-v1/
+    ```
+
+3. Activate with the experiment name using the `-e` flag:
+
+    ```bash
+    source bin/activate.sh -e sprint-v1
+    ```
+
+### Activating an experiment
+
+There are two ways to select an experiment:
+
+**Option A — `-e` flag (recommended)**
+
+Pass the experiment name when sourcing the activation script. This takes precedence over anything in `system.env`:
+
+```bash
+source bin/activate.sh -e sprint-v1
+```
+
+**Option B — `DR_EXPERIMENT_NAME` in `system.env`**
+
+Uncomment and set the variable in `system.env`:
+
+```
+DR_EXPERIMENT_NAME=sprint-v1
+```
+
+Then run `dr-update` or re-source `bin/activate.sh`. Use this option if you want the experiment to persist across shell sessions automatically.
+
+When `DR_EXPERIMENT_NAME` is set (by either method), DRfC will:
+- Load `run.env` from `experiments/<name>/run.env`
+- Load `worker-N.env` from `experiments/<name>/worker-N.env` (multi-worker)
+- Sync `custom_files` to/from `experiments/<name>/custom_files/`
+- Show `Experiment: <name>` in `dr-summary`
+
+If the experiment directory does not exist, activation will abort with an error.
+
+### Iterating to a new experiment
+
+Copy the entire experiment folder to a new name and update the model prefix in `run.env`:
+
+```bash
+cp -av experiments/sprint-v1 experiments/sprint-v2
+```
+
+Edit `experiments/sprint-v2/run.env` to update `DR_LOCAL_S3_MODEL_PREFIX` (and `DR_LOCAL_S3_PRETRAINED_PREFIX` if you want to continue training from the previous experiment's model), then activate the new experiment:
+
+```bash
+source bin/activate.sh -e sprint-v2
+```
+
+### Custom files upload and download
+
+`dr-upload-custom-files` and `dr-download-custom-files` are experiment-aware. When an experiment is active they sync against `experiments/<name>/custom_files/` instead of the root `custom_files/` directory.
+
+---
 
 # Running Multiple Parallel Experiments
 
@@ -50,7 +115,7 @@ The feature works by creating unique prefixes to the container names:
 
 ## Suggested way to use the feature
 
-By default `run.env` is loaded when DRfC is activated - but it is possible to load a separate configuration through `source bin/activate.sh <filename>`. 
+By default `run.env` is loaded when DRfC is activated - but it is possible to load a separate configuration through `source bin/activate.sh <filename>`, or through `source bin/activate.sh -e <experiment-name>` when using experiment sub-directories.
 
 The best way to use this feature is to have a bash-shell per experiment, and to load a separate configuration per shell.
 

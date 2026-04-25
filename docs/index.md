@@ -35,7 +35,7 @@ DRfC supports a wide set of features to ensure that you can focus on creating th
 * [DeepRacer on AWS (DRoA) Integration](droa.md)
 * [Reference](reference.md)
 * [Using multiple Robomaker workers](multi_worker.md)
-* [Running multiple parallel experiments](multi_run.md)
+* [Managing experiments and running multiple parallel experiments](multi_run.md)
 * [GPU Accelerated OpenGL for Robomaker](opengl.md)
 * [Having multiple GPUs in one Computer](multi_gpu.md)
 * [Installing on Windows](windows.md)
