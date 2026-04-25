@@ -4,6 +4,37 @@ verlte() {
   [ "$1" = "$(echo -e "$1\n$2" | sort -V | head -n1)" ]
 }
 
+# Find a free /24 subnet in 192.168.200-254/24 that doesn't conflict with
+# existing Docker networks or host routes.
+function find_free_subnet() {
+  local USED NW_IDS
+  NW_IDS=$(docker network ls -q 2>/dev/null)
+  USED=$(
+    { [[ -n "$NW_IDS" ]] && docker network inspect $NW_IDS \
+          --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' 2>/dev/null; \
+      ip route show 2>/dev/null | awk '{print $1}' | grep -E '^[0-9]+\.'; } | sort -u
+  )
+  for j in $(seq 200 254); do
+    local CANDIDATE="192.168.${j}.0/24"
+    if ! echo "$USED" | grep -qF "$CANDIDATE"; then
+      echo "$CANDIDATE"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Create the sagemaker-local Docker network with the required compose labels.
+function _create_sagemaker_network() {
+  local NW_SUBNET=$(find_free_subnet)
+  local SWARM_FLAGS
+  [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]] && SWARM_FLAGS="-d overlay --attachable --scope swarm"
+  docker network create "$SAGEMAKER_NW" $SWARM_FLAGS \
+    ${NW_SUBNET:+--subnet=$NW_SUBNET} \
+    --label com.docker.compose.network=sagemaker-local \
+    --label com.docker.compose.project=sagemaker-local >/dev/null 2>&1
+}
+
 function dr-update-env {
 
   if [[ -f "$DIR/system.env" ]]; then
@@ -90,9 +121,21 @@ else
   return 1
 fi
 
+## Activate Python virtual environment
+if [[ -f "${DR_DIR}/.venv/bin/activate" ]]; then
+  source "${DR_DIR}/.venv/bin/activate"
+else
+  echo "WARNING: Python venv not found at ${DR_DIR}/.venv. Run bin/prepare.sh to create it."
+fi
+
 # Check if Docker runs -- if not, then start it.
 if [[ "$(type service 2>/dev/null)" ]]; then
   service docker status >/dev/null || sudo service docker start
+fi
+
+## Check if WSL2
+if grep -qi Microsoft /proc/version && grep -q "WSL2" /proc/version; then
+    IS_WSL2="yes"
 fi
 
 # Check if we will use Docker Swarm or Docker Compose
@@ -107,6 +150,27 @@ if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
   SWARM_NODE_UPDATE=$(docker node update --label-add Sagemaker=true $SWARM_NODE)
 else
   export DR_DOCKER_FILE_SEP="-f"
+fi
+
+# Check if sagemaker-local network has required compose label; recreate if missing
+SAGEMAKER_NW='sagemaker-local'
+
+if ! docker network ls --format '{{.Name}}' | grep -q "^${SAGEMAKER_NW}$"; then
+  echo "Network $SAGEMAKER_NW does not exist. Creating."
+  _create_sagemaker_network
+else
+  NW_LABEL_NETWORK=$(docker network inspect "$SAGEMAKER_NW" --format '{{index .Labels "com.docker.compose.network"}}')
+  if [[ "$NW_LABEL_NETWORK" != "sagemaker-local" ]]; then
+    echo "Network $SAGEMAKER_NW is missing required label."
+    NW_CONTAINERS=$(docker network inspect "$SAGEMAKER_NW" --format '{{len .Containers}}')
+    if [[ "${NW_CONTAINERS:-0}" -gt 0 ]]; then
+      dr-stop-all
+    fi
+    docker network rm "$SAGEMAKER_NW" >/dev/null 2>&1
+    _create_sagemaker_network
+    echo "Network $SAGEMAKER_NW recreated with required labels."
+
+  fi
 fi
 
 # Check if CUDA_VISIBLE_DEVICES is configured.
@@ -145,16 +209,35 @@ elif [[ "${DR_CLOUD,,}" == "remote" ]]; then
   DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
   DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-endpoint.yml"
   DR_MINIO_COMPOSE_FILE=""
+elif [[ "${DR_CLOUD,,}" == "aws" ]]; then
+  DR_LOCAL_PROFILE_ENDPOINT_URL=""
+  DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-aws.yml"
+  DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-aws.yml"
 else
   DR_LOCAL_PROFILE_ENDPOINT_URL=""
   DR_TRAIN_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-training.yml"
   DR_EVAL_COMPOSE_FILE="$DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-eval.yml"
 fi
 
-# Prevent docker swarms to restart
+# Add host X support for Linux and WSL2
 if [[ "${DR_HOST_X,,}" == "true" ]]; then
-  DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
-  DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
+  if [[ "$IS_WSL2" == "yes" ]]; then
+  
+    # Check if package x11-server-utils is installed
+    if ! command -v xset &> /dev/null; then
+      echo "WARNING: Package x11-server-utils is not installed. Please install it to enable X11 support."
+    fi
+  
+    if [[ "${DR_DOCKER_STYLE,,}" == "swarm" && "${DR_USE_GUI,,}" == "true" ]]; then
+      echo "WARNING: Cannot use GUI in Swarm mode. Please switch to Compose mode."
+    fi
+
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg-wsl.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg-wsl.yml"
+  else
+    DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
+    DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-local-xorg.yml"
+  fi
 fi
 
 # Prevent docker swarms to restart
@@ -173,6 +256,12 @@ fi
 if [[ -d "${DR_ROBOMAKER_MOUNT_SIMAPP_DIR,,}" ]]; then
   DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-simapp.yml"
   DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-simapp.yml"
+fi
+
+# Enable local scripts mount
+if [[ -d "${DR_ROBOMAKER_MOUNT_SCRIPTS_DIR,,}" ]]; then
+  DR_TRAIN_COMPOSE_FILE="$DR_TRAIN_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-robomaker-scripts.yml"
+  DR_EVAL_COMPOSE_FILE="$DR_EVAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-robomaker-scripts.yml"
 fi
 
 ## Check if we have an AWS IAM assumed role, or if we need to set specific credentials.
@@ -197,7 +286,12 @@ if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
   export MINIO_GID=$(id -g)
   export MINIO_GROUPNAME=$(id -g -n)
   if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
-    docker stack deploy $DR_MINIO_COMPOSE_FILE s3
+
+    if [ "$DR_DOCKER_MAJOR_VERSION" -gt 24 ]; then
+      DETACH_FLAG="--detach=true"
+    fi
+
+    docker stack deploy $DR_MINIO_COMPOSE_FILE $DETACH_FLAG s3
   else
     docker compose $DR_MINIO_COMPOSE_FILE -p s3 up -d
   fi
@@ -205,30 +299,42 @@ if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
 fi
 
 ## Version check
+if [[ -z "$DR_SIMAPP_SOURCE" || -z "$DR_SIMAPP_VERSION" ]]; then
+  DEFAULT_SIMAPP_VERSION=$(jq -r '.containers.simapp | select (.!=null)' $DIR/defaults/dependencies.json)
+  echo "ERROR: Variable DR_SIMAPP_SOURCE or DR_SIMAPP_VERSION not defined."
+  echo ""
+  echo "As of version 5.3 the variables DR_SIMAPP_SOURCE and DR_SIMAPP_VERSION are required in system.env."
+  echo "To continue to use the separate Sagemaker, Robomaker and RL Coach images, run 'git checkout legacy'."
+  echo ""
+  echo "Please add the following lines to your system.env file:"
+  echo "DR_SIMAPP_SOURCE=awsdeepracercommunity/deepracer-simapp"
+  echo "DR_SIMAPP_VERSION=${DEFAULT_SIMAPP_VERSION}-gpu"
+  return
+fi
+
 DEPENDENCY_VERSION=$(jq -r '.master_version  | select (.!=null)' $DIR/defaults/dependencies.json)
 
-SAGEMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-sagemaker:$DR_SAGEMAKER_IMAGE 2>/dev/null | jq -r .[].Config.Labels.version)
-if [ -z "$SAGEMAKER_VER" ]; then SAGEMAKER_VER=$DR_SAGEMAKER_IMAGE; fi
-if ! verlte $DEPENDENCY_VERSION $SAGEMAKER_VER; then
-  echo "WARNING: Incompatible version of Deepracer Sagemaker. Expected >$DEPENDENCY_VERSION. Got $SAGEMAKER_VER."
+SIMAPP_VER=$(docker inspect ${DR_SIMAPP_SOURCE}:${DR_SIMAPP_VERSION} 2>/dev/null | jq -r .[].Config.Labels.version)
+if [ -z "$SIMAPP_VER" ]; then SIMAPP_VER=$SIMAPP_VERSION; fi
+if [ -z "$SIMAPP_VER" ]; then
+  # Image not pulled -- fall back to checking the configured version tag
+  SIMAPP_VER=$(echo ${DR_SIMAPP_VERSION} | grep -oP '^\d+\.\d+(\.\d+)?')
+fi
+if [ -n "$SIMAPP_VER" ] && ! verlte $DEPENDENCY_VERSION $SIMAPP_VER; then
+  echo "WARNING: Incompatible version of Deepracer Simapp. Expected >$DEPENDENCY_VERSION. Got $SIMAPP_VER."
 fi
 
-ROBOMAKER_VER=$(docker inspect awsdeepracercommunity/deepracer-robomaker:$DR_ROBOMAKER_IMAGE 2>/dev/null | jq -r .[].Config.Labels.version)
-if [ -z "$ROBOMAKER_VER" ]; then ROBOMAKER_VER=$DR_ROBOMAKER_IMAGE; fi
-if ! verlte $DEPENDENCY_VERSION $ROBOMAKER_VER; then
-  echo "WARNING: Incompatible version of Deepracer Robomaker. Expected >$DEPENDENCY_VERSION. Got $ROBOMAKER_VER."
-fi
-
-COACH_VER=$(docker inspect awsdeepracercommunity/deepracer-rlcoach:$DR_COACH_IMAGE 2>/dev/null | jq -r .[].Config.Labels.version)
-if [ -z "$COACH_VER" ]; then COACH_VER=$DR_COACH_IMAGE; fi
-if ! verlte $DEPENDENCY_VERSION $COACH_VER; then
-  echo "WARNING: Incompatible version of Deepracer-for-Cloud Coach. Expected >$DEPENDENCY_VERSION. Got $COACH_VER."
-fi
+# Get Docker version
+DOCKER_VERSION=$(docker --version | grep -oP '\d+\.\d+\.\d+' | head -1)
+DR_DOCKER_MAJOR_VERSION=$(echo $DOCKER_VERSION | cut -d. -f1)
+export DR_DOCKER_MAJOR_VERSION
 
 ## Create a dr-local-aws command
 alias dr-local-aws='aws $DR_LOCAL_PROFILE_ENDPOINT_URL'
 
 source $SCRIPT_DIR/scripts_wrapper.sh
+source $SCRIPT_DIR/module/summary.sh
+source $SCRIPT_DIR/module/droa.sh
 
 function dr-update {
   dr-update-env
@@ -237,3 +343,6 @@ function dr-update {
 function dr-reload {
   source $DIR/bin/activate.sh $DR_CONFIG
 }
+
+## Show summary after activation if not in quiet mode and if in interactive shell
+[[ $- == *i* && "${DR_QUIET_ACTIVATE,,}" != "true" ]] && dr-summary

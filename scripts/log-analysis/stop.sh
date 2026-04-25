@@ -1,3 +1,8 @@
 #!/usr/bin/env bash
 
-docker stop deepracer-analysis
+echo "Stopping log-analysis container..."
+if docker stop deepracer-analysis > /dev/null 2>&1; then
+  echo "Log-analysis stopped."
+else
+  echo "Log-analysis is not running."
+fi

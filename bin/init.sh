@@ -7,6 +7,26 @@ function ctrl_c() {
     exit 1
 }
 
+# Find a free /24 subnet in 192.168.200-254/24 that doesn't conflict with
+# existing Docker networks or host routes.
+function find_free_subnet() {
+    local USED NW_IDS
+    NW_IDS=$(docker network ls -q 2>/dev/null)
+    USED=$(
+        { [[ -n "$NW_IDS" ]] && docker network inspect $NW_IDS \
+              --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' 2>/dev/null; \
+          ip route show 2>/dev/null | awk '{print $1}' | grep -E '^[0-9]+\.'; } | sort -u
+    )
+    for j in $(seq 200 254); do
+        local CANDIDATE="192.168.${j}.0/24"
+        if ! echo "$USED" | grep -qF "$CANDIDATE"; then
+            echo "$CANDIDATE"
+            return 0
+        fi
+    done
+    return 1
+}
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 INSTALL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd)"
 
@@ -40,34 +60,27 @@ while getopts ":m:c:a:s:" opt; do
     esac
 done
 
+# Check if cloud type is set, if not try to detect it. If detection fails, default to local.
 if [[ -z "$OPT_CLOUD" ]]; then
     source $SCRIPT_DIR/detect.sh
     OPT_CLOUD=$CLOUD_NAME
     echo "Detected cloud type to be $CLOUD_NAME"
 fi
 
-# Find CPU Level
-CPU_LEVEL="cpu"
-
-if [[ -f /proc/cpuinfo ]] && [[ "$(cat /proc/cpuinfo | grep avx2 | wc -l)" > 0 ]]; then
-    CPU_LEVEL="cpu"
-elif [[ "$(type sysctl 2>/dev/null)" ]] && [[ "$(sysctl -n hw.optional.avx2_0)" == 1 ]]; then
-    CPU_LEVEL="cpu"
-fi
-
-# Check if Intel (to ensure MKN)
-if [[ -f /proc/cpuinfo ]] && [[ "$(cat /proc/cpuinfo | grep GenuineIntel | wc -l)" > 0 ]]; then
-    CPU_INTEL="true"
-elif [[ "$(type sysctl 2>/dev/null)" ]] && [[ "$(sysctl -n machdep.cpu.vendor)" == "GenuineIntel" ]]; then
-    CPU_INTEL="true"
-fi
-
 # Check GPU
-if [[ "${OPT_ARCH}" == "gpu" ]]; then
-    docker buildx build -t local/gputest - <$INSTALL_DIR/utils/Dockerfile.gpu-detect
-    GPUS=$(docker run --rm --gpus all local/gputest 2>/dev/null | awk '/Device: ./' | wc -l)
-    if [ $? -ne 0 ] || [ $GPUS -eq 0 ]; then
-        echo "No GPU detected in docker. Using CPU".
+if [ "$OPT_ARCH" = "gpu" ]; then
+    if GPUS="$(docker run --rm --gpus all --pull=missing \
+        nvcr.io/nvidia/cuda:12.6.3-base-ubuntu24.04 \
+        bash -lc 'nvidia-smi -L | wc -l')" ; then
+
+        if [ "${GPUS:-0}" -ge 1 ]; then
+            echo "Detected ${GPUS} GPU(s) inside docker."
+        else
+            echo "No GPU detected in docker. Using CPU"
+            OPT_ARCH="cpu"
+        fi
+    else
+        echo "Failed to run GPU test container. Using CPU"
         OPT_ARCH="cpu"
     fi
 fi
@@ -95,7 +108,8 @@ cp $INSTALL_DIR/defaults/reward_function.py $INSTALL_DIR/custom_files/
 cp $INSTALL_DIR/defaults/template-system.env $INSTALL_DIR/system.env
 cp $INSTALL_DIR/defaults/template-run.env $INSTALL_DIR/run.env
 if [[ "${OPT_CLOUD}" == "aws" ]]; then
-    AWS_EC2_AVAIL_ZONE=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
+    IMDS_TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+    AWS_EC2_AVAIL_ZONE=$(curl -s -H "X-aws-ec2-metadata-token: $IMDS_TOKEN" http://169.254.169.254/latest/meta-data/placement/availability-zone)
     AWS_REGION="$(echo $AWS_EC2_AVAIL_ZONE | sed 's/[a-z]$//')"
     sed -i "s/<AWS_DR_BUCKET>/not-defined/g" $INSTALL_DIR/system.env
     sed -i "s/<LOCAL_PROFILE>/default/g" $INSTALL_DIR/system.env
@@ -126,8 +140,6 @@ sed -i "s/<REGION_REPLACE>/$AWS_REGION/g" $INSTALL_DIR/system.env
 
 if [[ "${OPT_ARCH}" == "gpu" ]]; then
     SAGEMAKER_TAG="gpu"
-elif [[ -n "${CPU_INTEL}" ]]; then
-    SAGEMAKER_TAG="cpu"
 else
     SAGEMAKER_TAG="cpu"
 fi
@@ -142,52 +154,55 @@ for arg in "$@"; do
 done
 
 # Download docker images. Change to build statements if locally built images are desired.
-COACH_VERSION=$(jq -r '.containers.rl_coach | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
-sed -i "s/<COACH_TAG>/$COACH_VERSION/g" $INSTALL_DIR/system.env
-
-ROBOMAKER_VERSION=$(jq -r '.containers.robomaker  | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
-if [ -n $ROBOMAKER_VERSION ]; then
-    ROBOMAKER_VERSION=$ROBOMAKER_VERSION-$CPU_LEVEL
-else
-    ROBOMAKER_VERSION=$CPU_LEVEL
-fi
-sed -i "s/<ROBO_TAG>/$ROBOMAKER_VERSION/g" $INSTALL_DIR/system.env
-
-SAGEMAKER_VERSION=$(jq -r '.containers.sagemaker  | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
-if [ -n $SAGEMAKER_VERSION ]; then
-    SAGEMAKER_VERSION=$SAGEMAKER_VERSION-$SAGEMAKER_TAG
-else
-    SAGEMAKER_VERSION=$SAGEMAKER_TAG
-fi
-sed -i "s/<SAGE_TAG>/$SAGEMAKER_VERSION/g" $INSTALL_DIR/system.env
-
-docker pull awsdeepracercommunity/deepracer-rlcoach:$COACH_VERSION
-docker pull awsdeepracercommunity/deepracer-robomaker:$ROBOMAKER_VERSION
-docker pull awsdeepracercommunity/deepracer-sagemaker:$SAGEMAKER_VERSION
+SIMAPP_VERSION=$(jq -r '.containers.simapp | select (.!=null)' $INSTALL_DIR/defaults/dependencies.json)
+sed -i "s/<SIMAPP_VERSION_TAG>/$SIMAPP_VERSION-$SAGEMAKER_TAG/g" $INSTALL_DIR/system.env
+docker pull awsdeepracercommunity/deepracer-simapp:$SIMAPP_VERSION-$SAGEMAKER_TAG
 
 # create the network sagemaker-local if it doesn't exit
 SAGEMAKER_NW='sagemaker-local'
 
 if [[ "${OPT_STYLE}" == "swarm" ]]; then
 
+    docker node ls >/dev/null 2>/dev/null
+    if [ $? -eq 0 ]; then
+        echo "Swarm exists. Exiting."
+        exit 1
+    fi
+
     docker swarm init
+    if [ $? -ne 0 ]; then
+
+        DEFAULT_IFACE=$(ip route | grep default | awk '{print $5}')
+        DEFAULT_IP=$(ip addr show $DEFAULT_IFACE | grep "inet\b" | awk '{print $2}' | cut -d/ -f1)
+
+        if [ -z "$DEFAULT_IP" ]; then
+            echo "Could not determine default IP address. Exiting."
+            exit 1
+        fi
+
+        echo "Error when creating swarm, trying again with advertise address $DEFAULT_IP."
+        docker swarm init --advertise-addr $DEFAULT_IP
+        if [ $? -ne 0 ]; then
+            echo "Cound not create swarm. Exiting."
+            exit 1
+        fi
+    fi
+
     SWARM_NODE=$(docker node inspect self | jq .[0].ID -r)
     docker node update --label-add Sagemaker=true $SWARM_NODE >/dev/null 2>/dev/null
     docker node update --label-add Robomaker=true $SWARM_NODE >/dev/null 2>/dev/null
-    docker network ls | grep -q $SAGEMAKER_NW
-    if [ $? -ne 0 ]; then
-        docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm
-    else
-        docker network rm $SAGEMAKER_NW
-        docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm --subnet=192.168.2.0/24
-    fi
+    NW_SUBNET=$(find_free_subnet)
+    docker network ls | grep -q $SAGEMAKER_NW && docker network rm $SAGEMAKER_NW >/dev/null 2>&1
+    docker network create $SAGEMAKER_NW -d overlay --attachable --scope swarm \
+        ${NW_SUBNET:+--subnet=$NW_SUBNET} \
+        --label com.docker.compose.network=sagemaker-local \
+        --label com.docker.compose.project=sagemaker-local
 
 elif [[ "${OPT_STYLE}" == "compose" ]]; then
 
-    docker network ls | grep -q $SAGEMAKER_NW
-    if [ $? -ne 0 ]; then
-        docker network create $SAGEMAKER_NW
-    fi
+    NW_SUBNET=$(find_free_subnet)
+    docker network ls | grep -q $SAGEMAKER_NW || \
+        docker network create $SAGEMAKER_NW ${NW_SUBNET:+--subnet=$NW_SUBNET}
 
 else
     echo "Unknown docker style ${OPT_STYLE}. Exiting."

@@ -17,6 +17,10 @@ config['JOB_TYPE'] = 'TRAINING'
 config['KINESIS_VIDEO_STREAM_NAME'] = os.environ.get('DR_KINESIS_STREAM_NAME', '')
 config['METRICS_S3_BUCKET'] = os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket')
 
+s3_container_endpoint_url = os.environ.get('DR_MINIO_URL', None)
+if s3_container_endpoint_url is not None:
+    config['S3_ENDPOINT_URL'] = s3_container_endpoint_url
+
 metrics_prefix = os.environ.get('DR_LOCAL_S3_METRICS_PREFIX', None)
 if metrics_prefix is not None:
     config['METRICS_S3_OBJECT_KEY'] = '{}/TrainingMetrics.json'.format(metrics_prefix)
@@ -52,6 +56,7 @@ config['MIN_EVAL_TRIALS'] = os.environ.get('DR_TRAIN_MIN_EVAL_TRIALS', '5')
 config['CAMERA_MAIN_ENABLE'] = os.environ.get('DR_CAMERA_MAIN_ENABLE', 'True')
 config['CAMERA_SUB_ENABLE'] = os.environ.get('DR_CAMERA_SUB_ENABLE', 'True')
 config['BEST_MODEL_METRIC'] = os.environ.get('DR_TRAIN_BEST_MODEL_METRIC', 'progress')
+config['ENABLE_EXTRA_KVS_OVERLAY'] = os.environ.get('DR_ENABLE_EXTRA_KVS_OVERLAY', 'False')
 
 # Object Avoidance
 if config['RACE_TYPE'] == 'OBJECT_AVOIDANCE':
@@ -81,7 +86,7 @@ if config['RACE_TYPE'] == 'HEAD_TO_BOT':
     config['BOT_CAR_SPEED'] = os.environ.get('DR_H2B_BOT_CAR_SPEED', '0.2')
     config['PENALTY_SECONDS'] = os.environ.get('DR_H2B_BOT_CAR_PENALTY', '2.0')
 
-s3_endpoint_url = os.environ.get('DR_LOCAL_S3_ENDPOINT_URL', None)
+s3_local_endpoint_url = os.environ.get('DR_LOCAL_S3_ENDPOINT_URL', None)
 s3_region = config['AWS_REGION']
 s3_bucket = config['SAGEMAKER_SHARED_S3_BUCKET']
 s3_prefix = config['SAGEMAKER_SHARED_S3_PREFIX']
@@ -94,7 +99,7 @@ s3_yaml_name = os.environ.get('DR_LOCAL_S3_TRAINING_PARAMS_FILE', 'training_para
 yaml_key = os.path.normpath(os.path.join(s3_prefix, s3_yaml_name))
 
 session = boto3.session.Session(profile_name=s3_profile)
-s3_client = session.client('s3', region_name=s3_region, endpoint_url=s3_endpoint_url)
+s3_client = session.client('s3', region_name=s3_region, endpoint_url=s3_local_endpoint_url)
 
 yaml_key = os.path.normpath(os.path.join(s3_prefix, s3_yaml_name))
 local_yaml_path = os.path.abspath(os.path.join(os.environ.get('DR_DIR'),'tmp', 'training-params-' + train_time + '.yaml'))
@@ -161,6 +166,8 @@ if config['MULTI_CONFIG'] == "True" and num_workers > 1:
             config.update({'REVERSE_DIR': os.environ.get('DR_TRAIN_REVERSE_DIRECTION', False)})
             config.update({'CAMERA_MAIN_ENABLE': os.environ.get('DR_CAMERA_MAIN_ENABLE', 'True')})
             config.update({'CAMERA_SUB_ENABLE': os.environ.get('DR_CAMERA_SUB_ENABLE', 'True')})  
+            config.update({'ENABLE_EXTRA_KVS_OVERLAY': os.environ.get('DR_ENABLE_EXTRA_KVS_OVERLAY', 'False')})
+
             
             # Update Object Avoidance parameters
             if config['RACE_TYPE'] == 'OBJECT_AVOIDANCE':

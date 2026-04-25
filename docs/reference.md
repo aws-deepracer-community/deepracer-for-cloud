@@ -75,12 +75,15 @@ The scripts assume that two files `system.env` containing constant configuration
 | `CUDA_VISIBLE_DEVICES` | Used in multi-GPU configurations. See additional documentation for more information about this feature.|
 | `DR_TELEGRAF_HOST` | The hostname to send real-time metrics to. Uncommenting this will enable real-time metrics collection using Telegraf. The telegraf/influxdb/grafana compose stack must already be running (use `dr-start-metrics`) for this to work, and it should usually be set to `telegraf` to send metrics to the telegraf container.
 | `DR_TELEGRAF_PORT` | Defines the UDP port to send real-time metrics to. Should usually remain set as 8092.  
+| `DR_QUIET_ACTIVATE` | Set to `True` to suppress the environment summary dashboard that is displayed when sourcing `bin/activate.sh` in an interactive shell. Defaults to `False`.|
 
 ## Commands
 
 | Command | Description |
 |---------|-------------|
 | `dr-update` | Loads in all scripts and environment variables again.|
+| `dr-reload` | Re-sources `bin/activate.sh` with the current configuration file.|
+| `dr-summary` | Displays the environment summary dashboard (cloud config, Docker images, running services and containers). Runs automatically on interactive shell activation unless `DR_QUIET_ACTIVATE=True`.|
 | `dr-update-env` | Loads in all environment variables from `system.env` and `run.env`.|
 | `dr-upload-custom-files` | Uploads changed configuration files from `custom_files/` into `s3://{DR_LOCAL_S3_BUCKET}/custom_files`.|
 | `dr-download-custom-files` | Downloads changed configuration files from `s3://{DR_LOCAL_S3_BUCKET}/custom_files` into `custom_files/`.|
