@@ -37,6 +37,8 @@ function _create_sagemaker_network() {
 
 function dr-update-env {
 
+  local _saved_experiment="${DR_EXPERIMENT_NAME:-}"
+
   if [[ -f "$DIR/system.env" ]]; then
     LINES=$(grep -v '^#' $DIR/system.env)
     for l in $LINES; do
@@ -49,6 +51,24 @@ function dr-update-env {
     return 1
   fi
 
+  # Restore DR_EXPERIMENT_NAME if it was pre-set (e.g. via -e flag) so it takes
+  # precedence over any value in system.env.
+  if [[ -n "$_saved_experiment" ]]; then
+    export DR_EXPERIMENT_NAME="$_saved_experiment"
+  fi
+
+  if [[ ! -z $DR_EXPERIMENT_NAME ]]; then
+    if [[ ! -d "$DIR/experiments" ]]; then
+      echo "Experiments directory $DIR/experiments does not exist."
+      return 1
+    fi
+    if [[ ! -d "$DIR/experiments/$DR_EXPERIMENT_NAME" ]]; then
+      echo "Experiment directory $DIR/experiments/$DR_EXPERIMENT_NAME does not exist."
+      return 1
+    fi
+    export DR_CONFIG="$DIR/experiments/$DR_EXPERIMENT_NAME/run.env"
+  fi
+
   if [[ -f "$DR_CONFIG" ]]; then
     LINES=$(grep -v '^#' $DR_CONFIG)
     for l in $LINES; do
@@ -57,7 +77,7 @@ function dr-update-env {
       eval "export $env_var=$env_val"
     done
   else
-    echo "File run.env does not exist."
+    echo "File ${DR_CONFIG} does not exist."
     return 1
   fi
 
@@ -85,12 +105,33 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 DIR="$(dirname $SCRIPT_DIR)"
 export DR_DIR=$DIR
 
+# Parse arguments: -e <experiment-name> or a positional config file path
+_DR_OPT_EXPERIMENT=""
+OPTIND=1
+while getopts ":e:" _opt; do
+  case $_opt in
+    e) _DR_OPT_EXPERIMENT="$OPTARG" ;;
+    \?) break ;;
+  esac
+done
+shift $(( OPTIND - 1 ))
+unset _opt OPTIND
+
+if [[ -n "$_DR_OPT_EXPERIMENT" ]]; then
+  export DR_EXPERIMENT_NAME="$_DR_OPT_EXPERIMENT"
+fi
+unset _DR_OPT_EXPERIMENT
+
+EXPERIMENT_FLAG="$( grep DR_EXPERIMENT_NAME $DIR/system.env | grep -v \#)"
+
 if [[ -f "$1" ]]; then
   export DR_CONFIG=$(readlink -f $1)
-  dr-update-env
+  dr-update-env || return 1
+elif [[ -n "${DR_EXPERIMENT_NAME:-}" ]] || [[ -n "$EXPERIMENT_FLAG" ]]; then
+  dr-update-env || return 1
 elif [[ -f "$DIR/run.env" ]]; then
   export DR_CONFIG="$DIR/run.env"
-  dr-update-env
+  dr-update-env || return 1
 else
   echo "No configuration file."
   return 1

@@ -138,12 +138,19 @@ function dr-summary {
   echo; (( ++_dr_lines ))
   _dr_hline "╭" "─" "╮"
   _dr_row " ${BOLD}${C_HEADER}DeepRacer for Cloud  —  Environment Summary${RST}"
-  _dr_row " ${DIM}Config: ${DR_CONFIG}${RST}"
-  local _branch_row=" ${DIM}Branch: ${RST}${C_VAL}${_git_branch:-unknown}${RST}"
+  local _meta_row
+  if [[ -n "${DR_EXPERIMENT_NAME:-}" ]]; then
+    _meta_row=" ${DIM}Experiment: ${RST}${C_VAL}${DR_EXPERIMENT_NAME}${RST}"
+  else
+    local _rel_config
+    _rel_config=$(realpath --relative-to="${PWD}" "${DR_CONFIG}" 2>/dev/null || basename "${DR_CONFIG}")
+    _meta_row=" ${DIM}Config: ${RST}${C_VAL}${_rel_config}${RST}"
+  fi
+  local _branch_row="${DIM}  Branch: ${RST}${C_VAL}${_git_branch:-unknown}${RST}"
   if [[ "$_git_update_available" == true ]]; then
     _branch_row+="  ${C_WARN}⬆ update available — run 'git pull'${RST}"
   fi
-  _dr_row "$_branch_row"
+  _dr_row "${_meta_row}${_branch_row}"
 
   # ── system config + run config ────────────────────────────────────────────
   if [[ "$WIDE" == true ]]; then

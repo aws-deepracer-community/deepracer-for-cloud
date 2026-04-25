@@ -16,6 +16,8 @@ autorun.s3url
 nohup.out
 /*.sh
 _
+experiments/
+
 
 # Python
 __pycache__/

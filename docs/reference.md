@@ -76,6 +76,7 @@ The scripts assume that two files `system.env` containing constant configuration
 | `DR_TELEGRAF_HOST` | The hostname to send real-time metrics to. Uncommenting this will enable real-time metrics collection using Telegraf. The telegraf/influxdb/grafana compose stack must already be running (use `dr-start-metrics`) for this to work, and it should usually be set to `telegraf` to send metrics to the telegraf container.
 | `DR_TELEGRAF_PORT` | Defines the UDP port to send real-time metrics to. Should usually remain set as 8092.  
 | `DR_QUIET_ACTIVATE` | Set to `True` to suppress the environment summary dashboard that is displayed when sourcing `bin/activate.sh` in an interactive shell. Defaults to `False`.|
+| `DR_EXPERIMENT_NAME` | Optional. When set, DRfC loads `run.env`, `worker-N.env`, and `custom_files/` from `experiments/<name>/` instead of the repository root. Can be set here or passed via `source bin/activate.sh -e <name>`. See [Managing Experiments](multi_run.md).|
 
 ## Commands
 
