@@ -189,7 +189,7 @@ echo "Docker is available via Colima."
 ## On macOS, Docker runs inside Colima's Linux VM so bind-mounts must exist there,
 ## not on the macOS host. /tmp persists across colima stop/start but not colima delete.
 colima ssh -- sudo mkdir -p /tmp/sagemaker
-colima ssh -- sudo chmod -R a+w /tmp/sagemaker
+colima ssh -- sudo chmod -R ug+w /tmp/sagemaker
 echo "/tmp/sagemaker created inside Colima VM."
 
 ## Ensure Colima auto-starts on login (launchd)

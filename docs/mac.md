@@ -13,7 +13,7 @@ On macOS, Docker containers run inside a lightweight Linux VM managed by [Colima
 | **No NVIDIA GPU** | Always `cpu` architecture; training is slower than a GPU instance |
 | **Colima VM filesystem** | Bind-mount paths (e.g. `/tmp/sagemaker`) must exist inside the VM, not on the macOS host |
 | **IMDS not reachable from VM** | IAM role credentials are not automatically available inside containers; explicit AWS keys must be configured |
-| **BSD userland** | `sed`, `grep`, `sort`, `readlink` differ from GNU; scripts have been adapted |
+| **BSD userland** | `sed`, `grep`, `sort`, `readlink` differ from GNU; key shell entrypoints use portable path handling, but custom scripts should still avoid assuming GNU-only flags |
 | **bash 3.2 ships with macOS** | A modern bash 5 must be installed via Homebrew and set as the login shell |
 
 ---

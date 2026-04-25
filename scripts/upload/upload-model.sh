@@ -111,15 +111,38 @@ TARGET_METRICS_FILE_S3_KEY="s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/metrics
 # Check if metadata-files are available
 REWARD_IN_ROOT=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 ls s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/reward_function.py 2>/dev/null | wc -l)
 if [ "$REWARD_IN_ROOT" -ne 0 ]; then
-  REWARD_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/reward_function.py ${WORK_DIR} --no-progress | awk '/reward/ {print $4}' | xargs readlink -f 2>/dev/null)
+  SOURCE_REWARD_BASENAME="reward_function.py"
+  aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/reward_function.py ${WORK_DIR} --no-progress >/dev/null
 else
   echo "Looking for Reward Function in s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_REWARD}"
-  REWARD_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_REWARD} ${WORK_DIR} --no-progress | awk '/reward/ {print $4}' | xargs readlink -f 2>/dev/null)
+  SOURCE_REWARD_BASENAME=$(basename "$SOURCE_S3_REWARD")
+  aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_REWARD} ${WORK_DIR} --no-progress >/dev/null
 fi
 
-METADATA_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/model/model_metadata.json ${WORK_DIR} --no-progress | awk '/model_metadata.json$/ {print $4}' | xargs readlink -f 2>/dev/null)
-HYPERPARAM_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/ip/hyperparameters.json ${WORK_DIR} --no-progress | awk '/hyperparameters.json$/ {print $4}' | xargs readlink -f 2>/dev/null)
-METRICS_FILE=$(aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_METRICS} ${WORK_DIR}/metrics --no-progress | awk '/metric/ {print $4}' | xargs readlink -f 2>/dev/null)
+aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/model/model_metadata.json ${WORK_DIR} --no-progress >/dev/null
+aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/ip/hyperparameters.json ${WORK_DIR} --no-progress >/dev/null
+aws $DR_LOCAL_PROFILE_ENDPOINT_URL s3 sync s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_METRICS} ${WORK_DIR}/metrics --no-progress >/dev/null
+
+REWARD_FILE=""
+METADATA_FILE=""
+HYPERPARAM_FILE=""
+METRICS_FILE=""
+
+if [ -f "${WORK_DIR}${SOURCE_REWARD_BASENAME}" ]; then
+  REWARD_FILE=$(_realpath "${WORK_DIR}${SOURCE_REWARD_BASENAME}")
+fi
+
+if [ -f "${WORK_DIR}model_metadata.json" ]; then
+  METADATA_FILE=$(_realpath "${WORK_DIR}model_metadata.json")
+fi
+
+if [ -f "${WORK_DIR}hyperparameters.json" ]; then
+  HYPERPARAM_FILE=$(_realpath "${WORK_DIR}hyperparameters.json")
+fi
+
+if find "${WORK_DIR}/metrics" -type f | grep -q .; then
+  METRICS_FILE=$(_realpath "${WORK_DIR}/metrics")
+fi
 
 if [ -n "$METADATA_FILE" ] && [ -n "$REWARD_FILE" ] && [ -n "$HYPERPARAM_FILE" ] && [ -n "$METRICS_FILE" ]; then
   echo "All meta-data files found. Looking for checkpoint."
@@ -130,7 +153,12 @@ fi
 
 # Download checkpoint file
 echo "Looking for model to upload from s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/"
-CHECKPOINT_INDEX=$(aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/model/deepracer_checkpoints.json ${WORK_DIR}model/ --no-progress | awk '{print $4}' | xargs readlink -f 2>/dev/null)
+CHECKPOINT_INDEX=""
+aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 cp s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/model/deepracer_checkpoints.json ${WORK_DIR}model/ --no-progress >/dev/null
+
+if [ -f "${WORK_DIR}model/deepracer_checkpoints.json" ]; then
+  CHECKPOINT_INDEX=$(_realpath "${WORK_DIR}model/deepracer_checkpoints.json")
+fi
 
 if [ -z "$CHECKPOINT_INDEX" ]; then
   echo "No checkpoint file available at s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/model. Exiting."
@@ -161,8 +189,8 @@ fi
 
 # Find checkpoint & model files - download
 if [ -n "$CHECKPOINT" ]; then
-  CHECKPOINT_MODEL_FILES=$(aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 sync s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/model/ ${WORK_DIR}model/ --exclude "*" --include "${CHECKPOINT}*" --include "model_${CHECKPOINT}.pb" --include "deepracer_checkpoints.json" --no-progress | awk '{print $4}' | xargs readlink -f 2>/dev/null)
-  CHECKPOINT_MODEL_FILE_COUNT=$(echo $CHECKPOINT_MODEL_FILES | wc -l)
+  aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 sync s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/model/ ${WORK_DIR}model/ --exclude "*" --include "${CHECKPOINT}*" --include "model_${CHECKPOINT}.pb" --include "deepracer_checkpoints.json" --no-progress >/dev/null
+  CHECKPOINT_MODEL_FILE_COUNT=$(find "${WORK_DIR}model" -maxdepth 1 -type f \( -name "${CHECKPOINT}*" -o -name "model_${CHECKPOINT}.pb" -o -name "deepracer_checkpoints.json" \) | wc -l)
   if [ "$CHECKPOINT_MODEL_FILE_COUNT" -eq 0 ]; then
     echo "No model files found. Files possibly deleted. Try again."
     exit 1
