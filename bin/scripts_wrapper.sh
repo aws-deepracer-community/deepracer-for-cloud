@@ -267,8 +267,6 @@ function dr-logs-sagemaker {
 function dr-find-sagemaker {
 
   STACK_NAME="deepracer-$DR_RUN_ID"
-  RUN_NAME=${DR_LOCAL_S3_MODEL_PREFIX}
-
   SAGEMAKER_CONTAINERS=$(docker ps | awk ' /simapp/ { print $1 } ' | xargs)
 
   if [[ -n "$SAGEMAKER_CONTAINERS" ]]; then

@@ -2,7 +2,6 @@
 source $DR_DIR/bin/scripts_wrapper.sh
 
 STACK_NAME="deepracer-$DR_RUN_ID"
-RUN_NAME=${DR_LOCAL_S3_MODEL_PREFIX}
 
 SAGEMAKER_CONTAINERS=$(dr-find-sagemaker)
 
