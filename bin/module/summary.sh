@@ -312,6 +312,41 @@ function dr-summary {
     _dr_row "  ${C_WARN}No DeepRacer-related services or containers running.${RST}"
   fi
 
+  # ── update notifications ─────────────────────────────────────────────────
+  local git_update_available=false simapp_update_available=false
+
+  # Check for branch updates: fetch from origin (5-second timeout) then compare
+  timeout 5 git -C "$DR_DIR" fetch --quiet origin 2>/dev/null || true
+  local _local_hash _remote_hash
+  _local_hash=$(git -C "$DR_DIR" rev-parse HEAD 2>/dev/null || true)
+  _remote_hash=$(git -C "$DR_DIR" rev-parse '@{u}' 2>/dev/null || true)
+  if [[ -n "$_local_hash" && -n "$_remote_hash" && "$_local_hash" != "$_remote_hash" ]]; then
+    git_update_available=true
+  fi
+
+  # Check for SimApp update: compare configured version against dependencies.json
+  local _required_simapp_ver
+  _required_simapp_ver=$(jq -r '.containers.simapp | select (.!=null)' "$DR_DIR/defaults/dependencies.json" 2>/dev/null || true)
+  if [[ -n "$_required_simapp_ver" && -n "${DR_SIMAPP_VERSION:-}" ]]; then
+    local _configured_simapp_ver
+    _configured_simapp_ver=$(echo "${DR_SIMAPP_VERSION}" | grep -oP '^\d+\.\d+(\.\d+)?')
+    if [[ -n "$_configured_simapp_ver" ]] && ! verlte "$_required_simapp_ver" "$_configured_simapp_ver"; then
+      simapp_update_available=true
+    fi
+  fi
+
+  if [[ "$git_update_available" == true || "$simapp_update_available" == true ]]; then
+    _dr_section "Update Notifications"
+    if [[ "$git_update_available" == true ]]; then
+      _dr_row " ${C_WARN}⬆ Branch update available${RST}  ${DIM}Run 'git pull' to update${RST}"
+    fi
+    if [[ "$simapp_update_available" == true ]]; then
+      local _cur_ver
+      _cur_ver=$(echo "${DR_SIMAPP_VERSION}" | grep -oP '^\d+\.\d+(\.\d+)?')
+      _dr_row " ${C_WARN}⬆ SimApp update available${RST}  ${DIM}Expected: ${_required_simapp_ver}  Current: ${_cur_ver:-${DR_SIMAPP_VERSION}}${RST}"
+    fi
+  fi
+
   # ── footer ────────────────────────────────────────────────────────────────
   _dr_blank
   _dr_hline "╰" "─" "╯"
