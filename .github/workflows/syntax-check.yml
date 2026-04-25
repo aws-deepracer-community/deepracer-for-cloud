@@ -50,13 +50,6 @@ jobs:
       - name: Check docker-compose YAML files
         run: |
           find docker/ -name 'docker-compose*.yml' | sort | while read -r f; do
-            python3 -c "
-import sys, yaml
-try:
-    yaml.safe_load(open(sys.argv[1]))
-    print('OK: ' + sys.argv[1])
-except yaml.YAMLError as e:
-    print('FAIL: ' + sys.argv[1] + ': ' + str(e))
-    sys.exit(1)
-" "$f"
+            python3 -c 'import sys, yaml; yaml.safe_load(open(sys.argv[1])) or True; print("OK: " + sys.argv[1])' "$f" \
+              || { echo "FAIL: $f"; exit 1; }
           done
