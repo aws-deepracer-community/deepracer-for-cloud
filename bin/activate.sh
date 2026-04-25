@@ -50,6 +50,14 @@ function dr-update-env {
   fi
 
   if [[ ! -z $DR_EXPERIMENT_NAME ]]; then
+    if [[ ! -d "$DIR/experiments" ]]; then
+      echo "Experiments directory $DIR/experiments does not exist."
+      return 1
+    fi
+    if [[ ! -d "$DIR/experiments/$DR_EXPERIMENT_NAME" ]]; then
+      echo "Experiment directory $DIR/experiments/$DR_EXPERIMENT_NAME does not exist."
+      return 1
+    fi
     export DR_CONFIG="$DIR/experiments/$DR_EXPERIMENT_NAME/run.env"
   fi
 
@@ -64,21 +72,6 @@ function dr-update-env {
     echo "File ${DR_CONFIG} does not exist."
     return 1
   fi
-
-  if [[ ! -z $DR_EXPERIMENT_NAME ]]; then
-    if [[ -f "$DIR/experiments/$DR_EXPERIMENT_NAME/run.env" ]]; then
-      LINES=$(grep -v '^#' $DIR/experiments/$DR_EXPERIMENT_NAME/run.env)
-      for l in $LINES; do
-        env_var=$(echo $l | cut -f1 -d\=)
-        env_val=$(echo $l | cut -f2 -d\=)
-        eval "export $env_var=$env_val"
-      done
-    else
-      echo "File $DIR/experiments/$DR_EXPERIMENT_NAME/run.env does not exist."
-      return 1
-    fi
-  fi
-
 
   if [[ -z "${DR_RUN_ID}" ]]; then
     export DR_RUN_ID=0
@@ -109,12 +102,12 @@ EXPERIMENT_FLAG="$( grep DR_EXPERIMENT_NAME $DIR/system.env | grep -v \#)"
 if [[ -f "$1" ]]; then
   export DR_CONFIG=$(readlink -f $1)
   dr-update-env
-elif [[ -f "$DIR/run.env" ]]; then
-  export DR_CONFIG="$DIR/run.env"
-  dr-update-env
 elif [[ ! -z $EXPERIMENT_FLAG ]]; then
   EXPERIMENT_NAME=$(echo $EXPERIMENT_FLAG | cut -f2 -d\=)
   eval "export DR_CONFIG=$DIR/experiments/$EXPERIMENT_NAME/run.env"
+  dr-update-env
+elif [[ -f "$DIR/run.env" ]]; then
+  export DR_CONFIG="$DIR/run.env"
   dr-update-env
 else
   echo "No configuration file."
