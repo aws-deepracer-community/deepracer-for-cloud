@@ -35,24 +35,20 @@ done
 # This script creates the tar.gz file necessary to operate inside a deepracer physical car
 # The file is created directly from within the sagemaker container, using the most recent checkpoint
 
-# Find name of sagemaker container
-SAGEMAKER_CONTAINERS=$(docker ps | awk ' /algo/ { print $1 } ' | xargs)
-if [[ -n $SAGEMAKER_CONTAINERS ]]; then
-    for CONTAINER in $SAGEMAKER_CONTAINERS; do
-        CONTAINER_NAME=$(docker ps --format '{{.Names}}' --filter id=$CONTAINER)
-        CONTAINER_PREFIX=$(echo $CONTAINER_NAME | perl -n -e'/(.*)_(algo(.*))_./; print $1')
-        echo "Found Sagemaker container: $CONTAINER_NAME"
-    done
+# Find sagemaker container for the current run (respects DR_RUN_ID and DR_LOCAL_S3_MODEL_PREFIX)
+SAGEMAKER_CONTAINER=$(dr-find-sagemaker)
+if [[ -z "${SAGEMAKER_CONTAINER}" ]]; then
+    echo "No Sagemaker container found for run ${DR_RUN_ID}. Exiting."
+    exit 1
 fi
+echo "Found Sagemaker container: ${SAGEMAKER_CONTAINER}"
 
-#create tmp directory if it doesnt already exit
-mkdir -p $DR_DIR/tmp/car_upload
-cd $DR_DIR/tmp/car_upload
-#ensure directory is empty
-rm -r $DR_DIR/tmp/car_upload/*
+#create tmp directory if it doesnt already exist
+rm -rf "${DR_DIR}/tmp/car_upload" && mkdir -p "${DR_DIR}/tmp/car_upload"
+cd "${DR_DIR}/tmp/car_upload" || exit 1
 #The files we want are located inside the sagemaker container at /opt/ml/model.  Copy them to the tmp directory
-docker cp $CONTAINER_NAME:/opt/ml/model $DR_DIR/tmp/car_upload
-cd $DR_DIR/tmp/car_upload/model
+docker cp "${SAGEMAKER_CONTAINER}:/opt/ml/model" "${DR_DIR}/tmp/car_upload"
+cd "${DR_DIR}/tmp/car_upload/model" || exit 1
 #create a tar.gz file containing all of these files
 tar -czvf carfile.tar.gz *
 

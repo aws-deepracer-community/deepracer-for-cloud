@@ -4,7 +4,7 @@ usage() {
     echo "Usage: $0 [-f] [-w] [-p <model-prefix>] [-d <delimiter>]"
     echo ""
     echo "Command will increment a numerical suffix on the current upload model."
-    echo "-p model  Sets the to-be name to be <model-prefix> rather than auto-incremeneting the previous model."
+    echo "-p model  Sets the to-be name to be <model-prefix> rather than auto-incrementing the previous model."
     echo "-d delim  Delimiter in model-name (e.g. '-' in 'test-model-1')"
     echo "-f        Force. Ask for no confirmations."
     echo "-w        Wipe the S3 prefix to ensure that two models are not mixed."
@@ -51,7 +51,7 @@ echo "Configuration file $CONFIG_FILE will be updated."
 ## Read in data
 CURRENT_UPLOAD_MODEL=$(grep -e "^DR_UPLOAD_S3_PREFIX" ${CONFIG_FILE} | awk '{split($0,a,"="); print a[2] }')
 CURRENT_UPLOAD_MODEL_NUM=$(echo "${CURRENT_UPLOAD_MODEL}" |
-    awk -v DELIM="${OPT_DELIM}" '{ n=split($0,a,DELIM); if (a[n] ~ /[0-9]*/) print a[n]; else print ""; }')
+    awk -v DELIM="${OPT_DELIM}" '{ n=split($0,a,DELIM); if (a[n] ~ /^[0-9]+$/) print a[n]; else print ""; }')
 if [[ -z ${CURRENT_UPLOAD_MODEL_NUM} ]]; then
     NEW_UPLOAD_MODEL="${CURRENT_UPLOAD_MODEL}${OPT_DELIM}1"
 else

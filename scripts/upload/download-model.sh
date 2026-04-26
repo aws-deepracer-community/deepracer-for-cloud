@@ -3,8 +3,8 @@
 usage() {
   echo "Usage: $0 [-f] [-w] [-d] -s <source-prefix> -t <target-prefix>"
   echo "       -f                Force download. No confirmation question."
-  echo "       -w                Wipes the target AWS DeepRacer model structure before upload."
-  echo "       -d                Dry-Run mode. Does not perform any write or delete operatios on target."
+  echo "       -w                Wipes the target model structure before download."
+  echo "       -d                Dry-run mode. Does not perform any write or delete operations on target."
   echo "       -c                Copy config files into custom_files."
   echo "       -s source-url     Downloads model from specified S3 URL (s3://bucket/prefix)."
   echo "       -t target-prefix  Downloads model into specified prefix in local storage."
@@ -71,7 +71,7 @@ SOURCE_HYPERPARAM_FILE_S3_KEY="${SOURCE_S3_URL}/ip/hyperparameters.json"
 SOURCE_METADATA_S3_KEY="${SOURCE_S3_URL}/model/model_metadata.json"
 
 WORK_DIR=${DR_DIR}/tmp/download
-mkdir -p ${WORK_DIR} && rm -rf ${WORK_DIR} && mkdir -p ${WORK_DIR}/config ${WORK_DIR}/full
+rm -rf "${WORK_DIR}" && mkdir -p "${WORK_DIR}/config" "${WORK_DIR}/full"
 
 # Check if metadata-files are available
 REWARD_FILE=""
@@ -111,7 +111,7 @@ if [[ -z "${OPT_FORCE}" ]]; then
   fi
 fi
 
-cd ${WORK_DIR}
+cd "${WORK_DIR}" || exit 1
 aws ${DR_UPLOAD_PROFILE} s3 sync "${SOURCE_S3_URL}" ${WORK_DIR}/full/ ${OPT_DRYRUN}
 aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 sync ${WORK_DIR}/full/ s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/ ${OPT_DRYRUN} ${OPT_WIPE}
 

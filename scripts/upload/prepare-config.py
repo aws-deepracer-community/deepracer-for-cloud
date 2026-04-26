@@ -1,11 +1,6 @@
 #!/usr/bin/python3
 
-import boto3
-import sys
-import os 
-import time
-import json
-import io
+import os
 import yaml
 
 config = {}
@@ -61,7 +56,7 @@ if config['RACE_TYPE'] == 'HEAD_TO_BOT':
     config['RANDOMIZE_BOT_CAR_LOCATIONS'] = os.environ.get('DR_H2B_RANDOMIZE_BOT_CAR_LOCATIONS', 'False')
     config['BOT_CAR_SPEED'] = os.environ.get('DR_H2B_BOT_CAR_SPEED', '0.2')
 
-local_yaml_path = os.path.abspath(os.path.join(os.environ.get('WORK_DIR'),'training_params.yaml'))
+local_yaml_path = os.path.abspath(os.path.join(os.environ.get('WORK_DIR', '.'), 'training_params.yaml'))
 print(local_yaml_path)
 with open(local_yaml_path, 'w') as yaml_file:
     yaml.dump(config, yaml_file, default_flow_style=False, default_style='\'', explicit_start=True)

@@ -12,7 +12,7 @@ The scripts assume that two files `system.env` containing constant configuration
 | `DR_CAR_COLOR` | Valid options are `Black`, `Grey`, `Blue`, `Red`, `Orange`, `White`, and `Purple`.|
 | `DR_CAR_NAME` | Display name of car; shows in Deepracer Console when uploading.|
 | `DR_ENABLE_DOMAIN_RANDOMIZATION` | If `True`, this cycles through different environment colors and lighting each episode.  This is typically used to make your model more robust and generalized instead of tightly aligned with the simulator|
-| `DR_UPLOAD_S3_PREFIX` | Prefix of the target location. (Typically starts with `DeepRacer-SageMaker-RoboMaker-comm-`|
+| `DR_UPLOAD_S3_PREFIX` | Prefix of the target location in the upload bucket. |
 | `DR_EVAL_NUMBER_OF_TRIALS` | How many laps to complete for evaluation simulations.|
 | `DR_EVAL_IS_CONTINUOUS` | If False, your evaluation trial will end if you car goes off track or is in a collision. If True, your car will take the penalty times as configured in those parameters, but continue evaluating the trial.|
 | `DR_EVAL_OFF_TRACK_PENALTY` | Number of seconds penalty time added for an off track during evaluation.  Only takes effect if `DR_EVAL_IS_CONTINUOUS` is set to True.|
@@ -54,8 +54,8 @@ The scripts assume that two files `system.env` containing constant configuration
 | `DR_H2B_BOT_CAR_SPEED` | How fast the bot cars go in meters per second.|
 | `DR_CLOUD` | Can be `azure`, `aws`, `local` or `remote`; determines how the storage will be configured.|
 | `DR_AWS_APP_REGION` | (AWS only) Region for other AWS resources (e.g. Kinesis) |
-| `DR_UPLOAD_S3_PROFILE` | AWS Cli profile to be used that holds the 'real' S3 credentials needed to upload a model into AWS DeepRacer.|
-| `DR_UPLOAD_S3_BUCKET` | Name of the AWS DeepRacer bucket where models will be uploaded. (Typically starts with `aws-deepracer-`.)|
+| `DR_UPLOAD_S3_PROFILE` | AWS CLI profile holding credentials for the upload target bucket (e.g. a real AWS account when copying from local minio to S3).|
+| `DR_UPLOAD_S3_BUCKET` | Name of the target S3 bucket models will be copied to. |
 | `DR_LOCAL_S3_PROFILE` | Name of AWS profile with credentials to be used. Stored in `~/.aws/credentials` unless AWS IAM Roles are used.|
 | `DR_GUI_ENABLE` | Enable or disable the Gazebo GUI in Robomaker |
 | `DR_KINESIS_STREAM_NAME` | Kinesis stream name. Used if you actually publish to the AWS KVS service. Leave blank if you do not want this. |
@@ -101,5 +101,5 @@ The scripts assume that two files `system.env` containing constant configuration
 | `dr-logs-robomaker` | Displays the logs from the running Robomaker container.|
 | `dr-list-aws-models` | Lists the models that are currently stored in your AWS DeepRacer S3 bucket. |
 | `dr-set-upload-model` | Updates the `run.env` with the prefix and name of your selected model. |
-| `dr-upload-model` | Uploads the model defined in `DR_LOCAL_S3_MODEL_PREFIX` to the AWS DeepRacer S3 prefix defined in `DR_UPLOAD_S3_PREFIX` |
+| `dr-upload-model` | Copies the model defined in `DR_LOCAL_S3_MODEL_PREFIX` to the target bucket/prefix (`DR_UPLOAD_S3_BUCKET`/`DR_UPLOAD_S3_PREFIX`). By default prepares the model for import into the AWS DeepRacer console; use `-A` for a full prefix sync. |
 | `dr-download-model` | Downloads a file from a 'real' S3 location into a local prefix of choice. |

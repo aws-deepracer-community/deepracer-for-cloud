@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
 
 usage() {
-  echo "Usage: $0 [-f] [-w] [-d] [-b] [-1] [-i] [-I] [-L] [-c <checkpoint>] [-p <model-prefix>]"
-  echo "       -f        Force upload. No confirmation question."
-  echo "       -w        Wipes the target AWS DeepRacer model structure before upload."
-  echo "       -d        Dry-Run mode. Does not perform any write or delete operatios on target."
-  echo "       -b        Uploads best checkpoint. Default is last checkpoint."
-  echo "       -p model  Uploads model from specified S3 prefix."
+  echo "Usage: $0 [-f] [-w] [-d] [-b] [-A] [-1] [-L] [-c <checkpoint>] [-p <model-prefix>]"
+  echo "Copies a model between S3 buckets (e.g. local minio to remote S3)."
+  echo "By default prepares the model for import into the AWS DeepRacer console"
+  echo "(cherry-picks checkpoint files and generates training_params.yaml)."
+  echo ""
+  echo "       -f        Force. No confirmation question."
+  echo "       -w        Wipes the target prefix before copy."
+  echo "       -d        Dry-run mode. Does not perform any write or delete operations on target."
+  echo "       -b        Copy best checkpoint. Default is last checkpoint."
+  echo "       -A        Copy all files in the model prefix (full sync, skips console prep)."
+  echo "       -p model  Copy model from specified S3 prefix."
   echo "       -1        Increment upload name with 1 (dr-increment-upload-model)"
-  echo "       -L        Upload model to the local S3 bucket"
+  echo "       -L        Copy model to the local S3 bucket."
   exit 1
 }
 
@@ -19,7 +24,7 @@ function ctrl_c() {
   exit 1
 }
 
-while getopts ":fwdhbp:c:1L" opt; do
+while getopts ":fwdhbp:c:1LA" opt; do
   case $opt in
   b)
     OPT_CHECKPOINT="Best"
@@ -44,6 +49,9 @@ while getopts ":fwdhbp:c:1L" opt; do
     ;;
   1)
     OPT_INCREMENT="Yes"
+    ;;
+  A)
+    OPT_ALL="All"
     ;;
   h)
     usage
@@ -97,6 +105,20 @@ fi
 if [[ -z "${TARGET_S3_PREFIX}" ]]; then
   echo "No upload prefix defined. Exiting."
   exit 1
+fi
+
+# Full-sync mode: copy everything in the source prefix, skipping console-prep logic.
+if [[ -n "${OPT_ALL}" ]]; then
+  if [[ -z "${OPT_FORCE}" ]]; then
+    echo "Ready to copy all files from s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/ to s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/"
+    read -r -p "Are you sure? [y/N] " response
+    if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+      echo "Aborting."
+      exit 1
+    fi
+  fi
+  aws ${UPLOAD_PROFILE} s3 sync s3://${SOURCE_S3_BUCKET}/${SOURCE_S3_MODEL_PREFIX}/ s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/ ${OPT_DRYRUN} ${OPT_WIPE}
+  exit 0
 fi
 
 export WORK_DIR=${DR_DIR}/tmp/upload/
@@ -217,8 +239,8 @@ if [[ -z "${OPT_FORCE}" ]]; then
 fi
 
 # echo "" > ${WORK_DIR}model/.ready
-cd ${WORK_DIR}
-echo ${CHECKPOINT_JSON} >${WORK_DIR}model/deepracer_checkpoints.json
+cd "${WORK_DIR}" || exit 1
+echo "${CHECKPOINT_JSON}" >${WORK_DIR}model/deepracer_checkpoints.json
 aws ${UPLOAD_PROFILE} s3 sync ${WORK_DIR}model/ s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/model/ ${OPT_DRYRUN} ${OPT_WIPE}
 aws ${UPLOAD_PROFILE} s3 cp ${REWARD_FILE} ${TARGET_REWARD_FILE_S3_KEY} ${OPT_DRYRUN}
 aws ${UPLOAD_PROFILE} s3 sync ${WORK_DIR}/metrics/ ${TARGET_METRICS_FILE_S3_KEY} ${OPT_DRYRUN}
