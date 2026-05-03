@@ -26,8 +26,6 @@ config['SIMTRACE_S3_BUCKET'] = []
 config['KINESIS_VIDEO_STREAM_NAME'] = []
 config['METRICS_S3_BUCKET'] = []
 config['METRICS_S3_OBJECT_KEY'] = []
-config['MP4_S3_BUCKET'] = []
-config['MP4_S3_OBJECT_PREFIX'] = []
 
 # Basic configuration; including all buckets etc.
 config['AWS_REGION'] = os.environ.get('DR_AWS_APP_REGION', 'us-east-1')
@@ -57,6 +55,8 @@ else:
 # MP4 configuration / sav
 save_mp4 = str2bool(os.environ.get("DR_EVAL_SAVE_MP4", "False"))
 if save_mp4:
+    config['MP4_S3_BUCKET'] = []
+    config['MP4_S3_OBJECT_PREFIX'] = []
     config['MP4_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
     config['MP4_S3_OBJECT_PREFIX'].append('{}/{}'.format(os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'bucket'),'mp4'))
 
