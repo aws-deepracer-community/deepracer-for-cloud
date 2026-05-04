@@ -13,7 +13,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 # Only allow supported Ubuntu versions
 . /etc/os-release
-SUPPORTED_VERSIONS=("22.04" "24.04" "24.10" "25.04" "25.10")
+SUPPORTED_VERSIONS=("22.04" "24.04" "24.10" "25.04" "25.10" "26.04")
 DISTRIBUTION=${ID}${VERSION_ID//./}
 UBUNTU_MAJOR_VERSION=$(echo $VERSION_ID | cut -d. -f1)
 UBUNTU_MINOR_VERSION=$(echo $VERSION_ID | cut -d. -f2)

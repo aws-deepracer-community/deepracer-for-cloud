@@ -1,7 +1,7 @@
 # DeepRacer-For-Cloud
 Provides a quick and easy way to get up and running with a DeepRacer training environment using a cloud virtual machine or a local compter, such [AWS EC2 Accelerated Computing instances](https://aws.amazon.com/ec2/instance-types/?nc1=h_ls#Accelerated_Computing) or the Azure [N-Series Virtual Machines](https://docs.microsoft.com/en-us/azure/virtual-machines/windows/sizes-gpu).
 
-DRfC runs on Ubuntu 22.04 and 24.04. GPU acceleration requires a NVIDIA GPU, preferrably with more than 8GB of VRAM. ARM64/Graviton instances (AWS Graviton, Apple Silicon) are also supported for CPU-only training.
+DRfC runs on Ubuntu (between 22.04 and 26.04). GPU acceleration requires a NVIDIA GPU, preferrably with more than 8GB of VRAM. ARM64/Graviton instances (AWS Graviton, Apple Silicon) are also supported for CPU-only training.
 
 **Experimental:** macOS is supported in CPU-only mode via [Colima](https://github.com/abiosoft/colima), on both AWS Mac EC2 instances and local Mac hardware (Intel and Apple Silicon). See [docs/mac.md](docs/mac.md) for setup instructions.
 
