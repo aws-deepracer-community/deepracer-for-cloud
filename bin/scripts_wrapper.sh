@@ -92,6 +92,10 @@ function dr-download-model {
   dr-update-env && ${DR_DIR}/scripts/upload/download-model.sh "$@"
 }
 
+function dr-create-car-zip {
+  dr-update-env && ${DR_DIR}/scripts/upload/create-car-zip.sh "$@"
+}
+
 function dr-upload-car-zip {
   dr-update-env && ${DR_DIR}/scripts/upload/upload-car.sh "$@"
 }

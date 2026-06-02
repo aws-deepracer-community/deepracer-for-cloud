@@ -1,78 +1,86 @@
 #!/usr/bin/env bash
 
 usage() {
-    echo "Usage: $0 [-L] [-f]"
-    echo "       -f        Force. Do not ask for confirmation."
-    echo "       -L        Upload model to the local S3 bucket."
-    exit 1
+  echo "Usage: $0 [-b] [-f] [-L] [-p <model-prefix>]"
+  echo "       -b              Use best checkpoint. Default is last checkpoint."
+  echo "       -f              Force. Do not ask for confirmation."
+  echo "       -L              Upload to local S3 bucket."
+  echo "       -p <prefix>     Model prefix. Default: DR_LOCAL_S3_MODEL_PREFIX."
+  exit 1
 }
 
 trap ctrl_c INT
 
 function ctrl_c() {
-    echo "Requested to stop."
-    exit 1
+  echo "Requested to stop."
+  exit 1
 }
 
-while getopts ":Lf" opt; do
-    case $opt in
-    L)
-        OPT_LOCAL="Local"
-        ;;
-    f)
-        OPT_FORCE="force"
-        ;;
-    h)
-        usage
-        ;;
-    \?)
-        echo "Invalid option -$OPTARG" >&2
-        usage
-        ;;
-    esac
+while getopts ":bfLp:h" opt; do
+  case $opt in
+  b)
+    OPT_CHECKPOINT="-b"
+    ;;
+  f)
+    OPT_FORCE="force"
+    ;;
+  L)
+    OPT_LOCAL="Local"
+    ;;
+  p)
+    OPT_PREFIX="$OPTARG"
+    ;;
+  h)
+    usage
+    ;;
+  \?)
+    echo "Invalid option -$OPTARG" >&2
+    usage
+    ;;
+  esac
 done
 
-# This script creates the tar.gz file necessary to operate inside a deepracer physical car
-# The file is created directly from within the sagemaker container, using the most recent checkpoint
-
-# Find name of sagemaker container
-SAGEMAKER_CONTAINERS=$(docker ps | awk ' /algo/ { print $1 } ' | xargs)
-if [[ -n $SAGEMAKER_CONTAINERS ]]; then
-    for CONTAINER in $SAGEMAKER_CONTAINERS; do
-        CONTAINER_NAME=$(docker ps --format '{{.Names}}' --filter id=$CONTAINER)
-        CONTAINER_PREFIX=$(echo $CONTAINER_NAME | perl -n -e'/(.*)_(algo(.*))_./; print $1')
-        echo "Found Sagemaker container: $CONTAINER_NAME"
-    done
-fi
-
-#create tmp directory if it doesnt already exit
-mkdir -p $DR_DIR/tmp/car_upload
-cd $DR_DIR/tmp/car_upload
-#ensure directory is empty
-rm -r $DR_DIR/tmp/car_upload/*
-#The files we want are located inside the sagemaker container at /opt/ml/model.  Copy them to the tmp directory
-docker cp $CONTAINER_NAME:/opt/ml/model $DR_DIR/tmp/car_upload
-cd $DR_DIR/tmp/car_upload/model
-#create a tar.gz file containing all of these files
-tar -czvf carfile.tar.gz *
-
-# Upload files
-if [[ -z "${OPT_FORCE}" ]]; then
-    if [[ -n "${OPT_LOCAL}" ]]; then
-        echo "Ready to upload car model to local s3://${DR_LOCAL_S3_BUCKET}/${DR_UPLOAD_S3_PREFIX}."
-    else
-        echo "Ready to upload car model to remote s3://${DR_UPLOAD_S3_BUCKET}/${DR_UPLOAD_S3_PREFIX}."
-    fi
-    read -r -p "Are you sure? [y/N] " response
-    if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-        echo "Aborting."
-        exit 1
-    fi
-fi
-
-#upload to s3
-if [[ -n "${OPT_LOCAL}" ]]; then
-    aws ${DR_LOCAL_PROFILE_ENDPOINT_URL} s3 cp carfile.tar.gz s3://${DR_LOCAL_S3_BUCKET}/${DR_UPLOAD_S3_PREFIX}/carfile.tar.gz
+# Determine model prefix
+if [[ -n "${OPT_PREFIX}" ]]; then
+  MODEL_PREFIX="${OPT_PREFIX}"
 else
-    aws ${DR_UPLOAD_PROFILE} s3 cp carfile.tar.gz s3://${DR_UPLOAD_S3_BUCKET}/${DR_UPLOAD_S3_PREFIX}/carfile.tar.gz
+  MODEL_PREFIX="${DR_LOCAL_S3_MODEL_PREFIX}"
 fi
+
+# Create the car tar.gz via create-car-zip.sh
+CREATE_ARGS="${OPT_CHECKPOINT}"
+if [[ -n "${OPT_PREFIX}" ]]; then
+  CREATE_ARGS="${CREATE_ARGS} -p ${OPT_PREFIX}"
+fi
+
+CAR_ZIP_FILE="${DR_DIR}/${MODEL_PREFIX}.tar.gz"
+CREATE_ARGS="${CREATE_ARGS} -o ${CAR_ZIP_FILE}"
+
+${DR_DIR}/scripts/upload/create-car-zip.sh ${CREATE_ARGS}
+if [ $? -ne 0 ]; then
+  echo "Failed to create car zip. Exiting." >&2
+  exit 1
+fi
+
+# Determine upload target
+if [[ -z "${OPT_LOCAL}" ]]; then
+  TARGET_S3_BUCKET="${DR_UPLOAD_S3_BUCKET}"
+  UPLOAD_PROFILE="${DR_UPLOAD_PROFILE}"
+  TARGET_S3_PREFIX="${DR_UPLOAD_S3_PREFIX}"
+else
+  TARGET_S3_BUCKET="${DR_LOCAL_S3_BUCKET}"
+  UPLOAD_PROFILE="${DR_LOCAL_PROFILE_ENDPOINT_URL}"
+  TARGET_S3_PREFIX="${MODEL_PREFIX}"
+fi
+
+if [[ -z "${OPT_FORCE}" ]]; then
+  echo "Ready to upload ${MODEL_PREFIX}.tar.gz to s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/${MODEL_PREFIX}.tar.gz"
+  read -r -p "Are you sure? [y/N] " response
+  if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+    echo "Aborting."
+    exit 1
+  fi
+fi
+
+aws ${UPLOAD_PROFILE} s3 cp "${CAR_ZIP_FILE}" \
+  "s3://${TARGET_S3_BUCKET}/${TARGET_S3_PREFIX}/${MODEL_PREFIX}.tar.gz"
