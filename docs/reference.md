@@ -103,3 +103,5 @@ The scripts assume that two files `system.env` containing constant configuration
 | `dr-set-upload-model` | Updates the `run.env` with the prefix and name of your selected model. |
 | `dr-upload-model` | Uploads the model defined in `DR_LOCAL_S3_MODEL_PREFIX` to the AWS DeepRacer S3 prefix defined in `DR_UPLOAD_S3_PREFIX` |
 | `dr-download-model` | Downloads a file from a 'real' S3 location into a local prefix of choice. |
+| `dr-create-car-zip` | Creates a physical car deployment archive (`data/output/<model-prefix>.tar.gz`) containing `agent/model.pb` and `model_metadata.json`, sourced directly from S3 — no running container required. Accepts `-b` (best checkpoint, default: last), `-p <prefix>` (override model prefix), `-o <output-file>`. |
+| `dr-upload-car-zip` | Creates a car deployment archive via `dr-create-car-zip` and uploads it to S3. Accepts `-b` (best checkpoint), `-f` (force, skip confirmation), `-L` (upload to local S3 bucket), `-p <prefix>` (override model prefix). |
