@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+  elasticmq:
+    image: softwaremill/elasticmq-native:${DR_VIRTUAL_ELASTICMQ_IMAGE:-latest}
+    ports:
+      - "9324:9324"
+      - "9325:9325"
+    volumes:
+      - ${DR_DIR}/docker/files/elasticmq.conf:/opt/elasticmq.conf
+    init: true

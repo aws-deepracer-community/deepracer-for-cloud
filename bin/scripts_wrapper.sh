@@ -144,6 +144,20 @@ function dr-stop-evaluation {
   bash -c "cd $DR_DIR/scripts/evaluation && ./stop.sh"
 }
 
+function dr-start-virtual {
+  dr-update-env
+  $DR_DIR/scripts/virtual/start.sh "$@"
+}
+
+function dr-stop-virtual {
+  bash -c "cd $DR_DIR/scripts/virtual && ./stop.sh"
+}
+
+function dr-addracer-virtual {
+  dr-update-env
+  python3 $DR_DIR/scripts/virtual/add-racer.py "$@"
+}
+
 function dr-stop-all {
   # Step 1: Stop all stacks (swarm) or all compose projects (compose)
   if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
@@ -296,10 +310,11 @@ function dr-logs-robomaker {
 
   OPT_REPLICA=1
   OPT_EVAL=""
+  OPT_VIRTUAL=""
   local OPTIND
   OPT_TIME="--since 5m"
 
-  while getopts ":w:n:ea" opt; do
+  while getopts ":w:n:eva" opt; do
     case $opt in
     w)
       OPT_WAIT=$OPTARG
@@ -310,6 +325,9 @@ function dr-logs-robomaker {
     e)
       OPT_EVAL="-e"
       ;;
+    v)
+      OPT_VIRTUAL="-v"
+      ;;
     a)
       OPT_TIME=""
       ;;
@@ -319,7 +337,7 @@ function dr-logs-robomaker {
     esac
   done
 
-  ROBOMAKER_CONTAINER=$(dr-find-robomaker -n ${OPT_REPLICA} ${OPT_EVAL})
+  ROBOMAKER_CONTAINER=$(dr-find-robomaker -n ${OPT_REPLICA} ${OPT_EVAL} ${OPT_VIRTUAL})
 
   if [[ -z "$ROBOMAKER_CONTAINER" ]]; then
     if [[ -n "$OPT_WAIT" ]]; then
@@ -332,7 +350,7 @@ function dr-logs-robomaker {
           echo "Robomaker #${OPT_REPLICA} is not running."
           return 1
         fi
-        ROBOMAKER_CONTAINER=$(dr-find-robomaker -n ${OPT_REPLICA} ${OPT_EVAL})
+        ROBOMAKER_CONTAINER=$(dr-find-robomaker -n ${OPT_REPLICA} ${OPT_EVAL} ${OPT_VIRTUAL})
       done
     else
       echo "Robomaker #${OPT_REPLICA} is not running."
@@ -366,13 +384,16 @@ function dr-find-robomaker {
 
   OPT_PREFIX="deepracer"
 
-  while getopts ":n:e" opt; do
+  while getopts ":n:ev" opt; do
     case $opt in
     n)
       OPT_REPLICA=$OPTARG
       ;;
     e)
-      OPT_PREFIX="-eval"
+      OPT_PREFIX="deepracer-eval"
+      ;;
+    v)
+      OPT_PREFIX="deepracer-virtual"
       ;;
     \?)
       echo "Invalid option -$OPTARG" >&2

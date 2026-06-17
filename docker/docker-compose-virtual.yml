@@ -1,0 +1,36 @@
+version: '3.7'
+
+networks:
+  default:
+    external: true
+    name: sagemaker-local
+
+services:
+  rl_coach:
+    image: ${DR_SIMAPP_SOURCE}:${DR_SIMAPP_VERSION}
+    command: ["/bin/bash", "-c", "echo No work for coach in Virtual Event Mode"]
+  robomaker:
+    image: ${DR_SIMAPP_SOURCE}:${DR_SIMAPP_VERSION}
+    command: ["${ROBOMAKER_COMMAND:-}"]
+    ports:
+      - "${DR_ROBOMAKER_EVAL_PORT}:8080"
+    environment:
+      - CUDA_VISIBLE_DEVICES=${DR_ROBOMAKER_CUDA_DEVICES:-}
+      - WORLD_NAME=${DR_WORLD_NAME}
+      - APP_REGION=${DR_AWS_APP_REGION}
+      - YAML_S3_BUCKET=${DR_LOCAL_S3_BUCKET}
+      - YAML_S3_PREFIX=${DR_LOCAL_S3_MODEL_PREFIX}
+      - S3_YAML_NAME=${DR_CURRENT_PARAMS_FILE}
+      - SQS_ENDPOINT_URL=${DR_VIRTUAL_SQS_ENDPOINT_URL:-}
+      - KINESIS_VIDEO_STREAM_NAME=${DR_KINESIS_STREAM_NAME}
+      - ENABLE_KINESIS=${DR_VIRTUAL_KVS_ENABLE:-False}
+      - ENABLE_GUI=${DR_GUI_ENABLE}
+      - ROLLOUT_IDX=0
+      - RTF_OVERRIDE=${DR_EVAL_RTF:-}
+      - ROS_MASTER_URI=http://localhost:11311/
+      - ROS_IP=127.0.0.1
+      - GAZEBO_ARGS=${DR_GAZEBO_ARGS:-}
+      - GAZEBO_RENDER_ENGINE=${DR_GAZEBO_RENDER_ENGINE:-ogre2}
+      - TELEGRAF_HOST=${DR_TELEGRAF_HOST:-}
+      - TELEGRAF_PORT=${DR_TELEGRAF_PORT:-}
+    init: true

@@ -327,8 +327,38 @@ else
   export DR_LOCAL_S3_AUTH_MODE="profile"
 fi
 
+# Virtual racing: mirror the evaluation stack, swapping in the virtual-event service.
+# This inherits all the same overlays (endpoint/keys/aws/xorg/swarm/cwlog/mounts).
+DR_VIRTUAL_COMPOSE_FILE=$(echo "$DR_EVAL_COMPOSE_FILE" | sed 's#docker-compose-eval.yml#docker-compose-virtual.yml#')
+
+# Virtual racing queue (SQS) configuration.
+# The queue endpoint is independent of the S3 endpoint, so the SQS-compatible
+# queue can live on a different host than MinIO/S3. Set DR_REMOTE_SQS_ENDPOINT_URL
+# (in system.env or run.env) to point at a remote SQS-compatible queue; this
+# suppresses the in-stack ElasticMQ. When left unset, a local ElasticMQ service
+# is started in-stack (non-aws) or real AWS SQS is used (aws).
+# DR_VIRTUAL_SQS_ENDPOINT_URL / DR_VIRTUAL_SQS_HOST_ENDPOINT_URL are always
+# derived here and must NOT be set by the user — they would break re-sourcing.
+export DR_VIRTUAL_SQS_QUEUE_NAME=${DR_VIRTUAL_SQS_QUEUE_NAME:-deepracer-virtual.fifo}
+unset DR_VIRTUAL_SQS_ENDPOINT_URL DR_VIRTUAL_SQS_HOST_ENDPOINT_URL
+if [[ -n "${DR_REMOTE_SQS_ENDPOINT_URL:-}" ]]; then
+  # User-supplied remote queue endpoint; do not start the in-stack ElasticMQ.
+  export DR_VIRTUAL_SQS_ENDPOINT_URL="$DR_REMOTE_SQS_ENDPOINT_URL"
+  export DR_VIRTUAL_SQS_HOST_ENDPOINT_URL=${DR_REMOTE_SQS_HOST_ENDPOINT_URL:-$DR_REMOTE_SQS_ENDPOINT_URL}
+elif [[ "${DR_CLOUD,,}" == "aws" ]]; then
+  # Real AWS SQS; no endpoint override. The queue is created on demand at start.
+  export DR_VIRTUAL_SQS_ENDPOINT_URL=""
+  export DR_VIRTUAL_SQS_HOST_ENDPOINT_URL=""
+else
+  # local / remote / azure: run a local SQS-compatible queue (ElasticMQ) in-stack.
+  DR_VIRTUAL_COMPOSE_FILE="$DR_VIRTUAL_COMPOSE_FILE $DR_DOCKER_FILE_SEP $DIR/docker/docker-compose-elasticmq.yml"
+  export DR_VIRTUAL_SQS_ENDPOINT_URL="http://elasticmq:9324"
+  export DR_VIRTUAL_SQS_HOST_ENDPOINT_URL="http://localhost:9324"
+fi
+
 export DR_TRAIN_COMPOSE_FILE
 export DR_EVAL_COMPOSE_FILE
+export DR_VIRTUAL_COMPOSE_FILE
 export DR_LOCAL_PROFILE_ENDPOINT_URL
 
 if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
