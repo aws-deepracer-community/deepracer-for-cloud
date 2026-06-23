@@ -128,4 +128,4 @@ if [ -n "$OPT_QUIET" ]; then
 fi
 
 echo "Virtual racing host started. Enqueue racers with: dr-addracer-virtual"
-echo "Tail the host with: dr-logs-robomaker -v"
+dr-logs-robomaker -w 15 -v
