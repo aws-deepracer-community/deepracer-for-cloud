@@ -40,13 +40,15 @@ config['RACE_DURATION'] = os.environ.get('DR_VIRTUAL_RACE_DURATION', '180')
 config['NUMBER_OF_TRIALS'] = os.environ.get('DR_VIRTUAL_NUMBER_OF_TRIALS', '3')
 config['NUMBER_OF_RESETS'] = os.environ.get('DR_VIRTUAL_NUMBER_OF_RESETS', '0')
 config['IS_CONTINUOUS'] = os.environ.get('DR_VIRTUAL_IS_CONTINUOUS', 'False')
-config['PENALTY_SECONDS'] = os.environ.get('DR_VIRTUAL_PENALTY_SECONDS', '2.0')
 config['OFF_TRACK_PENALTY'] = os.environ.get('DR_VIRTUAL_OFF_TRACK_PENALTY', '2.0')
 config['COLLISION_PENALTY'] = os.environ.get('DR_VIRTUAL_COLLISION_PENALTY', '5.0')
 config['NUM_SECTORS'] = os.environ.get('DR_VIRTUAL_NUM_SECTORS', '3')
 config['START_POS_OFFSET'] = os.environ.get('DR_VIRTUAL_START_POS_OFFSET', '0.0')
 config['CHANGE_START_POSITION'] = os.environ.get('DR_VIRTUAL_CHANGE_START_POSITION', 'False')
 config['ALTERNATE_DRIVING_DIRECTION'] = os.environ.get('DR_VIRTUAL_ALTERNATE_DRIVING_DIRECTION', 'False')
+
+config['CAMERA_MAIN_ENABLE'] = os.environ.get('DR_CAMERA_MAIN_ENABLE', 'True')
+config['CAMERA_SUB_ENABLE'] = os.environ.get('DR_CAMERA_SUB_ENABLE', 'True')
 
 # Pass the S3 endpoint through for components that read it from the race config.
 s3_container_endpoint_url = os.environ.get('DR_MINIO_URL', None)
