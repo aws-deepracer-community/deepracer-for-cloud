@@ -52,7 +52,7 @@ DRfC is built on top of the [AWS DeepRacer Simapp](https://github.com/aws-deepra
 | Python | 3.12 |
 | TensorFlow | 2.20 |
 | CUDA | 12.6 (GPU only) |
-| Redis | 8.6.1 |
+| Redis | 8.8.0 |
 | ROS | 2 Jazzy |
 | Gazebo | Harmonic |
 
