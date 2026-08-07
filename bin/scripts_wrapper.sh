@@ -391,31 +391,6 @@ function dr-find-robomaker {
   fi
 }
 
-function dr-get-robomaker-stats {
-
-  local OPTIND
-  OPT_REPLICA=1
-
-  while getopts ":n:" opt; do
-    case $opt in
-    n)
-      OPT_REPLICA=$OPTARG
-      ;;
-    \?)
-      echo "Invalid option -$OPTARG" >&2
-      ;;
-    esac
-  done
-
-  eval ROBOMAKER_ID=$(dr-find-robomaker -n $OPT_REPLICA)
-  if [ -n "$ROBOMAKER_ID" ]; then
-    echo "Showing statistics for Robomaker #$OPT_REPLICA - container $ROBOMAKER_ID"
-    docker exec -ti $ROBOMAKER_ID bash -c "gz stats"
-  else
-    echo "Robomaker #$OPT_REPLICA is not running."
-  fi
-}
-
 function dr-logs-loganalysis {
   eval LOG_ANALYSIS_ID=$(docker ps | awk ' /deepracer-analysis/ { print $1 }')
   if [ -n "$LOG_ANALYSIS_ID" ]; then
