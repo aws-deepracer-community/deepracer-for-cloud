@@ -372,8 +372,23 @@ function dr-summary {
     _dr_row "  ${C_WARN}No DeepRacer-related services or containers running.${RST}"
   fi
 
+  # ── message of the day ───────────────────────────────────────────────────
+  local _motd_file="$DR_DIR/defaults/motd.json"
+  if [[ -f "$_motd_file" ]]; then
+    local _motd_msgs=()
+    while IFS= read -r _motd_line; do
+      _motd_msgs+=("$_motd_line")
+    done < <(jq -r '.messages[]?' "$_motd_file" 2>/dev/null)
+    if [[ ${#_motd_msgs[@]} -gt 0 ]]; then
+      local _motd_idx=$(( (10#$(date +%j) - 1) % ${#_motd_msgs[@]} ))
+      _dr_section "Message of the Day"
+      while IFS= read -r _motd_wrapped; do
+        _dr_row " ${C_VAL}${_motd_wrapped}${RST}"
+      done < <(echo "${_motd_msgs[$_motd_idx]}" | fold -s -w $(( W - 3 )))
+    fi
+  fi
+
   # ── footer ────────────────────────────────────────────────────────────────
-  _dr_blank
   _dr_hline "╰" "─" "╯"
   echo
 }
