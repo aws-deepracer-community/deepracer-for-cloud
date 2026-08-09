@@ -74,6 +74,55 @@ function _dr_compose_file_matches_run {
   grep -Fq "RUN_ID=${DR_RUN_ID}" <<<"$compose_content" && grep -Fq "${DR_LOCAL_S3_MODEL_PREFIX}" <<<"$compose_content"
 }
 
+function _dr_is_bare_metal {
+  local virt_type
+
+  if ! [[ -f /proc/version ]]; then
+    return 1
+  fi
+
+  if command -v systemd-detect-virt >/dev/null 2>&1; then
+    virt_type=$(systemd-detect-virt 2>/dev/null || true)
+    if [[ -n "$virt_type" && "$virt_type" != "none" ]]; then
+      return 1
+    fi
+  fi
+
+  return 0
+}
+
+function _dr_check_cpu_performance_mode {
+  local governor_file governor
+  local -a governor_files
+  local has_non_performance=0
+
+  if ! _dr_is_bare_metal; then
+    return 0
+  fi
+
+  if [[ "${DR_CLOUD,,}" == "aws" || "${DR_CLOUD,,}" == "azure" ]]; then
+    return 0
+  fi
+
+  mapfile -t governor_files < <(compgen -G "/sys/devices/system/cpu/cpu[0-9]*/cpufreq/scaling_governor")
+  if [[ ${#governor_files[@]} -eq 0 ]]; then
+    return 0
+  fi
+
+  for governor_file in "${governor_files[@]}"; do
+    governor=$(<"$governor_file")
+    if [[ "$governor" != "performance" ]]; then
+      has_non_performance=1
+      break
+    fi
+  done
+
+  if [[ "$has_non_performance" -eq 1 ]]; then
+    printf '\033[33mWARNING: CPU governor is not set to performance on all cores.\033[0m\n'
+    echo "         To switch now: sudo cpupower frequency-set -g performance"
+  fi
+}
+
 function dr-upload-custom-files {
   eval CUSTOM_TARGET=$(echo s3://$DR_LOCAL_S3_BUCKET/$DR_LOCAL_S3_CUSTOM_FILES_PREFIX/)
   echo "Uploading files to $CUSTOM_TARGET"
@@ -124,6 +173,7 @@ function dr-download-custom-files {
 
 function dr-start-training {
   dr-update-env
+  _dr_check_cpu_performance_mode
   $DR_DIR/scripts/training/start.sh "$@"
 }
 
@@ -137,6 +187,7 @@ function dr-stop-training {
 
 function dr-start-evaluation {
   dr-update-env
+  _dr_check_cpu_performance_mode
   $DR_DIR/scripts/evaluation/start.sh "$@"
 }
 
