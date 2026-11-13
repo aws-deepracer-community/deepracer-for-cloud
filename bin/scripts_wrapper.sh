@@ -249,6 +249,10 @@ function dr-start-loganalysis {
   bash -c "cd $DR_DIR/scripts/log-analysis && ./start.sh"
 }
 
+function dr-performance-stats {
+  dr-update-env && "${DR_DIR}/.venv/bin/python" "${DR_DIR}/scripts/log-analysis/performance-stats.py" "$@"
+}
+
 function dr-stop-loganalysis {
   eval LOG_ANALYSIS_ID=$(docker ps | awk ' /deepracer-analysis/ { print $1 }')
   if [ -n "$LOG_ANALYSIS_ID" ]; then
