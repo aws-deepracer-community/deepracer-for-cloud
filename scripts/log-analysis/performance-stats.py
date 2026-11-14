@@ -10,6 +10,8 @@ import os
 import sys
 import warnings
 
+import boto3
+
 warnings.filterwarnings("ignore")
 
 from deepracer.logs import DeepRacerLog, S3FileHandler  # noqa: E402
@@ -30,11 +32,16 @@ def main() -> int:
         print("Error: DR_LOCAL_S3_BUCKET and DR_LOCAL_S3_MODEL_PREFIX must be set.", file=sys.stderr)
         return 1
 
+    # On EC2 with an IAM role the profile does not exist; use the default credential chain.
+    profile = os.environ.get("DR_LOCAL_S3_PROFILE") or None
+    if profile not in boto3.session.Session().available_profiles:
+        profile = None
+
     fh = S3FileHandler(
         bucket=bucket,
         prefix=prefix,
         s3_endpoint_url=os.environ.get("DR_LOCAL_S3_ENDPOINT_URL") or None,
-        profile=os.environ.get("DR_LOCAL_S3_PROFILE") or None,
+        profile=profile,
     )
     log = DeepRacerLog(filehandler=fh)
 
