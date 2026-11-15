@@ -53,3 +53,8 @@ services:
       - TELEGRAF_HOST=${DR_TELEGRAF_HOST:-}
       - TELEGRAF_PORT=${DR_TELEGRAF_PORT:-}
     init: true
+    volumes:
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+          size: 1073741824  # 1 GiB
