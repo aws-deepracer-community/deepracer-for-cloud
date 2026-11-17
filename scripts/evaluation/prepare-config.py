@@ -58,7 +58,7 @@ else:
 save_mp4 = str2bool(os.environ.get("DR_EVAL_SAVE_MP4", "False"))
 if save_mp4:
     config['MP4_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
-    config['MP4_S3_OBJECT_PREFIX'].append('{}/{}'.format(os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'bucket'),'mp4'))
+    config['MP4_S3_OBJECT_PREFIX'].append('{}/evaluation-{}/{}'.format(os.environ.get('DR_LOCAL_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'), eval_time, 'mp4'))
 
 # Checkpoint
 config['EVAL_CHECKPOINT'] = os.environ.get('DR_EVAL_CHECKPOINT', 'last')
@@ -80,7 +80,7 @@ config['IS_CONTINUOUS'] = os.environ.get('DR_EVAL_IS_CONTINUOUS', 'True')
 config['NUMBER_OF_RESETS'] = os.environ.get('DR_EVAL_MAX_RESETS', '0')
 
 config['OFF_TRACK_PENALTY'] = os.environ.get('DR_EVAL_OFF_TRACK_PENALTY', '5.0')
-config['COLLISION_PENALTY'] = os.environ.get('DR_COLLISION_PENALTY', '5.0')
+config['COLLISION_PENALTY'] = os.environ.get('DR_EVAL_COLLISION_PENALTY', '5.0')
 
 config['CAMERA_MAIN_ENABLE'] = os.environ.get('DR_CAMERA_MAIN_ENABLE', 'True')
 config['CAMERA_SUB_ENABLE'] = os.environ.get('DR_CAMERA_SUB_ENABLE', 'True')
@@ -120,21 +120,18 @@ if config['RACE_TYPE'] == 'HEAD_TO_MODEL':
     config['MODEL_S3_PREFIX'].append(os.environ.get('DR_EVAL_OPP_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'))
     config['MODEL_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
     config['SIMTRACE_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
-    config['SIMTRACE_S3_PREFIX'].append(os.environ.get('DR_EVAL_OPP_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'))
+    config['SIMTRACE_S3_PREFIX'].append('{}/evaluation-{}'.format(os.environ.get('DR_EVAL_OPP_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'), eval_time))
 
     # Metrics
     config['METRICS_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
     metrics_prefix = os.environ.get('DR_EVAL_OPP_S3_METRICS_PREFIX', '{}/{}'.format(os.environ.get('DR_EVAL_OPP_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'),'metrics'))
-    if metrics_prefix is not None:
-        config['METRICS_S3_OBJECT_KEY'].append('{}/EvaluationMetrics-{}.json'.format(metrics_prefix, str(round(time.time()))))
-    else:
-        config['METRICS_S3_OBJECT_KEY'].append('DeepRacer-Metrics/EvaluationMetrics-{}.json'.format(str(round(time.time()))))
+    config['METRICS_S3_OBJECT_KEY'].append('{}/evaluation/evaluation-{}.json'.format(metrics_prefix, eval_time))
 
     # MP4 configuration / sav
     save_mp4 = str2bool(os.environ.get("DR_EVAL_SAVE_MP4", "False"))
     if save_mp4:
         config['MP4_S3_BUCKET'].append(os.environ.get('DR_LOCAL_S3_BUCKET', 'bucket'))
-        config['MP4_S3_OBJECT_PREFIX'].append('{}/{}'.format(os.environ.get('DR_EVAL_OPP_MODEL_PREFIX', 'bucket'),'mp4'))
+        config['MP4_S3_OBJECT_PREFIX'].append('{}/evaluation-{}/{}'.format(os.environ.get('DR_EVAL_OPP_S3_MODEL_PREFIX', 'rl-deepracer-sagemaker'), eval_time, 'mp4'))
 
     # Car and training 
     config['DISPLAY_NAME'].append(os.environ.get('DR_EVAL_OPP_DISPLAY_NAME', 'racer1'))
