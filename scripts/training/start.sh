@@ -149,12 +149,6 @@ WORKER_CONFIG=$(python3 $DR_DIR/scripts/training/prepare-config.py)
 if [ "$DR_WORKERS" -gt 1 ]; then
   echo "Starting $DR_WORKERS workers"
 
-  if [[ "${DR_DOCKER_STYLE,,}" != "swarm" ]]; then
-    mkdir -p $DR_DIR/tmp/comms.$DR_RUN_ID
-    rm -rf $DR_DIR/tmp/comms.$DR_RUN_ID/*
-    COMPOSE_FILES="$COMPOSE_FILES $DR_DOCKER_FILE_SEP $DR_DIR/docker/docker-compose-robomaker-multi.yml"
-  fi
-
   if [ "$DR_TRAIN_MULTI_CONFIG" == "True" ]; then
     export MULTI_CONFIG=$WORKER_CONFIG
     echo "Multi-config training, creating multiple Robomaker configurations in $S3_PATH"

@@ -222,11 +222,11 @@ function dr-summary {
 
   local minio_img="" minio_disp="" minio_id=""
   if [[ "${DR_CLOUD,,}" == "local" || "${DR_CLOUD,,}" == "azure" ]]; then
-    minio_img="minio/minio:${DR_MINIO_IMAGE:-latest}"
+    minio_img="chainguard/minio:${DR_MINIO_IMAGE:-latest}"
     minio_disp="$minio_img"
     minio_id=$(docker image inspect "$minio_img" --format '{{slice .Id 7 19}}' 2>/dev/null)
     if [[ -z "$minio_id" ]]; then
-      minio_id=$(docker images minio/minio --format '{{slice .ID 0 12}}' 2>/dev/null | head -1)
+      minio_id=$(docker images chainguard/minio --format '{{slice .ID 0 12}}' 2>/dev/null | head -1)
     fi
   fi
 
