@@ -1,5 +1,3 @@
-version: '3.7'
-
 services:
   rl_coach:
     environment:
