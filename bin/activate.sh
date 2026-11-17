@@ -224,11 +224,11 @@ if [[ -n "${CUDA_VISIBLE_DEVICES}" ]]; then
   echo "         and DR_SAGEMAKER_CUDA_DEVICES and rlcoach v5.0.1 or later."
 fi
 
-# Check if CUDA_VISIBLE_DEVICES is configured.
+# Check if DR_MINIO_IMAGE is configured.
 if [ "${DR_CLOUD,,}" == "local" ] && [ -z "${DR_MINIO_IMAGE}" ]; then
   echo "WARNING: You have not configured DR_MINIO_IMAGE in system.env."
-  echo "         System will default to tag RELEASE.2022-10-24T18-35-07Z"
-  export DR_MINIO_IMAGE="RELEASE.2022-10-24T18-35-07Z"
+  echo "         System will default to tag latest"
+  export DR_MINIO_IMAGE="latest"
 fi
 
 # Prepare the docker compose files depending on parameters
@@ -333,9 +333,7 @@ export DR_LOCAL_PROFILE_ENDPOINT_URL
 
 if [[ -n "${DR_MINIO_COMPOSE_FILE}" ]]; then
   export MINIO_UID=$(id -u)
-  export MINIO_USERNAME=$(id -u -n)
   export MINIO_GID=$(id -g)
-  export MINIO_GROUPNAME=$(id -g -n)
   if [[ "${DR_DOCKER_STYLE,,}" == "swarm" ]]; then
 
     if [ "$DR_DOCKER_MAJOR_VERSION" -gt 24 ]; then
