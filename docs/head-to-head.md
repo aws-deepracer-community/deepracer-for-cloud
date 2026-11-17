@@ -19,7 +19,8 @@ Configure `run.env` with the following parameters:
 * `DR_EVAL_OPP_S3_MODEL_PREFIX` will be the S3 prefix for the secondary model.
 * `DR_EVAL_OPP_CAR_NAME` is the display name of this model.
 
-Metrics, Traces and Videos will be stored in each models' prefix.
+Traces and videos are stored in each model's prefix under `evaluation-<timestamp>` (videos in
+`evaluation-<timestamp>/mp4`); metrics are stored in `metrics/evaluation/evaluation-<timestamp>.json`.
 
 ## Run
 
